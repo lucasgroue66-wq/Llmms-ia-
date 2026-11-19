@@ -77,3 +77,4 @@ Activée dès que `RESEND_API_KEY` est réglée (sinon le site reste ouvert sans
    Sans domaine, Resend n'envoie qu'à l'adresse de ton propre compte Resend (pratique pour tester).
 3. Optionnel : `AUTH_SECRET` = une longue phrase secrète (signe les connexions) ; `ALLOWED_EMAILS` = liste d'e-mails autorisés séparés par des virgules (seuls eux peuvent entrer).
 La connexion dure 30 jours sur chaque appareil. Menu ⚙ → « Se déconnecter ».
+ok
