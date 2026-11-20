@@ -1792,11 +1792,13 @@ function embedVideos(el){
   const done=new Set();
   el.querySelectorAll("a[href]").forEach(a=>{ const id=ytId(a.href); if(!id||done.has(id)||a.dataset.yt) return; done.add(id); a.dataset.yt="1";
     const w=document.createElement("div"); w.className="yt"; w.innerHTML=`<iframe src="https://www.youtube-nocookie.com/embed/${id}" title="Vidéo YouTube" allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture; fullscreen" allowfullscreen loading="lazy"></iframe>`;
-    const block=a.closest("p,li")||a; block.after(w); });
+    const block=a.closest("p,li")||a; block.after(w);
+    // on montre la vidéo, pas l'adresse : le lien brut est retiré (ou remplacé par son titre)
+    if(/^https?:\/\//.test(a.textContent.trim())){ const onlyLink=block!==a&&block.textContent.trim()===a.textContent.trim(); if(onlyLink) block.remove(); else a.remove(); } });
 }
 
-const BUILTIN=new Set(["recherche_web","meteo","analyse_jeu_roblox"]);
-function toolLabel(name,a){ a=a||{}; return name==="meteo"?"🌦 Météo : "+(a.ville||""):name==="recherche_web"?"🔎 "+(a.requete||"recherche"):name==="analyse_jeu_roblox"?"🎮 Analyse du jeu : "+(a.nom||""):null; }
+const BUILTIN=new Set(["recherche_web","meteo","analyse_jeu_roblox","video_youtube"]);
+function toolLabel(name,a){ a=a||{}; return name==="video_youtube"?"▶️ Cherche la vidéo : "+(a.requete||""):name==="meteo"?"🌦 Météo : "+(a.ville||""):name==="recherche_web"?"🔎 "+(a.requete||"recherche"):name==="analyse_jeu_roblox"?"🎮 Analyse du jeu : "+(a.nom||""):null; }
 const isAnimReq=c=>{ const u=[...c.messages].reverse().find(m=>m.role==="user"&&!m._auto); return /cin[ée]matique|animation|anim[ée]|trailer|bande[- ]annonce|intro\b|cutscene|clip|vid[ée]o/i.test(textOf(u?.content||"")); };
 // Mode abusé : plan + relectures seulement pour du vrai code (pas pour une animation web, pour aller vite)
 
@@ -2809,6 +2811,7 @@ const PERSONAS = {
 const BUILTIN_TOOLS = [
   { type: "function", function: { name: "recherche_web", description: "Cherche sur internet des infos récentes ou que tu ne connais pas : actualités, prix, résultats sportifs, horaires, dates, sorties, personnes, mises à jour Roblox, documentation… Renvoie un résumé avec les sources.", parameters: { type: "object", properties: { requete: { type: "string", description: "La recherche, courte et précise (dans la langue la plus utile)" } }, required: ["requete"] } } },
   { type: "function", function: { name: "analyse_jeu_roblox", description: "Trouve un jeu Roblox existant par son nom et l'analyse : description officielle, créateur, stats, et ses captures d'écran officielles regardées une par une (map, bâtiments, couleurs, interface, boutons, textes). À utiliser AVANT de recréer ou de s'inspirer d'un jeu Roblox connu.", parameters: { type: "object", properties: { nom: { type: "string", description: "Nom du jeu Roblox, ex. « Steal a Brainrot »" } }, required: ["nom"] } } },
+  { type: "function", function: { name: "video_youtube", description: "Trouve une VRAIE vidéo YouTube (trailer officiel, clip, cinématique, tuto…) et renvoie ses liens. Utilise-le dès que l'utilisateur veut voir une vidéo existante : mets ensuite le lien https://www.youtube.com/watch?v=… tel quel dans ta réponse, le site l'affiche en lecteur vidéo (n'écris pas « voici l'URL »).", parameters: { type: "object", properties: { requete: { type: "string", description: "Ce qu'il faut chercher, ex. « GTA 6 trailer 1 officiel Rockstar »" } }, required: ["requete"] } } },
   { type: "function", function: { name: "meteo", description: "Météo actuelle et prévisions sur 7 jours pour une ville (température, ressenti, pluie, vent).", parameters: { type: "object", properties: { ville: { type: "string", description: "Nom de la ville, ex. « Paris » ou « Lyon, France »" } }, required: ["ville"] } } },
 ];
 const SEARCH_MODELS = ["google/gemini-2.5-flash", "openai/gpt-5-mini"];
@@ -2837,6 +2840,25 @@ async function toolMeteo(args) {
   return lines.join("\n");
 }
 
+async function toolYoutube(args) {
+  const q = String(args?.requete || "").trim(); if (!q) return "Erreur : requête vide.";
+  try {
+    const r = await fetch("https://www.youtube.com/results?search_query=" + encodeURIComponent(q) + "&hl=fr", { headers: { "Accept-Language": "fr-FR,fr;q=0.9", "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/126 Safari/537.36" } });
+    const html = await r.text();
+    const out = [], seen = new Set();
+    const parts = html.split('"videoRenderer":{"videoId":"').slice(1);
+    for (const part of parts) {
+      const id = part.slice(0, 11); if (!/^[\w-]{11}$/.test(id) || seen.has(id)) continue; seen.add(id);
+      const chunk = part.slice(0, 8000);
+      const tm = chunk.match(/"title":\{"runs":\[\{"text":"((?:[^"\\]|\\.)*)"/), om = chunk.match(/"ownerText":\{"runs":\[\{"text":"((?:[^"\\]|\\.)*)"/);
+      let title = tm ? tm[1] : "", ch = om ? om[1] : ""; try { title = JSON.parse('"' + title + '"'); ch = JSON.parse('"' + ch + '"'); } catch {}
+      out.push(`- ${title || "(sans titre)"}${ch ? " — chaîne : " + ch : ""} — https://www.youtube.com/watch?v=${id}`);
+      if (out.length >= 5) break;
+    }
+    if (!out.length) return "Aucune vidéo trouvée. Réessaie avec d'autres mots.";
+    return "Vidéos trouvées (choisis la plus officielle, de préférence la chaîne de l'éditeur, et mets son lien tel quel dans ta réponse) :\n" + out.join("\n");
+  } catch (e) { return "Recherche YouTube impossible : " + e.message; }
+}
 async function toolSearch(args, env) {
   const q = String(args?.requete || "").trim();
   if (!q) return "Erreur : requête vide.";
@@ -2905,7 +2927,7 @@ async function* runTool(body, env) {
   const name = body?.name, args = body?.args || {};
   let out;
   try {
-    out = name === "meteo" ? await toolMeteo(args) : name === "analyse_jeu_roblox" ? await toolRoblox(args, env) : name === "recherche_web" ? await toolSearch(args, env) : "Outil inconnu.";
+    out = name === "video_youtube" ? await toolYoutube(args) : name === "meteo" ? await toolMeteo(args) : name === "analyse_jeu_roblox" ? await toolRoblox(args, env) : name === "recherche_web" ? await toolSearch(args, env) : "Outil inconnu.";
   } catch (e) { out = "Erreur de l'outil : " + String(e?.message || e); }
   yield { t: "text", v: out };
   yield { t: "done", message: { role: "tool", content: out }, finish: "stop" };
