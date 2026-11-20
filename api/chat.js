@@ -61,7 +61,7 @@ async function tryGemini(b, opts) {
         if (r.status === 400 && g.reasoning_effort) { delete g.reasoning_effort; continue; }
         if (r.status === 400 && g.max_tokens > 8192) { g.max_tokens = 8192; continue; }
         if (r.status === 400 && g.tools) { delete g.tools; delete g.tool_choice; continue; }
-        if (r.status === 429) { let t = ""; try { t = await r.text(); } catch {} gemDead.set(model, Date.now() + (/limit[^0-9]{0,12}0\b|quota.{0,40}\b0\b/i.test(t) ? 6 * 3600e3 : 60e3)); }
+        if (r.status === 429) { let t = ""; try { t = await r.text(); } catch {} gemDead.set(model, Date.now() + (/limit[^0-9]{0,12}0\b|quota.{0,40}\b0\b/i.test(t) ? 6 * 3600e3 : /per.?day|PerDay|daily/i.test(t) ? 3 * 3600e3 : 30e3)); }
         if (r.status === 404 || r.status === 403) gemDead.set(model, Date.now() + 6 * 3600e3);
       } catch {}
       break;
@@ -167,19 +167,49 @@ async function geminiSearch(b, opts) {
   }
   return null;
 }
+// IA gratuite de secours n°2 : Pollinations (sans clé, compatible OpenAI)
+async function tryPollinations(b, opts) {
+  const tok = process.env.POLLINATIONS_TOKEN;
+  const urls = tok ? [["https://gen.pollinations.ai/v1/chat/completions", { Authorization: `Bearer ${tok}` }], ["https://text.pollinations.ai/openai", {}]] : [["https://text.pollinations.ai/openai", {}]];
+  for (const [u, h] of urls) {
+    for (const withTools of b.tools ? [true, false] : [false]) {
+      try {
+        const body = { model: "openai", messages: (b.messages || []).map(cleanMsg), stream: !!b.stream };
+        if (withTools) { body.tools = b.tools; body.tool_choice = "auto"; }
+        const r = await realFetch(u, { method: "POST", headers: { "Content-Type": "application/json", ...h }, body: JSON.stringify(body), signal: opts?.signal });
+        if (r.ok && !/text\/html/.test(r.headers.get("content-type") || "")) return r;
+      } catch {}
+    }
+  }
+  return null;
+}
+let orDayDeadUntil = 0; // quota « free-models-per-day » d'OpenRouter atteint → on ne l'essaie plus jusqu'à demain
+const sleep = ms => new Promise(r => setTimeout(r, ms));
 async function freeChat(url, opts, b) {
     if (!b.stream && Array.isArray(b.plugins) && b.plugins.some(p => p?.id === "web")) { const sr = await geminiSearch(b, opts); if (sr) return sr; }
-    const g = await tryGemini(b, opts); if (g) return g;
+    let g = await tryGemini(b, opts); if (g) return g;
+    // Gemini saturé « à la minute » : on attend qu'un modèle se libère (souvent < 30 s) au lieu d'échouer
+    for (let k = 0; k < 2 && process.env.GEMINI_API_KEY; k++) {
+      const soon = [...gemDead.values()].filter(t => t > Date.now() && t - Date.now() <= 31e3);
+      if (!soon.length) break;
+      await sleep(Math.min(...soon) - Date.now() + 300);
+      g = await tryGemini(b, opts); if (g) return g;
+    }
+    const p = await tryPollinations(b, opts); if (p) return p;
     delete b.reasoning; b.max_tokens = Math.min(b.max_tokens || 16000, 32000); b.messages = boostSystem(b.messages || []);
     let r2 = null;
-    for (const model of [...(await orFreeModels()).filter(m => (orDead.get(m) || 0) < Date.now()), "openrouter/free"]) {
+    if (!orDayDeadUntil) { try { const j = await kv([["GET", "llmms:orday"]]); if (j?.[0]?.result) orDayDeadUntil = Number(j[0].result); } catch {} }
+    if (Date.now() > orDayDeadUntil) for (const model of [...(await orFreeModels()).filter(m => (orDead.get(m) || 0) < Date.now()), "openrouter/free"]) {
       const bb = { ...b, model };
       r2 = await realFetch(url, { ...opts, body: JSON.stringify(bb) });
       if (!r2.ok && bb.tools) { delete bb.tools; delete bb.tool_choice; delete bb.parallel_tool_calls; r2 = await realFetch(url, { ...opts, body: JSON.stringify(bb) }); }
       if (r2.ok) return r2;
+      let t = ""; try { t = await r2.clone().text(); } catch {}
+      if (/free-models-per-day/i.test(t)) { const d = new Date(); d.setUTCHours(24, 5, 0, 0); orDayDeadUntil = d.getTime(); kv([["SET", "llmms:orday", String(orDayDeadUntil), "EX", 90000]]).catch(() => {}); break; }
       if (model !== "openrouter/free") orDead.set(model, Date.now() + (r2.status === 429 ? 120e3 : 3600e3));
     }
-    return r2;
+    // tout est saturé : un message clair en français plutôt que l'erreur brute d'OpenRouter
+    return new Response(JSON.stringify({ error: { message: "Les IA gratuites sont saturées pour le moment 😅 Réessaie dans 1 à 2 minutes : elles se libèrent toutes seules." } }), { status: 503, headers: { "Content-Type": "application/json" } });
 }
 let noMoneyChecked = 0;
 let noMoneyUntil = 0; // quand OpenRouter a dit « pas de crédits », on ne le redemande pas pendant 10 min (gagne du temps)
