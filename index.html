@@ -1270,6 +1270,49 @@ function niceError(e,status,ct){
   return e?.message||"Problème de connexion. Renvoyez votre message.";
 }
 
+/* ---------------- installation automatique du code dans Studio ---------------- */
+function runToolOf(){ const L=mcp.list; const t=L.find(x=>/^(run_code|execute_luau|run_luau|execute_code|run_lua|luau|run_command)$/i.test(x.name))||L.find(x=>/(run|exec)/i.test(x.name)&&/(code|luau|lua|command|script)/i.test(x.name+" "+(x.description||"")));
+  if(!t) return null; const p=t.inputSchema?.properties||{}; const key=Object.keys(p).find(k=>/code|command|source|script|luau|lua/i.test(k))||Object.keys(p)[0]||"code"; return {name:t.name,key}; }
+function luaLong(code){ let n=1; while(code.includes("]"+"=".repeat(n)+"]")) n++; const eq="=".repeat(n); return `[${eq}[\n${code}]${eq}]`; }
+const SVC=["ServerScriptService","StarterPlayer","StarterGui","ReplicatedStorage","ServerStorage","Workspace","StarterPack","ReplicatedFirst","Lighting","SoundService"];
+function installerFor(code,ctx,i){
+  const local=/Players\.LocalPlayer|LocalPlayer\b|UserInputService|OnClientEvent|RenderStepped|PlayerGui|:GetMouse\(/.test(code);
+  const game=/PlayerAdded|OnServerEvent|\.Touched:Connect|Heartbeat:Connect|DataStoreService|while\s+true\s+do|task\.wait\(|wait\(/.test(code);
+  let cls=(ctx.match(/\b(LocalScript|ModuleScript|Script)\b/)||[])[1]||(local?"LocalScript":/^\s*return\s+\w+\s*$/m.test(code.trim().split("\n").slice(-1)[0])?"ModuleScript":game?"Script":null);
+  if(!cls) return {kind:"run",lua:code}; // simple construction (parts, décor…) : on l'exécute tel quel
+  // emplacement : « ServerScriptService > Systèmes > GameManager », « StarterPlayerScripts », etc.
+  const pm=ctx.match(new RegExp("(StarterPlayerScripts|StarterCharacterScripts|"+SVC.join("|")+")((?:\\s*[>›/.]\\s*[\\wÀ-ÿ-]+)*)"));
+  let segs=pm?[pm[1],...pm[2].split(/\s*[>›/.]\s*/).map(x=>x.trim()).filter(Boolean)]:[];
+  if(segs[0]==="StarterPlayerScripts"||segs[0]==="StarterCharacterScripts") segs.unshift("StarterPlayer");
+  if(!segs.length) segs=cls==="LocalScript"?["StarterPlayer","StarterPlayerScripts"]:cls==="ModuleScript"?["ReplicatedStorage"]:["ServerScriptService"];
+  let name=(ctx.match(/\*\*([\wÀ-ÿ-]{3,40})\*\*\s*(?:\(|—|-|:|$)/)||[])[1];
+  const last=segs[segs.length-1]; if(segs.length>1&&!/^(StarterPlayerScripts|StarterCharacterScripts)$/.test(last)&&!SVC.includes(last)){ name=name||last; segs.pop(); if(name===last){} }
+  name=(name||(cls==="LocalScript"?"ClientScript":cls==="ModuleScript"?"Module":"ServerScript")+(i?i+1:"")).replace(/\.(server|client)?\.?lua[u]?$/i,"");
+  const svc=segs.shift(), folders=segs; if(svc==="StarterPlayer"&&!folders.length) folders.push(cls==="LocalScript"?"StarterPlayerScripts":"StarterCharacterScripts");
+  const lua=`local parent = game:GetService(${JSON.stringify(svc)})
+for _, n in ipairs(${"{"+folders.map(x=>JSON.stringify(x)).join(",")+"}"}) do
+	local f = parent:FindFirstChild(n)
+	if not f then f = Instance.new("Folder"); f.Name = n; f.Parent = parent end
+	parent = f
+end
+local s = parent:FindFirstChild(${JSON.stringify(name)})
+if s and not s:IsA(${JSON.stringify(cls)}) then s = nil end
+s = s or Instance.new(${JSON.stringify(cls)})
+s.Name = ${JSON.stringify(name)}
+s.Source = ${luaLong(code)}
+s.Parent = parent
+print("Installé : " .. s:GetFullName())`;
+  return {kind:"script",lua,where:[svc,...folders,name].join(" > "),cls}; }
+async function autoApplyStudio(content,bot,status){
+  const rt=runToolOf(); if(!rt) throw new Error("ton serveur MCP n'a pas d'outil pour exécuter du code");
+  const re=/```(?:lua|luau)[^\n]*\n([\s\S]*?)```/gi; let m, i=0; const chips=document.createElement("div"); chips.className="chips"; bot.txt.insertBefore(chips,status);
+  while((m=re.exec(content))){ const ctx=content.slice(Math.max(0,m.index-500),m.index).split("\n").slice(-5).join("\n"); const job=installerFor(m[1],ctx,i++);
+    const chip=document.createElement("span"); chip.className="chip run"; chip.textContent=job.kind==="script"?`Installe ${job.cls} → ${job.where}`:"Construit dans Studio"; chips.appendChild(chip);
+    let r; try{ r=await mcp.call(rt.name,{[rt.key]:job.lua}); }catch(e){ r={text:e.message,isError:true}; }
+    chip.className="chip "+(r.isError?"err":"ok"); chip.textContent=(r.isError?"✗ ":"✓ ")+chip.textContent+(r.isError?" — "+String(r.text).slice(0,120):""); }
+  if(i) { const n=note(`✅ J'ai installé le code directement dans ta place Roblox Studio (${i} élément${i>1?"s":""}). Ctrl+Z dans Studio pour annuler.`); n.className="note ok"; }
+}
+
 /* ---------------- envoi ---------------- */
 // « t'es co ? », « tu es connectée à Roblox Studio ? », « est ce que t es co a studio »… (toutes les façons de l'écrire)
 function isCoQuestion(t){ const x=" "+String(t).toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/[’']/g," ").replace(/[^a-z0-9? ]/g," ").replace(/\s+/g," ")+" ";
@@ -1458,6 +1501,10 @@ async function agent(c){
         corrections++; lastMsg.content=fixed; lastSeg.innerHTML=md(fixed); save();
       }
       const ch=document.createElement("div"); ch.className="chips"; ch.innerHTML=`<span class="chip ok">✓ ${corrections?`Code vérifié et corrigé (${corrections} correction${corrections>1?"s":""})`:"Code vérifié"}</span>`; bot.txt.insertBefore(ch,status);
+    }
+    // Filet de sécurité : Studio connecté mais l'IA a seulement écrit du code → on l'installe nous-mêmes dans la place
+    if(!usedTools&&mcp.connected&&autoStudio&&c.mode!=="image"&&/```(lua|luau)\b/i.test(lastMsg?.content||"")){
+      setStatus("Installe dans Studio…"); try{ await autoApplyStudio(lastMsg.content,bot,status); }catch(e){ note("Installation dans Studio impossible : "+e.message).className="note bad"; }
     }
     status?.remove(); status=null;
   }catch(e){
