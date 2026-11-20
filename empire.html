@@ -421,6 +421,7 @@ function admin(){ const S=(t,h)=>`<h2 style="margin-top:18px">${t}</h2><div clas
   <h2 style="margin-top:14px">🏢 Racheter une entreprise</h2><div class="row" style="gap:6px;flex-wrap:wrap"><select class="in" id="cps" style="width:auto">${COMP.map((c,i)=>`<option value="${i}">${c[0]} ${c[1]} (+${fmt(c[3])}/min)</option>`).join("")}</select><button class="btn" id="cpb">Me la donner</button><button class="btn gh" id="ap5">Toutes</button></div>
   <h2 style="margin-top:18px">🎚️ Difficulté de l'économie</h2><div class="qty">${[[1,"😎 Facile"],[.4,"🙂 Normal"],[.2,"😤 Difficile"],[.08,"💀 Extrême"]].map(([v,n])=>`<button data-eco="${v}">${ECO()==v?"✅ ":""}${n}</button>`).join("")}</div>
   ${xAdminHTML()}
+  ${yAdminHTML()}
   ${S("⭐ Encore plus",`<button id="x100">⏩ Vitesse x100</button><button id="ntx">${E.noTax?"✅":"⬜"} Plus jamais d'impôts</button><button id="bz1">📈 Tous mes business +1 niveau</button><button id="fl">⚽ Toutes les stars dans mon club</button><button id="mx">💰 Monétisation max sur mes jeux</button><button id="sv">☁️ Sauvegarder en ligne</button>`)}
   <h2 style="margin-top:14px">💸 Pluie d'argent (chaque seconde)</h2><div class="row" style="gap:6px;flex-wrap:wrap"><input class="in" id="rnv" type="number" placeholder="€ par seconde" value="${E.rain||""}"><button class="btn" id="rnb">Activer</button><button class="btn gh" id="rnx">Arrêter</button></div>
   <h2 style="margin-top:14px">🖱️ Clic : niveau exact</h2><div class="row" style="gap:6px;flex-wrap:wrap"><input class="in" id="clv" type="number" min="1" max="${CLICK.length}" placeholder="1 à ${CLICK.length}" value="${E.cl+1}"><button class="btn" id="clb">Mettre</button><button class="btn gh" id="ac10">🤖 +10 auto-clics</button><button class="btn gh" id="crm">💥 Critique max</button></div>
@@ -429,7 +430,7 @@ function admin(){ const S=(t,h)=>`<h2 style="margin-top:18px">${t}</h2><div clas
   ${S("⏱ Temps",`<button data-sk="1">+1 jour</button><button data-sk="30">+30 jours</button><button data-sk="365">+1 an</button><button id="ag">🎂 -5 ans (plus jeune)</button>`)}
   <div class="row" style="margin-top:16px"><button class="btn r" id="rs">Tout réinitialiser</button><span class="grow"></span><button class="btn gh" id="x">Fermer</button></div>`,()=>{
   const ok=t=>{ save(); head(); toast(t); };
-  xAdminBind(ok);
+  xAdminBind(ok); yAdminBind(ok);
   document.querySelectorAll("[data-eco]").forEach(b=>b.onclick=()=>{ E.eco=+b.dataset.eco; ok("🎚️ Difficulté changée"); admin(); });
   document.querySelectorAll("[data-am]").forEach(b=>b.onclick=()=>{ E.cash+=+b.dataset.am; ok("+"+fmt(+b.dataset.am)); });
   $("inf").onclick=()=>{ E.inf=!E.inf; if(E.inf) E.cash=Math.max(E.cash,1e15); ok(E.inf?"♾️ Argent infini activé":"Argent infini désactivé"); admin(); };
@@ -505,7 +506,7 @@ function appsTick(silent){ const A=P(); let net=0;
     const target=Math.pow(m.q,2.4)*AIT[m.k][3]*.6*(m.mk>0?2:1); m.users=Math.max(0,Math.round(m.users+(target-m.users)*.06+gauss()*m.users*.02)); if(m.mk>0) m.mk--;
     const rv=m.users*AIT[m.k][3]/30*.8-m.users*.04; m.last=rv; net+=rv;
     if(!silent&&m.users>3000&&Math.random()<.03) msg("buy",`Bonjour ! Notre groupe veut racheter ton IA « ${m.n} » (${m.users.toLocaleString("fr-FR")} utilisateurs). On te propose ${fmt(Math.round(rv*rnd(250,500)))}.`,{k:"ai",id:m.id,price:Math.round(rv*rnd(250,500))}); });
-  const V=A.vid; let vr=0; V.vids.forEach(v=>{ if(v.age<8){ const vw=Math.round(v.v0*Math.pow(.55,v.age)); v.views+=vw; V.tot+=vw; vr+=vw/1000*VTH[v.th][2]; V.subs+=Math.round(vw*.008*(v.viral?2:1)); v.age++; } }); V.vids=V.vids.filter(v=>v.age<30); V.last=vr; net+=vr;
+  const V=A.vid; let vr=0; V.vids.forEach(v=>{ if(v.age<8){ const vw=Math.round(v.v0*Math.pow(.55,v.age)); v.views+=vw; V.tot+=vw; vr+=vw/1000*VTH[v.th][2]; V.subs+=Math.round(vw*.003*(v.viral?2:1)); v.age++; } }); V.vids=V.vids.filter(v=>v.age<30); V.last=vr; net+=vr;
   if(!silent&&V.subs>8000&&Math.random()<.04){ const pr=Math.round(V.subs*rnd(.3,1.2)); msg("spon",`Salut ! On aimerait un placement de produit dans ta prochaine vidéo. Rémunération : ${fmt(pr)}. Ça te va ?`,{k:"spon",price:pr}); }
   A.form.forEach(f=>{ const s=Math.max(0,Math.round(V.subs*.00035*Math.pow(99/f.price,.8)*f.q*rnd(.5,1.5))); const ref=Math.round(s*(f.q<.8?.15:.03)); f.sales+=s-ref; const rv=(s-ref)*f.price*.92; f.last=rv; net+=rv; });
   A.blox.forEach(g=>{ if(g.dev>0){ g.dev--; if(g.dev===0&&!silent) logEv(`🧱 Ton jeu Bloxy « ${g.n} » est ${g.live?"mis à jour":"publié"} !`); g.live=1; return; }
@@ -520,15 +521,15 @@ function appsTick(silent){ const A=P(); let net=0;
   const life=25+Object.keys(E.items).length*40, el=elec(); net-=life+el;
   const share=net>0?net*A.share:0; net-=share; A.appE+=net; A.taxB+=Math.max(0,net)+Math.max(0,E.biz.reduce((a,b)=>a+(b.last||0),0));
   if(E.day%30===0&&A.taxB>0&&E.noTax){ A.taxB=0; }
-  if(E.day%30===0&&A.taxB>0&&!E.noTax){ const tx=A.taxB*.2; E.cash-=tx; A.taxB=0; if(!silent) logEv(`🧾 Impôts du mois (20 % des bénéfices) : -${fmt(tx)}`); }
+  if(E.day%30===0&&A.taxB>0&&!E.noTax){ const tr=taxRate(), tx=A.taxB*tr; E.cash-=tx; A.taxB=0; if(!silent) logEv(`🧾 Impôts du mois (${Math.round(tr*100)} % des bénéfices) : -${fmt(tx)}`); }
   return net; }
 function appsDaily(){ const A=P(); let n=-teamPower().cost; (A.sites||[]).forEach(s=>n+=s.last||0); if(A.shop) n-=A.shop.p.reduce((a,x)=>a+x.ads,0); A.ai.forEach(m=>n+=m.last||0); n+=A.vid.last||0; A.form.forEach(f=>n+=f.last||0); A.blox.forEach(g=>n+=g.last||0); return n-25-Object.keys(E.items).length*40-elec(); }
 setInterval(()=>{ const r=acqRate(); if(r>0){ E.cash+=r; E.ph.acqE=(E.ph.acqE||0)+r; head(); const el=$("acqT"); if(el) el.textContent="+"+fmt(r); } },10000);
 
 /* ---------- écran Apps ---------- */
-const APPS=[["web","🌐","Sites web","Ton site d'IA & abonnements","#0ea5e9"],["build","🛠️","Bloxy Créateur","Crée ta map","#14b8a6"],["shop","🛍️","ShopNova","Dropshipping & e-commerce","#f97316"],["ai","🤖","Neura Studio","Crée tes IA","#8b5cf6"],["vid","▶️","VidTube","Fais des vidéos","#ef4444"],["form","🎓","Academy","Vends des formations","#0ea5e9"],["blox","🧱","Bloxy Studio","Crée ton jeu","#22c55e"],["chat","💬","Disko","Discute avec des gens","#5865f2"],["s:face","👥","Facely","Réseau social","#1877f2"],["s:snap","👻","Snappo","Stories","#eab308"],["s:pix","📸","Pixgram","Photos","#e1306c"],["s:chirp","🐦","Chirp","Posts","#1d9bf0"],["s:tok","🎵","TokTik","Vidéos courtes","#ff0050"],["pc","🖥️","PC Store","Achète des PC","#64748b"],["acq","🏢","Rachat","Rachète des entreprises","#eab308"],["gog","🔎","Gogole","Ton moteur de recherche","#4285f4"],["coin","🪙","LLMMS Coin","Ta propre crypto","#f59e0b"],["casino","🎰","Casino","Roulette & machines","#16a34a"],["mus","🎤","Label","Ta maison de disques","#db2777"],["quest","🏆","Défis","Quêtes, rival & prestige","#dc2626"]];
+const APPS=[["web","🌐","Sites web","Ton site d'IA & abonnements","#0ea5e9"],["build","🛠️","Bloxy Créateur","Crée ta map","#14b8a6"],["shop","🛍️","ShopNova","Dropshipping & e-commerce","#f97316"],["ai","🤖","Neura Studio","Crée tes IA","#8b5cf6"],["vid","▶️","VidTube","Fais des vidéos","#ef4444"],["form","🎓","Academy","Vends des formations","#0ea5e9"],["blox","🧱","Bloxy Studio","Crée ton jeu","#22c55e"],["chat","💬","Disko","Discute avec des gens","#5865f2"],["s:face","👥","Facely","Réseau social","#1877f2"],["s:snap","👻","Snappo","Stories","#eab308"],["s:pix","📸","Pixgram","Photos","#e1306c"],["s:chirp","🐦","Chirp","Posts","#1d9bf0"],["s:tok","🎵","TokTik","Vidéos courtes","#ff0050"],["pc","🖥️","PC Store","Achète des PC","#64748b"],["acq","🏢","Rachat","Rachète des entreprises","#eab308"],["gog","🔎","Gogole","Ton moteur de recherche","#4285f4"],["coin","🪙","LLMMS Coin","Ta propre crypto","#f59e0b"],["casino","🎰","Casino","Roulette & machines","#16a34a"],["mus","🎤","Label","Ta maison de disques","#db2777"],["quest","🏆","Défis","Quêtes, rival & prestige","#dc2626"],["race","🏎️","Courses","Paris & rival","#e11d48"],["isl","🏝️","Île","Ton île privée","#06b6d4"],["pol","🗳️","Politique","Deviens Président","#2563eb"],["law","⚖️","Justice","Tes procès","#78716c"],["star","🧑‍💼","Stars","Employés d'élite","#a16207"],["mg","🎮","Mini-jeux","Gagne en jouant","#7c3aed"],["sea","📅","Saison","Classement de la semaine","#0d9488"],["cty","🌍","Pays","Ouvre-toi au monde","#15803d"]];
 let app=null;
-function apps(){ const A=P(); if(app&&app.startsWith("s:")){ socApp=app.slice(2); return appSoc(); } if(app) return ({web:appWeb,build:appBuild,shop:appShop,ai:appAI,vid:appVid,form:appForm,blox:appBlox,chat:appChat,pc:appPC,acq:appAcq,gog:appGog,coin:appCoin,casino:appCasino,mus:appMus,quest:appQuest})[app]();
+function apps(){ const A=P(); if(app&&app.startsWith("s:")){ socApp=app.slice(2); return appSoc(); } if(app) return ({web:appWeb,build:appBuild,shop:appShop,ai:appAI,vid:appVid,form:appForm,blox:appBlox,chat:appChat,pc:appPC,acq:appAcq,gog:appGog,coin:appCoin,casino:appCasino,mus:appMus,quest:appQuest,race:appRace,isl:appIsl,pol:appPol,law:appLaw,star:appStar,mg:appMg,sea:appSea,cty:appCty})[app]();
   const unread=Object.values(A.unread).reduce((a,b)=>a+b,0);
   $("main").innerHTML=`<div class="card"><div class="row"><div class="grow"><div class="hint">Revenus des applis</div><b class="${appsDaily()>=0?"up":"dn"}" style="font-size:20px">${fmt(appsDaily())}/jour</b></div><div style="text-align:right"><div class="hint">Rachats</div><b class="up">+${fmt(acqRate())}/min</b></div></div><p class="hint" style="margin:6px 0 0">🏠 Coût de la vie ${fmt(25+Object.keys(E.items).length*40)}/j · ⚡ électricité ${fmt(elec())}/j · 🧾 impôts 20 % chaque mois${A.share?` · 👩‍💼 Kaïa prend ${Math.round(A.share*100)} %`:""}</p></div>
   <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:14px 8px;padding:8px 4px">${APPS.map(([k,ic,n,,c])=>`<button data-app="${k}" style="display:flex;flex-direction:column;align-items:center;gap:6px;position:relative"><span style="width:62px;height:62px;border-radius:18px;display:grid;place-items:center;font-size:30px;background:linear-gradient(145deg,${c},#0b1020);box-shadow:0 6px 16px -6px ${c}">${ic}</span><span style="font-size:11.5px;font-weight:700">${n}</span>${k==="chat"&&unread?`<span style="position:absolute;top:-4px;right:8px;background:#ef4444;border-radius:999px;padding:1px 7px;font-size:12px;font-weight:900">${unread}</span>`:""}</button>`).join("")}</div>`;
@@ -593,8 +594,8 @@ function appVid(){ const A=P(), V=A.vid, q=vq(), can=E.day>V.cd;
   <h2>Matériel</h2>${CAMS.map((c,i)=>`<div class="item"><div class="ic">${c[0]}</div><div class="grow"><div class="t">${c[1]}</div><div class="d">+${c[3]} qualité</div></div>${A.cams[i]?'<span class="tag b">✔</span>':`<button class="btn" data-cm="${i}">${fmt(c[2])}</button>`}</div>`).join("")}
   <p class="hint">Les vidéos Business et Tuto IA rapportent plus par vue. Un bon PC (PC Store) améliore aussi le montage.</p>`; bindBack();
   $("golive").onclick=startLive;
-  document.querySelectorAll("[data-vt]").forEach(b=>b.onclick=()=>{ const th=+b.dataset.vt, viral=Math.random()<.06+q*.006; const titles={0:["J'ai fini le jeu en 1 heure","Le pire bug de l'année"],1:["Comment j'ai gagné mon premier million","Mes 5 business à lancer"],2:["Je piège mon pote 😂","Les pires situations au collège"],3:["Je crée une IA en 24h","L'IA va remplacer ton job ?"],4:["Ma nouvelle supercar 🏎️","Une journée de millionnaire"],5:["Je crée un jeu Bloxy viral","Mon jeu a 1000 joueurs !"]};
-    const v0=Math.round((V.subs*rnd(.08,.3)+rnd(40,250)*q)*(viral?rnd(8,30):1)); V.vids.push({t:pick(titles[th]),th,v0,views:0,age:0,viral}); V.cd=E.day; save(); toast(viral?"🔥 Ta vidéo part en VIRAL !":"🎬 Vidéo publiée"); appVid(); });
+  document.querySelectorAll("[data-vt]").forEach(b=>b.onclick=()=>{ const th=+b.dataset.vt, viral=Math.random()<.02+q*.003; const titles={0:["J'ai fini le jeu en 1 heure","Le pire bug de l'année"],1:["Comment j'ai gagné mon premier million","Mes 5 business à lancer"],2:["Je piège mon pote 😂","Les pires situations au collège"],3:["Je crée une IA en 24h","L'IA va remplacer ton job ?"],4:["Ma nouvelle supercar 🏎️","Une journée de millionnaire"],5:["Je crée un jeu Bloxy viral","Mon jeu a 1000 joueurs !"]};
+    const v0=Math.round((V.subs*rnd(.04,.15)+rnd(5,60)*q)*(viral?rnd(6,20):1)*SBOOST()); V.vids.push({t:pick(titles[th]),th,v0,views:0,age:0,viral}); V.cd=E.day; save(); toast(viral?"🔥 Ta vidéo part en VIRAL !":"🎬 Vidéo publiée"); appVid(); });
   document.querySelectorAll("[data-cm]").forEach(b=>b.onclick=()=>{ const i=+b.dataset.cm; if(!pay(CAMS[i][2])) return; A.cams[i]=1; save(); appVid(); }); }
 
 /* Academy — formations */
@@ -719,8 +720,9 @@ function appSoc(){ const k=socApp, [ic,name,,col,mul]=SOC[k], so=S0()[k], A=P(),
   <h2>Tes publications</h2><div id="sposts">${so.posts.slice().reverse().map(postHTML).join("")||'<p class="hint">Aucune publication pour l’instant.</p>'}</div>`; bindBack();
   const fill=()=>{ const v=$("sp").value, t=v.split(":")[0], g=v.startsWith("g:")?A.blox.find(x=>x.id==v.slice(2)):null, m=v.startsWith("ai:")?A.ai.find(x=>x.id==v.slice(3)):null, w=v.startsWith("site:")?(A.sites||[]).find(x=>x.id==v.slice(5)):null; $("st").value=pick(TEMPL[t]).replace("%s",g?g.n:m?m.n:w?w.n:A.shop?A.shop.n:""); };
   $("sp").onchange=fill; fill(); $("slive").onclick=()=>startLive(k);
-  $("spo").onclick=()=>{ const txt=$("st").value.trim(); if(!txt) return toast("Écris quelque chose"); const v=$("sp").value, viral=Math.random()<.07;
-    const views=Math.round((so.f*rnd(.15,.55)+rnd(80,600))*mul*(viral?rnd(10,40):1)), likes=Math.round(views*rnd(.04,.13)), nf=Math.round(views*rnd(.006,.02));
+  $("spo").onclick=()=>{ const txt=$("st").value.trim(); if(!txt) return toast("Écris quelque chose"); const v=$("sp").value, viral=Math.random()<.02*SBOOST(); const pd=so.pdD===E.day?so.pd:0; so.pdD=E.day; so.pd=pd+1; const spam=pd>=3?.2:1;
+    const views=Math.round((so.f*rnd(.03,.12)+rnd(3,35)*Math.sqrt(vq()))*mul*(viral?rnd(6,20):1)*spam*SBOOST()), likes=Math.round(views*rnd(.03,.1)), nf=Math.round(views*rnd(.002,.008));
+    if(spam<1) setTimeout(()=>toast("📉 Trop de posts aujourd'hui : l'algorithme te montre moins"),2400);
     const post={id:++so.n,txt,views,likes,com:Array.from({length:Math.min(4,1+Math.floor(likes/200))},()=>[pick(SNAMES),pick(SCOM)]),viral,d:E.day,tgt:v,res:""};
     so.f+=nf;
     if(v.startsWith("g:")){ const g=A.blox.find(x=>x.id==v.slice(2)); if(g){ const pl=Math.round(views*rnd(.01,.03)), vis=Math.round(views*rnd(.08,.18)); g.pl+=pl; g.vis+=vis; g.hype=(g.hype||1)*(1+Math.min(3,views/20000)); post.res=`🧱 ${vis.toLocaleString("fr-FR")} personnes sont allées jouer à « ${g.n} » (+${pl} joueurs en ligne)`; } }
@@ -747,17 +749,17 @@ function startLive(src){ src=typeof src==="string"?src:"vid"; const A=P(), V=src
   <div style="padding:10px 10px 16px;display:flex;flex-wrap:wrap;gap:8px;background:#0a0d14"><button class="btn gh" id="lhi" style="flex:1">👋 Dire bonjour</button><button class="btn gh" id="lpr" style="flex:1">📣 Mes projets</button><button class="btn r" id="lend" style="width:100%;font-size:18px;padding:14px">✂️ COUPER LE LIVE</button></div>`;
   document.body.appendChild(ov);
   const title=pick(["Je joue à mon jeu Bloxy en live 🔥","On parle business et argent 💸","Ouverture de packs en direct 🎁","Je code une IA en live 🤖","Q&R : comment je suis devenu riche"]); ov.querySelector("#ltt").textContent=title;
-  let viewers=0, peak=0, don=0, newSub=0, sec=0, hype=1; const base=Math.max(15,fol()*rnd(.02,.06)*(src==="tok"?1.6:src==="snap"?1.3:1)+rnd(10,60)*vq());
+  let viewers=0, peak=0, don=0, newSub=0, sec=0, hype=1; const base=Math.max(0,fol()*rnd(.004,.014)*(src==="tok"?1.6:src==="snap"?1.3:1)+rnd(0,5)*Math.sqrt(vq()))*SBOOST(); let lastAct=0;
   const chat=(u,t,c)=>{ const d=document.createElement("div"); d.innerHTML=`<b style="color:${c||pick(["#f472b6","#60a5fa","#4ade80","#facc15","#c084fc"])}">${esc(u)}</b> ${esc(t)}`; const L=ov.querySelector("#lchat"); L.appendChild(d); while(L.children.length>12) L.firstChild.remove(); };
   const LINES=["salut 👋","premier !","t'es trop fort","c'est quoi ton jeu ?","GG","combien t'as gagné ce mois ?","je viens de m'abonner ✅","fais un giveaway 🙏","le boss","mdrrr","❤️❤️❤️","tu peux dire bonjour à moi ?","t'as quel PC ?"];
-  const iv=setInterval(()=>{ sec++; const target=base*hype*(1+Math.min(1.5,sec/40)); viewers=Math.max(0,Math.round(viewers+(target-viewers)*.25+gauss()*Math.sqrt(viewers+1))); peak=Math.max(peak,viewers); hype=Math.max(1,hype*.97);
+  const iv=setInterval(()=>{ sec++; const target=base*hype*(1+Math.min(.6,sec/90))*(1-Math.min(.6,(sec-lastAct)/90)); viewers=Math.max(0,Math.round(viewers+(target-viewers)*.25+gauss()*Math.sqrt(viewers+1))); peak=Math.max(peak,viewers); hype=Math.max(1,hype*.97);
     ov.querySelector("#lv").textContent=viewers.toLocaleString("fr-FR"); ov.querySelector("#lt").textContent=`${Math.floor(sec/60)}:${String(sec%60).padStart(2,"0")}`;
-    for(let i=0;i<Math.min(3,1+viewers/400);i++) if(Math.random()<.8) chat(pick(SNAMES),pick(LINES));
-    if(Math.random()<.18+viewers/5000){ const amt=pick([2,5,5,10,20,50,100,500])*(viewers>2000?3:1); don+=amt; const u=pick(SNAMES); chat("💸 "+u,`a donné ${amt} € !`,"#facc15"); const dn=ov.querySelector("#ldon"); dn.innerHTML=`<span style="background:#facc15;color:#1a1100;padding:8px 14px;border-radius:12px;font-weight:900;font-size:18px">💸 ${esc(u)} : ${amt} €</span>`; setTimeout(()=>{ if(dn) dn.innerHTML=""; },1800); try{ beep && 0; }catch{} }
-    newSub+=Math.round(viewers*rnd(.002,.008)); if(sec>=180) end(); },1000);
-  ov.querySelector("#lhi").onclick=()=>{ chat("⭐ TOI","Salut tout le monde ! 👋","#fbbf24"); hype*=1.15; };
-  ov.querySelector("#lpr").onclick=()=>{ const g=A.blox.find(x=>x.live); chat("⭐ TOI",g?`Allez jouer à mon jeu « ${g.n} » sur Bloxy !`:"Abonnez-vous et activez la cloche 🔔","#fbbf24"); if(g){ g.pl+=Math.round(viewers*.03); g.vis+=Math.round(viewers*.3); } hype*=1.1; };
-  let done=false; function end(){ if(done) return; done=true; clearInterval(iv); const ads=peak*sec/60*.02; addF(newSub); V.lcd=E.day; E.cash+=don+ads; save(); head(); ov.remove();
+    for(let i=0;i<Math.min(3,1+viewers/400);i++) if(Math.random()<Math.min(.8,viewers/15)) chat(pick(SNAMES),pick(LINES));
+    if(viewers>0&&Math.random()<Math.min(.35,.01+viewers/4000)){ const amt=pick([2,5,5,10,20,50,100,500])*(viewers>2000?3:1); don+=amt; const u=pick(SNAMES); chat("💸 "+u,`a donné ${amt} € !`,"#facc15"); const dn=ov.querySelector("#ldon"); dn.innerHTML=`<span style="background:#facc15;color:#1a1100;padding:8px 14px;border-radius:12px;font-weight:900;font-size:18px">💸 ${esc(u)} : ${amt} €</span>`; setTimeout(()=>{ if(dn) dn.innerHTML=""; },1800); try{ beep && 0; }catch{} }
+    newSub+=Math.round(viewers*rnd(.0005,.003)); if(sec>=180) end(); },1000);
+  ov.querySelector("#lhi").onclick=()=>{ chat("⭐ TOI","Salut tout le monde ! 👋","#fbbf24"); if(sec-lastAct>8) hype*=1.06; lastAct=sec; };
+  ov.querySelector("#lpr").onclick=()=>{ const g=A.blox.find(x=>x.live); chat("⭐ TOI",g?`Allez jouer à mon jeu « ${g.n} » sur Bloxy !`:"Abonnez-vous et activez la cloche 🔔","#fbbf24"); if(g){ g.pl+=Math.round(viewers*.03); g.vis+=Math.round(viewers*.3); } if(sec-lastAct>8) hype*=1.04; lastAct=sec; };
+  let done=false; function end(){ if(done) return; done=true; clearInterval(iv); const ads=peak*sec/60*.006*ECO(); addF(newSub); V.lcd=E.day; E.cash+=don+ads; save(); head(); ov.remove();
     popup(`<h3>🔴 Live terminé</h3><div class="kpi" style="margin:10px 0"><div><span>Pic de spectateurs</span><b>${peak.toLocaleString("fr-FR")}</b></div><div><span>Durée</span><b>${Math.floor(sec/60)} min ${sec%60} s</b></div><div><span>💸 Dons</span><b class="up">${fmt(don)}</b></div><div><span>Pub</span><b class="up">${fmt(ads)}</b></div><div><span>Nouveaux abonnés</span><b>+${newSub.toLocaleString("fr-FR")}</b></div></div><button class="btn g" id="x" style="width:100%">Super !</button>`,()=>{ $("x").onclick=closePop; }); }
   ov.querySelector("#lend").onclick=end; ov.querySelector("#lcut").onclick=end; }
 
@@ -928,21 +930,21 @@ PEOPLE.rival=["😈","Damien Kross","Ton rival milliardaire"];
 (()=>{ const st=document.createElement("style"); st.textContent=`
 #cine{position:fixed;inset:0;z-index:9999;overflow:hidden;display:grid;place-items:center;color:#fff;text-align:center;cursor:pointer;animation:cIn .5s ease}
 #cine .bar{position:absolute;left:0;right:0;height:0;background:#000;z-index:3;transition:height .6s ease}#cine .bar.t{top:0}#cine .bar.b{bottom:0}#cine.on .bar{height:11vh}
-#cine .ic{font-size:min(38vw,190px);line-height:1;animation:cPop 1.1s cubic-bezier(.2,1.6,.4,1) both;filter:drop-shadow(0 10px 40px rgba(0,0,0,.6))}
-#cine .tt{font-size:min(9vw,46px);font-weight:900;letter-spacing:1px;margin:14px 16px 6px;text-shadow:0 4px 20px rgba(0,0,0,.7)}#cine .tt span{display:inline-block;opacity:0;animation:cL .35s ease forwards}
-#cine .ss{font-size:min(4.6vw,20px);opacity:0;animation:cF .8s ease 1.3s forwards;max-width:560px;margin:0 22px;text-shadow:0 2px 10px #000}
+#cine .cic{font-size:min(38vw,190px);line-height:1;animation:cPop 1.1s cubic-bezier(.2,1.6,.4,1) both;filter:drop-shadow(0 10px 40px rgba(0,0,0,.6))}
+#cine .ctt{font-size:min(9vw,46px);font-weight:900;letter-spacing:1px;margin:14px 16px 6px;text-shadow:0 4px 20px rgba(0,0,0,.7)}#cine .ctt span{display:inline-block;opacity:0;animation:cL .35s ease forwards}
+#cine .css{font-size:min(4.6vw,20px);opacity:0;animation:cF .8s ease 1.3s forwards;max-width:560px;margin:0 22px;text-shadow:0 2px 10px #000}
 #cine .fx{position:absolute;top:-10%;font-size:28px;animation:cFall linear forwards;z-index:1}
 #cine .sk{position:absolute;bottom:13vh;right:16px;z-index:4;font-size:13px;opacity:.75;background:#0008;padding:6px 12px;border-radius:999px}
 #cine .ray{position:absolute;width:220vmax;height:220vmax;background:repeating-conic-gradient(#fff1 0 8deg,#0000 8deg 20deg);animation:cRot 14s linear infinite;z-index:0}
-#cine .in{position:relative;z-index:2}
-#cine.shake .in{animation:cSh .45s linear 3}
+#cine .cin{position:relative;z-index:2}
+#cine.shake .cin{animation:cSh .45s linear 3}
 @keyframes cIn{from{opacity:0}}@keyframes cPop{0%{transform:scale(0) rotate(-40deg)}100%{transform:scale(1) rotate(0)}}@keyframes cL{from{opacity:0;transform:translateY(25px) scale(1.6)}to{opacity:1;transform:none}}
 @keyframes cF{to{opacity:1}}@keyframes cFall{to{transform:translateY(125vh) rotate(720deg)}}@keyframes cRot{to{transform:rotate(360deg)}}
 @keyframes cSh{0%,100%{transform:none}25%{transform:translate(-8px,4px)}75%{transform:translate(8px,-4px)}}`; document.head.appendChild(st); })();
-const CSTY={or:["#78350f","#fbbf24","💰💸💎🪙"],vert:["#064e3b","#22c55e","💸💵🍀✨"],rouge:["#450a0a","#ef4444","🔥💥⚠️"],bleu:["#0c1e4a","#3b82f6","✨⭐💫"],violet:["#2e1065","#a855f7","🎉🎊✨⭐"],noir:["#000","#555","💀🖤⚡"]};
+const CSTY={or:["#78350f","#fbbf24","💰💸💎🪙"],vert:["#064e3b","#22c55e","💸💵🍀✨"],rouge:["#450a0a","#ef4444","🔥💥⚠️"],bleu:["#0c1e4a","#3b82f6","✨⭐💫"],violet:["#2e1065","#a855f7","🎉🎊✨⭐"],noir:["#000","#555555","💀🖤⚡"]};
 function cine(o){ return new Promise(res=>{ const old=$("cine"); if(old) old.remove(); const [bg,c2,fx]=CSTY[o.col]||CSTY.or;
-  const d=document.createElement("div"); d.id="cine"; d.style.background=`radial-gradient(circle at 50% 45%,${c2}66,${bg} 55%,#000)`;
-  d.innerHTML=`<div class="ray"></div><div class="bar t"></div><div class="bar b"></div><div class="in"><div class="ic">${o.ic||"🎬"}</div><div class="tt">${[...String(o.t||"")].map((ch,i)=>`<span style="animation-delay:${.5+i*.045}s">${ch===" "?"&nbsp;":esc(ch)}</span>`).join("")}</div><div class="ss">${esc(o.s||"")}</div></div><div class="sk">Toucher pour passer ⏭</div>`;
+  const d=document.createElement("div"); d.id="cine"; d.style.background=`radial-gradient(circle at 50% 45%,${c2}66,${bg} 55%,#000),#000`;
+  d.innerHTML=`<div class="ray"></div><div class="bar t"></div><div class="bar b"></div><div class="cin"><div class="cic">${o.ic||"🎬"}</div><div class="ctt">${[...String(o.t||"")].map((ch,i)=>`<span style="animation-delay:${.5+i*.045}s">${ch===" "?"&nbsp;":esc(ch)}</span>`).join("")}</div><div class="css">${esc(o.s||"")}</div></div><div class="sk">Toucher pour passer ⏭</div>`;
   document.body.appendChild(d); requestAnimationFrame(()=>d.classList.add("on")); if(o.col==="rouge"||o.col==="noir") setTimeout(()=>d.classList.add("shake"),600);
   const em=[...fx]; let n=0; const rain=setInterval(()=>{ if(++n>40) return clearInterval(rain); const f=document.createElement("div"); f.className="fx"; f.textContent=pick(em); f.style.left=rnd(0,96)+"%"; f.style.animationDuration=rnd(1.6,3.2)+"s"; f.style.fontSize=rnd(18,40)+"px"; d.appendChild(f); },70);
   try{ navigator.vibrate&&navigator.vibrate(o.col==="rouge"?[80,60,80]:40); }catch{}
@@ -953,9 +955,9 @@ function cine(o){ return new Promise(res=>{ const old=$("cine"); if(old) old.rem
 const bestGame=()=>P().blox.slice().sort((a,b)=>(b.pl||0)-(a.pl||0))[0];
 const XEV=[
  ["influ","📱","UN INFLUENCEUR PARLE DE TOI","rose","vert",()=>{ const g=bestGame(); if(g){ g.pl=(g.pl||0)+50000; g.hype=(g.hype||1)*2; return `${pick(["NoxGaming","Lila Vlogs","Tibo Clash"])} a joué à « ${g.n} » en live : +50 000 joueurs !`; } const v=Math.max(20000,netWorth()*.02); E.cash+=v; return `Il a parlé de ton empire en vidéo : +${fmt(v)} de nouveaux clients.`; }],
- ["hack","💻","ALERTE : HACKER !","","rouge",()=>{ const v=Math.round(E.cash*.04); E.cash-=v; return `Un hacker a attaqué tes serveurs. Tu as perdu ${fmt(v)} avant que tes experts le bloquent.`; }],
- ["fisc","🧾","CONTRÔLE FISCAL","","rouge",()=>{ if(E.noTax) return "Les impôts sont passés… mais tu es intouchable 😎 (0 € à payer)."; const v=Math.round(E.cash*.06); E.cash-=v; return `Les impôts ont vérifié tes comptes : amende de ${fmt(v)}.`; }],
- ["viral","🚀","TU ES VIRAL !","","violet",()=>{ const so=S0(); let tot=0; for(const k in so){ const a=Math.round(so[k].f*.5+5000); so[k].f+=a; tot+=a; } P().vid.subs=Math.round(P().vid.subs*1.3+3000); return `Ton post a explosé sur tous les réseaux : +${tot.toLocaleString("fr-FR")} abonnés !`; }],
+ ["hack","💻","ALERTE : HACKER !","","rouge",()=>{ if(hasStar("hack")) return "Un hacker a essayé d'attaquer tes serveurs… ton hacker éthique l'a bloqué en 3 secondes 😎"; const v=Math.round(E.cash*.04*(Y().cty.sui?.5:1)); E.cash-=v; return `Un hacker a attaqué tes serveurs. Tu as perdu ${fmt(v)} avant que tes experts le bloquent.`; }],
+ ["fisc","🧾","CONTRÔLE FISCAL","","rouge",()=>{ if(E.noTax) return "Les impôts sont passés… mais tu es intouchable 😎 (0 € à payer)."; const v=Math.round(E.cash*.06*(hasStar("cpt")?.4:1)); E.cash-=v; return `Les impôts ont vérifié tes comptes : amende de ${fmt(v)}.`; }],
+ ["viral","🚀","TU ES VIRAL !","","violet",()=>{ const so=S0(); let tot=0; for(const k in so){ const a=Math.round(so[k].f*.15+300); so[k].f+=a; tot+=a; } P().vid.subs=Math.round(P().vid.subs*1.1+200); return `Ton post a explosé sur tous les réseaux : +${tot.toLocaleString("fr-FR")} abonnés !`; }],
  ["herit","👴","HÉRITAGE SURPRISE","","or",()=>{ const v=Math.max(20000,Math.round(netWorth()*.012)); E.cash+=v; return `Un oncle d'Amérique que tu ne connaissais pas t'a laissé ${fmt(v)} !`; }],
  ["loto","🎟️","JACKPOT AU LOTO !","","or",()=>{ const v=Math.max(1e6,Math.round(netWorth()*.008)); E.cash+=v; return `Tu as gagné ${fmt(v)} au loto !`; }],
  ["krach","📉","KRACH BOURSIER","","rouge",()=>{ E.mkt=-.8; E.mktT=6; return "Les marchés s'effondrent… c'est peut-être le moment d'acheter pas cher."; }],
@@ -963,7 +965,7 @@ const XEV=[
  ["pump","🪙","LLMMS COIN EXPLOSE","","or",()=>{ const c=X().coin; if(!c) { E.cash+=25000; return "Tout le monde parle de crypto… crée ta LLMMS Coin dans les applis ! (+25 000 € de bonus)"; } c.p*=5; c.hype+=3; return `Un milliardaire a tweeté sur ta crypto : le prix est x5 (${fmt(c.p,1)}) !`; }],
  ["gog","🔎","GOGOLE CARTONNE","","bleu",()=>{ const g=X().gog; if(!g){ E.cash+=25000; return "Les gens cherchent un nouveau moteur de recherche… lance Gogole dans les applis ! (+25 000 €)"; } g.s=Math.round(g.s*3+100000); return `Gogole est n°1 des téléchargements : ${g.s.toLocaleString("fr-FR")} recherches par jour !`; }],
  ["tube","🎤","TON ARTISTE A UN TUBE","","violet",()=>{ const m=X().mus; const a=m&&m.a.length?pick(m.a):null; if(!a){ E.cash+=25000; return "La musique paie… lance ton label dans les applis ! (+25 000 €)"; } a.str=(a.str||0)+5e6; return `« ${a.n} » est n°1 des charts : +5 millions d'écoutes par jour !`; }],
- ["fire","🔥","INCENDIE !","","rouge",()=>{ const v=Math.round(E.cash*.03); E.cash-=v; return `Un incendie dans un de tes locaux. L'assurance couvre presque tout : il te reste ${fmt(v)} à payer.`; }],
+ ["fire","🔥","INCENDIE !","","rouge",()=>{ const v=Math.round(E.cash*.03*(hasStar("cpt")?.4:1)); E.cash-=v; return `Un incendie dans un de tes locaux. L'assurance couvre presque tout : il te reste ${fmt(v)} à payer.`; }],
  ["rival","😈","TON RIVAL ATTAQUE","","noir",()=>{ const r=X().rv; r.w*=1.25; msg("rival",pick(["Je viens de racheter une boîte de plus. Tu me suivras jamais 😏","T'es mignon avec ton petit empire 😂","Le n°1 c'est moi. Pour toujours."])); return `${r.n} vient de racheter une entreprise géante : sa fortune passe à ${fmt(r.w)}.`; }],
  ["star","⚽","UNE STAR VEUT TON CLUB","","bleu",()=>{ const b=E.biz.find(x=>x.t==="foot"); if(!b){ E.cash+=50000; return "Une star du foot cherche un club… achète un club de foot ! (+50 000 €)"; } const i=ri(0,FOOTP.length-1); b.squad=b.squad||[]; if(!b.squad.includes(i)) b.squad.push(i); return `${FOOTP[i][0]||"Une star"} signe gratuitement dans ton club !`; }],
 ];
@@ -1115,6 +1117,145 @@ function xAdminBind(ok){ const x=X();
   $("xql").onclick=()=>{ QS.forEach(q=>x.ql[q[0]]=q[4].length); ok("🏆 Toutes les quêtes finies"); };
   $("xall").onclick=()=>{ if(!x.gog) x.gog={s:5000,q:1,ads:0,mk:0,last:0,top:null,tot:0}; if(!x.coin) x.coin={n:"LLMMS Coin",p:.001,q:4e8,hype:1,hold:50,h:[.001],sold:0}; if(!x.mus) x.mus={n:"LLMMS Records",a:[],pool:[],last:0}; ok("🎁 Gogole, crypto et label débloqués"); }; }
 
+
+/* ================= 🌟 EXTENSIONS 2 : Courses, Île, Politique, Justice, Stars, Mini-jeux, Saison, Pays ================= */
+function Y(){ const x=X(); if(!x.y) x.y={tune:0,rw:0,isl:null,pol:{lv:0,pop:10,tax:.2,cd:0},law:{lv:0,cases:[],won:0,lost:0},st:{},mg:{},sea:null,cty:{fr:1}}; return x.y; }
+const SBOOST=()=>(1+(E.x&&E.x.y&&E.x.y.st&&E.x.y.st.inf?.3:0))*(E.x&&E.x.y&&E.x.y.easy?5:1);
+function taxRate(){ const y=E.x&&E.x.y; let t=y?y.pol.tax:.2; if(y&&y.cty.dub) t*=.5; return Math.max(0,t); }
+function ctyBonus(){ const y=E.x&&E.x.y; if(!y) return 0; let b=0; CTY.forEach(c=>{ if(y.cty[c[0]]) b+=c[4]; }); return b; }
+const hasStar=k=>!!(E.x&&E.x.y&&E.x.y.st[k]);
+
+/* ---------- 🏎️ Courses ---------- */
+const RCARS=[[0,"🚙","Citadine",42],[1,"🚘","Berline sport",58],[2,"🏎️","Supercar",74],[3,"🚀","Hypercar",88]];
+const OPP=["Kévin","Sasha","Yanis","Inès","Tom","Bilal","Léa","Max"];
+function appRace(){ const y=Y(), own=RCARS.filter(c=>E.items["0-"+c[0]]);
+  $("main").innerHTML=back("Courses","🏎️")+(own.length?`<div class="card"><b>🚗 Ta voiture</b><select class="in" id="rcar" style="width:100%;margin:8px 0">${own.map(c=>`<option value="${c[0]}">${c[1]} ${c[2]} · vitesse ${c[3]+y.tune*3}</option>`).join("")}</select>
+   <div class="row" style="gap:6px"><input class="in" id="rbet" type="number" value="${y.lb||1000}" placeholder="Mise"><button class="btn o" id="rgo">🏁 Course (x2,5 si 1er)</button></div>
+   <button class="btn r" id="rriv" style="width:100%;margin-top:8px" ${y.rcd>E.day?"disabled":""}>😈 Défier ${esc(X().rv.n)} ${y.rcd>E.day?`(dans ${y.rcd-E.day} j)`:"· mise "+fmt(Math.max(1e4,netWorth()*.02))}</button></div>
+   <div class="card"><b>🔧 Préparation</b><p class="hint" style="margin:4px 0 8px">Moteur, pneus, nitro : +3 de vitesse par niveau.</p><button class="btn" id="rtu" style="width:100%">Niveau ${y.tune} → ${y.tune+1} · ${fmt(20000*Math.pow(2,y.tune))}</button></div>
+   <div id="track" class="card" style="display:none"></div><p class="hint">Victoires : ${y.rw||0}</p>`
+   :`<div class="card" style="text-align:center"><div style="font-size:50px">🏎️</div><p>Il te faut une voiture pour courir. Achète-en une dans l'onglet 💎 Objets.</p><button class="btn g" id="rgoi" style="width:100%">Aller aux objets</button></div>`); bindBack();
+  if(!own.length){ $("rgoi").onclick=()=>go("items"); return; }
+  $("rtu").onclick=()=>{ if(!pay(20000*Math.pow(2,y.tune))) return; y.tune++; save(); appRace(); };
+  const race=(bet,riv)=>{ const c=RCARS[+$("rcar").value], me=c[3]+y.tune*3, n=riv?1:4; y.lb=bet;
+    const R=[{n:"⭐ TOI",ic:c[1],sp:me}].concat(Array.from({length:n},(_,i)=>{ const oc=pick(RCARS); return {n:riv?"😈 "+X().rv.n:pick(OPP),ic:oc[1],sp:riv?me+rnd(-6,12):oc[3]+rnd(-8,10)+y.tune*2.5+Math.min(20,E.day/400)}; }));
+    const tr=$("track"); tr.style.display="block"; tr.innerHTML=R.map((r,i)=>`<div style="position:relative;height:34px;border-bottom:1px dashed var(--line)"><span style="position:absolute;right:4px;top:6px">🏁</span><span id="rc${i}" style="position:absolute;left:0;top:2px;font-size:24px;transform:scaleX(-1)">${r.ic}</span><span class="hint" style="position:absolute;left:34px;top:9px;font-size:11px">${esc(r.n)}</span></div>`).join(""); tr.scrollIntoView({behavior:"smooth"});
+    document.querySelectorAll("#rgo,#rriv").forEach(b=>b.disabled=true); const pos=R.map(()=>0), W=tr.clientWidth-40; let fin=[];
+    const iv=setInterval(()=>{ R.forEach((r,i)=>{ if(pos[i]>=1) return; pos[i]+=(r.sp+rnd(-25,25))/4200; if(pos[i]>=1){ pos[i]=1; fin.push(i); } const el=$("rc"+i); if(el) el.style.left=(pos[i]*W)+"px"; }); if(fin.length===R.length){ clearInterval(iv); const place=fin.indexOf(0)+1;
+      let g=0; if(riv){ if(place===1){ g=bet*2; X().rv.w*=.95; cine({ic:"🏆",t:"TU AS BATTU TON RIVAL",s:`Course gagnée : +${fmt(bet)} et ${X().rv.n} perd 5 % de sa fortune !`,col:"or",ms:3500}); } else msg("rival","Trop lent 😂 Reviens quand t'auras une vraie voiture."); y.rcd=E.day+30; }
+      else g=place===1?bet*2.5:place===2?bet*1.2:0;
+      if(place===1) y.rw=(y.rw||0)+1; E.cash+=g; save(); head(); toast(place===1?`🏆 1er ! +${fmt(g)}`:`${place}e place ${g?"+"+fmt(g):"-"+fmt(bet)}`); setTimeout(()=>{ if(app==="race"&&page==="apps") appRace(); },1600); } },60); };
+  $("rgo").onclick=()=>{ const b=Math.floor(+$("rbet").value||0), mx=Math.round(Math.max(5000,netWorth()*.05)); if(b<=0) return toast("Mets une mise"); if(b>mx) return toast("Mise max : "+fmt(mx)); if(!pay(b)) return; race(b,false); };
+  $("rriv").onclick=()=>{ const b=Math.round(Math.max(1e4,netWorth()*.02)); if(!pay(b)) return; race(b,true); }; }
+
+/* ---------- 🏝️ Île privée ---------- */
+const ISL=[["🏡","Villa",2e6,0],["⚓","Port privé",6e6,4000],["🛬","Piste d'avion",15e6,9000],["🏨","Hôtel de luxe",40e6,60000],["🎰","Casino de l'île",90e6,150000],["🎡","Parc d'attractions",250e6,450000]];
+function islDay(){ const i=Y().isl; if(!i) return 0; let r=0; ISL.forEach((b,k)=>{ if(i.b[k]) r+=b[3]; }); return r; }
+function appIsl(){ const y=Y(), i=y.isl;
+  if(!i){ $("main").innerHTML=back("Île privée","🏝️")+`<div class="card" style="text-align:center"><div style="font-size:60px">🏝️</div><p>Achète ta propre île et construis-la petit à petit : villa, port, hôtel, casino… puis organise des fêtes géantes.</p><input class="in" id="inn" value="Île LLMMS"><button class="btn g" id="ib" style="width:100%;margin-top:8px">Acheter l'île · ${fmt(5e6)}</button></div>`; bindBack();
+    $("ib").onclick=()=>{ if(!pay(5e6)) return; y.isl={n:($("inn").value.trim()||"Île LLMMS").slice(0,24),b:{},pcd:0}; save(); cine({ic:"🏝️",t:"TON ÎLE EST À TOI",s:"Construis-la et invite le monde entier.",col:"bleu",ms:3500}); appIsl(); }; return; }
+  const nb=Object.keys(i.b).length, guests=Math.round(80*Math.pow(2.2,nb));
+  $("main").innerHTML=back(esc(i.n),"🏝️")+`<div class="card" style="text-align:center;background:linear-gradient(180deg,#0ea5e955,#f59e0b33);font-size:42px;letter-spacing:6px;padding:20px 8px">🌴${ISL.filter((b,k)=>i.b[k]).map(b=>b[0]).join("")||"🏖️"}🌴<div class="hint" style="font-size:13px;letter-spacing:0">Revenus de l'île : <b class="up">${fmt(islDay()*ECO())}/jour</b></div></div>
+   <h2>🏗️ Construire</h2>${ISL.map((b,k)=>`<div class="item"><div class="ic">${b[0]}</div><div class="grow"><div class="t">${b[1]}</div><div class="d">${b[3]?"+"+fmt(b[3]*ECO())+"/jour":"Ta maison sur l'île"}</div></div>${i.b[k]?'<span class="tag b">✅ Construit</span>':`<button class="btn g" data-ib="${k}" ${k&&!i.b[k-1]?"disabled":""}>${fmt(b[2])}</button>`}</div>`).join("")}
+   <div class="card"><b>🎉 Organiser une fête</b><p class="hint" style="margin:4px 0 8px">~${guests.toLocaleString("fr-FR")} invités VIP (plus tu as construit, plus il y a de monde). Une fête par semaine.</p><button class="btn o" id="ipt" style="width:100%" ${i.pcd>E.day?"disabled":""}>${i.pcd>E.day?`Prochaine fête dans ${i.pcd-E.day} jours`:"🎉 Lancer la fête · "+fmt(200000)}</button></div>`; bindBack();
+  document.querySelectorAll("[data-ib]").forEach(b=>b.onclick=()=>{ const k=+b.dataset.ib; if(!pay(ISL[k][2])) return; i.b[k]=1; save(); toast(`${ISL[k][0]} ${ISL[k][1]} construit !`); appIsl(); });
+  $("ipt").onclick=()=>{ if(!pay(200000)) return; const g=Math.round(guests*rnd(.7,1.3)), m=g*rnd(1500,3000)*ECO(); E.cash+=m; i.pcd=E.day+7; for(const k in S0()) S0()[k].f+=Math.round(g*rnd(.5,2)); save(); head(); cine({ic:"🎉",t:"LA FÊTE DU SIÈCLE",s:`${g.toLocaleString("fr-FR")} invités VIP · +${fmt(m)} et des abonnés en plus !`,col:"violet",ms:3500}); appIsl(); }; }
+
+/* ---------- 🗳️ Politique ---------- */
+const POL=[["🧑","Citoyen",0,0],["🏛️","Conseiller municipal",50000,150],["🎖️","Maire",500000,800],["🗣️","Député",5e6,3000],["💼","Ministre",50e6,12000],["🇫🇷","Président",500e6,60000]];
+function appPol(){ const y=Y(), p=y.pol, nx=POL[p.lv+1], foll=Object.values(S0()).reduce((a,s)=>a+s.f,0)+P().vid.subs;
+  $("main").innerHTML=back("Politique","🗳️")+`<div class="card" style="text-align:center"><div style="font-size:50px">${POL[p.lv][0]}</div><b style="font-size:20px">${POL[p.lv][1]}</b><div class="hint">Popularité : ${Math.round(p.pop)} % ${p.lv?"· salaire "+fmt(POL[p.lv][3])+"/jour":""}</div>
+   <div style="height:10px;background:var(--line);border-radius:9px;margin-top:8px"><div style="height:100%;width:${p.pop}%;background:#3b82f6;border-radius:9px"></div></div></div>
+   ${nx?`<div class="card"><b>🗳️ Élection : ${nx[0]} ${nx[1]}</b><p class="hint" style="margin:4px 0 8px">Campagne : ${fmt(nx[2])}. Tes chances dépendent de ta popularité et de tes abonnés (${foll.toLocaleString("fr-FR")}).</p><button class="btn g" id="pel" style="width:100%" ${p.cd>E.day?"disabled":""}>${p.cd>E.day?`Prochaine élection dans ${p.cd-E.day} jours`:"Se présenter"}</button></div>`:""}
+   <div class="card"><b>📣 Gagner en popularité</b><div class="qty" style="margin-top:6px"><button id="pp1">🤝 Serrer des mains (gratuit)</button><button id="pp2">📺 Passer à la télé · ${fmt(50000)}</button><button id="pp3">🎁 Don à une association · ${fmt(500000)}</button></div></div>
+   ${p.lv>=5?`<div class="card"><b>🇫🇷 Pouvoir du Président : les impôts</b><p class="hint" style="margin:4px 0 8px">Baisser les impôts = moins à payer… mais ta popularité baisse chez certains.</p><div class="qty">${[0,.05,.1,.2,.3].map(t=>`<button data-tx="${t}">${p.tax==t?"✅ ":""}${t*100} %</button>`).join("")}</div></div>`:p.lv>=2?`<p class="hint">🎖️ Bonus élu : -${p.lv*2} % d'impôts.</p>`:""}`; bindBack();
+  const pop=(c,a)=>()=>{ if(c&&!pay(c)) return; p.pop=Math.min(95,p.pop+a*rnd(.5,1.2)); save(); appPol(); };
+  $("pp1").onclick=()=>{ if(p.hd===E.day) return toast("Déjà fait aujourd'hui"); p.hd=E.day; pop(0,1.5)(); }; $("pp2").onclick=pop(50000,4); $("pp3").onclick=pop(500000,9);
+  document.querySelectorAll("[data-tx]").forEach(b=>b.onclick=()=>{ const t=+b.dataset.tx; if(t<p.tax) p.pop=Math.max(5,p.pop-(p.tax-t)*40); p.tax=t; save(); toast(`🧾 Impôts à ${t*100} %`); appPol(); });
+  if($("pel")) $("pel").onclick=async()=>{ if(!pay(nx[2])) return; const ch=Math.min(.92,p.pop/100*.9+Math.min(.3,Math.log10(foll+1)/25)-p.lv*.04); const win=Math.random()<ch, sc=win?rnd(50.5,68):rnd(32,49.5); p.cd=E.day+60;
+    await cine({ic:"🗳️",t:"RÉSULTATS DE L'ÉLECTION",s:`${sc.toFixed(1).replace(".",",")} % des voix… ${win?"TU ES ÉLU "+nx[1].toUpperCase()+" !":"Battu de peu. Réessaie dans 60 jours."}`,col:win?"bleu":"noir",ms:4200});
+    if(win){ p.lv++; if(p.lv>=2&&p.lv<5) p.tax=.2-p.lv*.02; logEv(`🗳️ Tu es élu ${nx[1]} !`); } else p.pop=Math.max(5,p.pop-8); save(); appPol(); }; }
+function polDay(){ const p=Y().pol; p.pop=Math.max(5,p.pop+(50-p.pop)*.004+gauss()*.3); return POL[p.lv][3]; }
+
+/* ---------- ⚖️ Justice ---------- */
+const LAWY=[["🧑‍⚖️","Avocat débutant",0,.45],["👨‍💼","Avocat confirmé",200000,.6],["🦈","Ténor du barreau",3e6,.75],["🏛️","Cabinet international",30e6,.88]];
+const SUERS=[["😡","Un client mécontent"],["🏢","Un concurrent jaloux"],["👷","Un ancien employé"],["🎵","Une maison de disques"],["🛒","Une marque copiée"]];
+function newCase(silent){ const y=Y(), s=pick(SUERS), amt=Math.round(Math.max(20000,netWorth()*rnd(.01,.04))*(y.cty.usa?2:1)); y.law.cases.push({id:E.uid++,ic:s[0],w:s[1],amt,d:E.day}); msg("buy",`${s[1]} t'attaque en justice et réclame ${fmt(amt)}. Va dans l'appli ⚖️ Justice.`); if(!silent) cine({ic:"⚖️",t:"TU ES ATTAQUÉ EN JUSTICE",s:`${s[1]} te réclame ${fmt(amt)}.`,col:"rouge",ms:3500}); }
+function appLaw(){ const y=Y(), L=y.law, lw=LAWY[L.lv], win=Math.min(.95,lw[3]+(hasStar("avo")?.1:0));
+  $("main").innerHTML=back("Justice","⚖️")+`<div class="card"><b>${lw[0]} Ton avocat : ${lw[1]}</b><div class="hint">Chances de gagner un procès : ${Math.round(win*100)} % · gagnés ${L.won} · perdus ${L.lost}</div>${LAWY[L.lv+1]?`<button class="btn" id="lup" style="width:100%;margin-top:8px">Engager : ${LAWY[L.lv+1][0]} ${LAWY[L.lv+1][1]} · ${fmt(LAWY[L.lv+1][2])}</button>`:""}</div>
+   <h2>📂 Procès en cours</h2>${L.cases.length?L.cases.map((c,i)=>`<div class="card"><b>${c.ic} ${esc(c.w)}</b><div class="hint">Réclame ${fmt(c.amt)}</div><div class="qty" style="margin-top:8px"><button data-lf="${i}">⚖️ Aller au tribunal (${Math.round(win*100)} %)</button><button data-ln="${i}">🤝 Négocier · ${fmt(c.amt*.45)}</button><button data-lp="${i}">💸 Payer · ${fmt(c.amt)}</button></div></div>`).join(""):'<p class="hint">Aucun procès. Ça peut arriver à tout moment quand tu as des business…</p>'}`; bindBack();
+  if($("lup")) $("lup").onclick=()=>{ if(!pay(LAWY[L.lv+1][2])) return; L.lv++; save(); appLaw(); };
+  const rm=i=>L.cases.splice(i,1);
+  document.querySelectorAll("[data-lp]").forEach(b=>b.onclick=()=>{ const i=+b.dataset.lp; if(!pay(L.cases[i].amt)) return; rm(i); L.lost++; save(); appLaw(); });
+  document.querySelectorAll("[data-ln]").forEach(b=>b.onclick=()=>{ const i=+b.dataset.ln, c=L.cases[i]; if(Math.random()<.6){ if(!pay(c.amt*.45)) return; rm(i); toast("🤝 Accord trouvé"); } else { c.amt=Math.round(c.amt*1.1); toast("❌ Ils refusent et réclament 10 % de plus"); } save(); appLaw(); });
+  document.querySelectorAll("[data-lf]").forEach(b=>b.onclick=async()=>{ const i=+b.dataset.lf, c=L.cases[i], ok=Math.random()<win; rm(i); if(ok){ L.won++; const g=Math.round(c.amt*.2); E.cash+=g; } else { L.lost++; E.cash-=c.amt*1.3; } save(); head(); await cine({ic:ok?"🧑‍⚖️":"🔨",t:ok?"PROCÈS GAGNÉ !":"PROCÈS PERDU",s:ok?`Le juge te donne raison. Ils te remboursent tes frais : +${fmt(c.amt*.2)}`:`Tu dois payer ${fmt(c.amt*1.3)} (avec les frais).`,col:ok?"vert":"rouge",ms:3200}); appLaw(); }); }
+
+/* ---------- 🧑‍💼 Employés stars ---------- */
+const STARS=[["dir","👔","Directeur général","+15 % sur tes business",3e6,4000],["hack","🧑‍💻","Hacker éthique","Bloque les hackers · Gogole grandit plus vite",1.5e6,2500],["avo","⚖️","Avocate star","+10 % de chances au tribunal",2e6,3000],["inf","🤳","Influenceuse","+30 % de vues et de spectateurs",1e6,2000],["cpt","🧮","Comptable","Amendes et contrôles fiscaux -60 %",800000,1500],["trd","📊","Trader","Ta crypto monte plus vite",2.5e6,3500]];
+function appStar(){ const y=Y();
+  $("main").innerHTML=back("Stars","🧑‍💼")+`<p class="hint">Recrute des experts. Ils coûtent un salaire chaque jour, et s'ils sont mal payés… ils peuvent te trahir.</p>`+STARS.map(s=>{ const e=y.st[s[0]]; return `<div class="item" style="flex-wrap:wrap"><div class="ic">${s[1]}</div><div class="grow"><div class="t">${s[2]}</div><div class="d">${s[3]}<br>Salaire ${fmt(s[5]*(e?e.pay:1))}/jour${e?` · fidélité ${Math.round(e.loy)} %`:""}</div></div>${e?`<div class="qty"><button data-sr="${s[0]}">💰 Augmenter (+50 %)</button><button data-sf="${s[0]}">👋 Virer</button></div>`:`<button class="btn g" data-sh="${s[0]}">Recruter · ${fmt(s[4])}</button>`}</div>`; }).join(""); bindBack();
+  const S=k=>STARS.find(s=>s[0]===k);
+  document.querySelectorAll("[data-sh]").forEach(b=>b.onclick=()=>{ const s=S(b.dataset.sh); if(!pay(s[4])) return; y.st[s[0]]={pay:1,loy:70}; save(); toast(`${s[1]} ${s[2]} rejoint ton équipe !`); appStar(); });
+  document.querySelectorAll("[data-sr]").forEach(b=>b.onclick=()=>{ const e=y.st[b.dataset.sr]; e.pay*=1.5; e.loy=Math.min(100,e.loy+20); save(); appStar(); });
+  document.querySelectorAll("[data-sf]").forEach(b=>b.onclick=()=>{ delete y.st[b.dataset.sf]; save(); appStar(); }); }
+function starDay(silent){ const y=Y(); let cost=0; for(const k in y.st){ const s=STARS.find(z=>z[0]===k), e=y.st[k]; if(!s){ delete y.st[k]; continue; } cost+=s[5]*e.pay; e.loy=Math.max(0,Math.min(100,e.loy+(e.pay>=2?.3:e.pay>=1.5?.05:-.15))); if(e.loy<35&&Math.random()<.01){ const v=Math.round(E.cash*.03); E.cash-=v; delete y.st[k]; if(!silent) cine({ic:"🗡️",t:"TRAHISON !",s:`Ton ${s[2]} est parti chez ${X().rv.n} et t'a volé ${fmt(v)}…`,col:"noir",ms:3800}); logEv(`🗡️ Ton ${s[2]} t'a trahi`); } } return cost; }
+
+/* ---------- 🎮 Mini-jeux ---------- */
+function appMg(){ const y=Y(), m=y.mg, can=k=>!(m[k]>E.day), h=Array.from({length:20},(_, i)=>0), pts=[100]; for(let i=1;i<20;i++) pts.push(pts[i-1]*(1+gauss()*.04));
+  const offer=Math.round(Math.max(5000,netWorth()*.004)*rnd(.7,1.3));
+  $("main").innerHTML=back("Mini-jeux","🎮")+`<p class="hint">Chaque mini-jeu se recharge en 15 jours du jeu (1 minute).</p>
+   <div class="card"><b>📈 Haut ou bas ?</b><p class="hint" style="margin:4px 0 6px">Devine si l'action va monter ou descendre. Mise = 5 % de ton argent, gain x1,9.</p><canvas id="mgc" height="80" style="width:100%"></canvas><div class="qty" style="margin-top:6px"><button id="mgu" ${can("hl")?"":"disabled"}>📈 Elle monte</button><button id="mgd" ${can("hl")?"":"disabled"}>📉 Elle baisse</button></div><div id="mgr"></div></div>
+   <div class="card"><b>🤝 Négociation</b><p class="hint" style="margin:4px 0 6px">Un client te propose un contrat de <b>${fmt(offer)}</b>. Tu acceptes ou tu demandes plus ? Plus tu demandes, plus il risque de partir.</p><div class="qty"><button data-ng="1" ${can("ng")?"":"disabled"}>✅ Accepter</button><button data-ng="1.3" ${can("ng")?"":"disabled"}>+30 %</button><button data-ng="1.7" ${can("ng")?"":"disabled"}>+70 %</button><button data-ng="2.5" ${can("ng")?"":"disabled"}>x2,5</button></div><div id="ngr"></div></div>
+   <div class="card"><b>⚡ Réflexes de trader</b><p class="hint" style="margin:4px 0 6px">Appuie quand le prix est VERT. Trop tôt = perdu.</p><button class="btn" id="rfx" style="width:100%;height:70px;font-size:18px" ${can("rf")?"":"disabled"}>Commencer</button></div>`; bindBack();
+  const cv=$("mgc"), cx=cv.getContext("2d"); cv.width=cv.clientWidth*2; cv.height=160; const draw=a=>{ const mn=Math.min(...a), mx=Math.max(...a); cx.clearRect(0,0,cv.width,cv.height); cx.lineWidth=4; cx.strokeStyle="#6366f1"; cx.beginPath(); a.forEach((v,i)=>{ const X0=i/(a.length-1)*cv.width, Yy=cv.height-8-(v-mn)/((mx-mn)||1)*(cv.height-16); i?cx.lineTo(X0,Yy):cx.moveTo(X0,Yy); }); cx.stroke(); }; draw(pts);
+  const hl=up=>{ const b=Math.round(E.cash*.05); if(b<1) return toast("Pas assez d'argent"); m.hl=E.day+15; E.cash-=b; const nx=pts.slice(); for(let i=0;i<6;i++) nx.push(nx[nx.length-1]*(1+gauss()*.05)); draw(nx); const ok=(nx[nx.length-1]>pts[19])===up; if(ok) E.cash+=b*1.9; toast(ok?`📈 Bien vu ! +${fmt(b*.9)}`:`📉 Raté… -${fmt(b)}`); $("mgr").innerHTML=ok?`<b class="up">Bien vu ! +${fmt(b*.9)}</b>`:`<b class="dn">Raté… -${fmt(b)}</b>`; document.querySelectorAll("#mgu,#mgd").forEach(x=>x.disabled=true); save(); head(); };
+  $("mgu").onclick=()=>hl(true); $("mgd").onclick=()=>hl(false);
+  document.querySelectorAll("[data-ng]").forEach(b=>b.onclick=()=>{ const f=+b.dataset.ng, ok=Math.random()<(f===1?1:f<1.5?.7:f<2?.42:.18); m.ng=E.day+15; const g=Math.round(offer*f*ECO()); if(ok) E.cash+=g; $("ngr").innerHTML=ok?`<b class="up">Contrat signé : +${fmt(g)}</b>`:'<b class="dn">Le client est parti… 😬</b>'; document.querySelectorAll("[data-ng]").forEach(x=>x.disabled=true); save(); head(); });
+  $("rfx").onclick=()=>{ const bt=$("rfx"); if(bt.dataset.st==="go"){ const ms=performance.now()-bt.t0, g=Math.round(Math.max(0,1-(ms-150)/600)*Math.max(2000,netWorth()*.003)*ECO()); E.cash+=g; toast(`⚡ ${Math.round(ms)} ms · +${fmt(g)}`); bt.style.background=""; bt.textContent=`${Math.round(ms)} ms · +${fmt(g)}`; bt.disabled=true; bt.dataset.st="end"; save(); head(); return; }
+    if(bt.dataset.st==="wait"){ clearTimeout(bt.tm); bt.style.background="#ef4444"; bt.textContent="Trop tôt ! 😬"; bt.disabled=true; bt.dataset.st="end"; save(); return; }
+    m.rf=E.day+15; save(); bt.dataset.st="wait"; bt.textContent="Attends le vert…"; bt.style.background="#7f1d1d"; bt.tm=setTimeout(()=>{ bt.dataset.st="go"; bt.style.background="#16a34a"; bt.textContent="MAINTENANT !"; bt.t0=performance.now(); },rnd(1200,4000)); }; }
+
+/* ---------- 📅 Saison ---------- */
+const weekId=()=>{ const d=new Date(); const t=Date.UTC(d.getFullYear(),d.getMonth(),d.getDate()); const day=(new Date(t).getUTCDay()+6)%7; return Math.floor((t/864e5-day+3)/7); };
+const BOTS=["Zyro_77","Mila.Biz","KingSamy","Noa_Invest","TheoCash","Lyna💎","Rayan.exe","SoBoss","Ethan_Prime","Jade.Gold"];
+function seaRank(){ const y=Y(), s=y.sea, my=Math.max(0,netWorth()-s.start), el=Math.min(1,(Date.now()-s.t0)/(7*864e5)+.05);
+  let seed=s.id; const rr=()=>{ seed=(seed*9301+49297)%233280; return seed/233280; };
+  const L=BOTS.map(n=>[n,Math.round(Math.max(2000,s.start*.12)*Math.pow(rr()*3,2)*el)]).concat([["⭐ TOI",my]]).sort((a,b)=>b[1]-a[1]); return {L,rank:L.findIndex(r=>r[0]==="⭐ TOI")+1,my}; }
+function seaCheck(){ const y=Y(), w=weekId(); if(!y.sea){ y.sea={id:w,start:netWorth(),t0:Date.now()}; return; } if(y.sea.id!==w){ const {rank}=seaRank(), rw=Math.round(Math.max(5000,y.sea.start*.06)*[0,5,3,2,1.5,1.2,1,.8,.6,.5,.4,.3][Math.min(11,rank)]*ECO()); E.cash+=rw; y.lastSea={rank,rw}; y.sea={id:w,start:netWorth(),t0:Date.now()}; setTimeout(()=>cine({ic:rank<=3?["","🥇","🥈","🥉"][rank]:"📅",t:"FIN DE LA SAISON",s:`Tu finis ${rank}${rank===1?"er":"e"} · récompense ${fmt(rw)}`,col:rank===1?"or":"bleu",ms:4000}),1500); } }
+function appSea(){ seaCheck(); const y=Y(), {L,rank,my}=seaRank(), left=Math.max(0,7*864e5-(Date.now()-y.sea.t0));
+  $("main").innerHTML=back("Saison","📅")+`<div class="card" style="text-align:center"><div class="hint">Saison de la semaine · fin dans ${Math.floor(left/864e5)} j ${Math.floor(left%864e5/36e5)} h (temps réel)</div><div style="font-size:40px;font-weight:900">${rank}${rank===1?"er":"e"}</div><div class="hint">Ton score = l'argent gagné cette semaine : <b class="up">${fmt(my)}</b></div>${y.lastSea?`<p class="hint">Saison précédente : ${y.lastSea.rank}e · ${fmt(y.lastSea.rw)}</p>`:""}</div>
+   <div class="card">${L.map((r,i)=>`<div class="row" style="padding:6px 0;border-bottom:1px solid var(--line);${r[0]==="⭐ TOI"?"color:#fbbf24;font-weight:900":""}"><span style="width:28px">${["🥇","🥈","🥉"][i]||i+1}</span><span class="grow">${esc(r[0])}</span><b>${fmt(r[1])}</b></div>`).join("")}</div><p class="hint">Chaque lundi, le classement repart à zéro et le top reçoit une récompense.</p>`; bindBack(); }
+
+/* ---------- 🌍 Pays ---------- */
+const CTY=[["fr","🇫🇷","France","Ton pays de départ",0,0],["bre","🇧🇷","Brésil","+6 % de revenus · ton club de foot adore",30e6,.06],["dub","🇦🇪","Dubaï","Impôts divisés par 2",60e6,.04],["jpn","🇯🇵","Japon","+10 % de revenus (tech)",90e6,.1],["usa","🇺🇸","USA","+18 % de revenus… mais procès x2",150e6,.18],["sui","🇨🇭","Suisse","+8 % · coffre-fort : -50 % aux hackers",200e6,.08],["chn","🇨🇳","Chine","+25 % de revenus… risque de saisie",400e6,.25]];
+function appCty(){ const y=Y();
+  $("main").innerHTML=back("Pays","🌍")+`<div class="card"><div class="hint">Bonus de tes pays</div><b class="up" style="font-size:22px">+${Math.round(ctyBonus()*100)} % de revenus</b></div>`+CTY.map(c=>`<div class="item"><div class="ic">${c[1]}</div><div class="grow"><div class="t">${c[2]}</div><div class="d">${c[3]}</div></div>${y.cty[c[0]]?'<span class="tag b">✅ Ouvert</span>':`<button class="btn g" data-cy="${c[0]}">${fmt(c[4])}</button>`}</div>`).join(""); bindBack();
+  document.querySelectorAll("[data-cy]").forEach(b=>b.onclick=()=>{ const c=CTY.find(z=>z[0]===b.dataset.cy); if(!pay(c[4])) return; y.cty[c[0]]=1; save(); cine({ic:c[1],t:"BIENVENUE EN "+c[2].toUpperCase(),s:`Ton empire s'installe : ${c[3]}.`,col:"bleu",ms:3000}); appCty(); }); }
+
+/* ---------- ⏱ Chaque jour (en plus) ---------- */
+const _tick2=tick;
+tick=function(silent){ const c0=E.cash; _tick2(silent); const y=Y(); const g=E.cash-c0, b=ctyBonus()+(hasStar("dir")?.15:0); if(g>0&&b) E.cash+=g*b;
+  E.cash+=(islDay()+polDay())*ECO()*PMULT()-starDay(silent);
+  if(hasStar("hack")&&X().gog) X().gog.s=Math.round(X().gog.s*1.0015);
+  if(hasStar("trd")&&X().coin) X().coin.hype+=.05;
+  if(E.biz.length&&Math.random()<1/90) newCase(silent);
+  if(y.cty.chn&&Math.random()<1/400){ const v=Math.round(E.cash*.05); E.cash-=v; logEv(`🇨🇳 Le gouvernement a saisi ${fmt(v)} de tes actifs en Chine`); if(!silent) cine({ic:"🚨",t:"SAISIE EN CHINE",s:`Le gouvernement saisit ${fmt(v)}.`,col:"rouge",ms:3200}); }
+  if(E.day%7===0) seaCheck(); };
+const _di2=dailyIncome; dailyIncome=function(){ const y=E.x&&E.x.y, d=_di2(); if(!y) return d; let st=0; for(const k in y.st){ const s=STARS.find(z=>z[0]===k); if(s) st+=s[5]*y.st[k].pay; } return d*(1+(d>0?ctyBonus()+(hasStar("dir")?.15:0):0))+(islDay()+POL[y.pol.lv][3])*ECO()*PMULT()-st; };
+XEV.push(["proces","⚖️","PROCÈS","","rouge",()=>{ newCase(true); return "Quelqu'un t'attaque en justice ! Va dans l'appli ⚖️ Justice."; }]);
+function yAdminHTML(){ return `<h2 style="margin-top:18px">🌟 Encore plus de nouveautés</h2><div class="qty"><button id="ya1">🏝️ Île toute construite</button><button id="ya2">🇫🇷 Devenir Président</button><button id="ya3">📈 Popularité 95 %</button><button id="ya4">⚖️ Gagner tous les procès</button><button id="ya5">⚖️ Recevoir un procès</button><button id="ya6">🧑‍💼 Toutes les stars (fidèles)</button><button id="ya7">🌍 Tous les pays</button><button id="ya8">🏎️ Voitures + préparation max</button><button id="ya9">🎮 Rejouer les mini-jeux</button><button id="ya10">📅 1er de la saison</button><button id="ya11">📣 Abonnés et lives faciles (x5)</button></div>`; }
+function yAdminBind(ok){ const y=Y();
+  $("ya1").onclick=()=>{ if(!y.isl) y.isl={n:"Île LLMMS",b:{},pcd:0}; ISL.forEach((b,k)=>y.isl.b[k]=1); ok("🏝️ Île complète"); };
+  $("ya2").onclick=()=>{ y.pol.lv=5; y.pol.pop=Math.max(y.pol.pop,70); ok("🇫🇷 Tu es Président !"); };
+  $("ya3").onclick=()=>{ y.pol.pop=95; ok("📈 Popularité 95 %"); };
+  $("ya4").onclick=()=>{ y.law.won+=y.law.cases.length; y.law.cases=[]; ok("⚖️ Tous les procès gagnés"); };
+  $("ya5").onclick=()=>{ closePop(); newCase(false); save(); };
+  $("ya6").onclick=()=>{ STARS.forEach(s=>y.st[s[0]]={pay:2,loy:100}); ok("🧑‍💼 Toutes les stars recrutées"); };
+  $("ya7").onclick=()=>{ CTY.forEach(c=>y.cty[c[0]]=1); ok("🌍 Tous les pays ouverts"); };
+  $("ya8").onclick=()=>{ RCARS.forEach(c=>E.items["0-"+c[0]]=1); y.tune=Math.max(y.tune,10); y.rcd=0; ok("🏎️ Garage complet"); };
+  $("ya9").onclick=()=>{ y.mg={}; ok("🎮 Mini-jeux rechargés"); };
+  $("ya10").onclick=()=>{ seaCheck(); y.sea.start=Math.min(y.sea.start,netWorth()-1e15); ok("📅 Tu es 1er de la saison"); };
+  $("ya11").onclick=()=>{ y.easy=!y.easy; ok(y.easy?"📣 Abonnés et lives x5":"📣 Abonnés et lives normaux"); }; }
 
 /* ---------- DÉMARRAGE ---------- */
 if(!E.market.length) refreshMarket();
