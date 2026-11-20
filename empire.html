@@ -177,7 +177,8 @@ const rent=id=>{ const r=E.re[id]; return r.v*.0011*(1+r.u*.15); };
 function itemsVal(){ let v=0; ITEMS.forEach(([,l],g)=>l.forEach((x,i)=>{ if(E.items[g+"-"+i]) v+=x[2]*.6; })); return v; }
 function netWorth(){ let n=E.cash+E.sav-E.loan; E.biz.forEach(b=>n+=bValue(b)*(1-TAX)); STOCKS.forEach(s=>n+=E.st[s[0]].q*E.st[s[0]].p); CRYPTO.forEach(s=>n+=E.cr[s[0]].q*E.cr[s[0]].p); for(const id in E.re) if(E.re[id].own) n+=E.re[id].v*(1-TAX); if(E.ph){ if(E.ph.shop) n+=E.ph.shop.bal||0; COMP.forEach((c,i)=>{ if(E.ph.acq[i]) n+=c[2]*.85; }); PCS.forEach((p,i)=>n+=(E.ph.pcs[i]||0)*p[2]*.5); } return n+itemsVal(); }
 function dailyIncome(){ let n=0; E.biz.forEach(b=>n+=bEst(b)); for(const id in E.re) if(E.re[id].own) n+=rent(id); return n+E.sav*.0004-E.loan*.0008+(E.ph?appsDaily():0); }
-const clickVal=()=>CLICK[Math.min(E.cl,CLICK.length-1)]*(E.boost>0?6.49:1);
+const ECO=()=>(E&&E.eco!=null?E.eco:.4); // difficulté : part des gains que tu touches vraiment (1 = facile, .4 = normal, .2 = difficile)
+const clickVal=()=>CLICK[Math.min(E.cl,CLICK.length-1)]*(E.boost>0?6.49:1)*ECO();
 const acCost=()=>Math.round(400*Math.pow(2.1,E.ac||0)), critCost=()=>Math.round(3000*Math.pow(3.2,E.crit||0));
 
 /* ================= TEMPS ================= */
@@ -255,10 +256,10 @@ function home(){ const nw=netWorth(), list=RICH.concat([["⭐ TOI",nw]]).sort((a
 }
 function homeTap(){ const z=$("tapz"); if(!z) return; const L=E.cl, goal=CLICKGOAL(L), max=L>=CLICK.length-1;
   z.innerHTML=`<div class="row"><b class="grow">💰 Revenu du clic · niveau ${L+1}/${CLICK.length}</b>${E.boost>0?`<span class="tag b">⚡ x6,49 · ${E.boost}s</span>`:""}</div>
-  ${max?'<p class="hint">Niveau maximum atteint 🔥</p>':`<div class="row" style="margin-top:8px"><span class="hint grow">Niveau suivant : <b style="color:#fff">+${fmt(CLICK[L+1])} par clic</b></span><button class="btn o" id="lvl" ${E.cash<goal?"disabled":""}>Améliorer · ${fmt(goal)}</button></div>`}
+  ${max?'<p class="hint">Niveau maximum atteint 🔥</p>':`<div class="row" style="margin-top:8px"><span class="hint grow">Niveau suivant : <b style="color:#fff">+${fmt(CLICK[L+1]*ECO(),1)} par clic</b></span><button class="btn o" id="lvl" ${E.cash<goal?"disabled":""}>Améliorer · ${fmt(goal)}</button></div>`}
   <div class="row" style="margin-top:8px;gap:6px;flex-wrap:wrap"><button class="btn gh" id="acb" ${E.cash<acCost()?"disabled":""}>🤖 Auto-clic : ${E.ac||0}/s → +1 · ${fmt(acCost())}</button><button class="btn gh" id="crb" ${(E.crit||0)>=10||E.cash<critCost()?"disabled":""}>💥 Critique ${(E.crit||0)*5} % ${(E.crit||0)>=10?"· MAX":"· "+fmt(critCost())}</button></div>
   <button class="btn ${E.bcd>0?"gh":"g"}" id="bst" style="width:100%;margin-top:10px" ${E.bcd>0||E.boost>0?"disabled":""}>${E.boost>0?"⚡ Boost actif !":E.bcd>0?`⏳ Boost dispo dans ${E.bcd}s`:"⚡ BOOST : clics x6,49 pendant 30 s"}</button>`;
-  if(!max) $("lvl").onclick=()=>{ if(!pay(goal)) return; E.cl++; E.tapBase=E.taps; save(); toast(`💰 Clic niveau ${E.cl+1} : +${fmt(CLICK[E.cl])} par clic`); home(); };
+  if(!max) $("lvl").onclick=()=>{ if(!pay(goal)) return; E.cl++; E.tapBase=E.taps; save(); toast(`💰 Clic niveau ${E.cl+1} : +${fmt(clickVal(),1)} par clic`); home(); };
   $("acb").onclick=()=>{ if(!pay(acCost())) return; E.ac=(E.ac||0)+1; save(); toast(`🤖 Auto-clic : ${E.ac} clic(s) par seconde`); homeTap(); };
   $("crb").onclick=()=>{ if((E.crit||0)>=10||!pay(critCost())) return; E.crit=(E.crit||0)+1; save(); toast(`💥 Clic critique : ${E.crit*5} % de chance de x10`); homeTap(); };
   $("bst").onclick=()=>{ E.boost=30; E.bcd=180; toast("⚡ Boost activé !"); homeTap(); $("wv").textContent="+"+fmt(clickVal(),1); };
@@ -418,6 +419,7 @@ function admin(){ const S=(t,h)=>`<h2 style="margin-top:18px">${t}</h2><div clas
   <h2 style="margin-top:14px">🧱 Joueurs de mes jeux Bloxy</h2><div class="row" style="gap:6px;flex-wrap:wrap"><select class="in" id="bgs" style="width:auto">${(P().blox.length?P().blox:[{id:"",n:"(aucun jeu)"}]).map(g=>`<option value="${g.id}">${esc(g.n)}</option>`).join("")}</select><input class="in" id="bnb" type="number" placeholder="Joueurs"><button class="btn" id="bad">Mettre</button></div>
   <h2 style="margin-top:14px">🌐 Utilisateurs de mes sites</h2><div class="row" style="gap:6px;flex-wrap:wrap"><select class="in" id="sws" style="width:auto">${((P().sites||[]).length?P().sites:[{id:"",n:"(aucun site)"}]).map(x=>`<option value="${x.id}">${esc(x.n)}</option>`).join("")}</select><input class="in" id="swu" type="number" placeholder="Utilisateurs"><button class="btn" id="swb">Mettre</button></div>
   <h2 style="margin-top:14px">🏢 Racheter une entreprise</h2><div class="row" style="gap:6px;flex-wrap:wrap"><select class="in" id="cps" style="width:auto">${COMP.map((c,i)=>`<option value="${i}">${c[0]} ${c[1]} (+${fmt(c[3])}/min)</option>`).join("")}</select><button class="btn" id="cpb">Me la donner</button><button class="btn gh" id="ap5">Toutes</button></div>
+  <h2 style="margin-top:18px">🎚️ Difficulté de l'économie</h2><div class="qty">${[[1,"😎 Facile"],[.4,"🙂 Normal"],[.2,"😤 Difficile"],[.08,"💀 Extrême"]].map(([v,n])=>`<button data-eco="${v}">${ECO()==v?"✅ ":""}${n}</button>`).join("")}</div>
   ${xAdminHTML()}
   ${S("⭐ Encore plus",`<button id="x100">⏩ Vitesse x100</button><button id="ntx">${E.noTax?"✅":"⬜"} Plus jamais d'impôts</button><button id="bz1">📈 Tous mes business +1 niveau</button><button id="fl">⚽ Toutes les stars dans mon club</button><button id="mx">💰 Monétisation max sur mes jeux</button><button id="sv">☁️ Sauvegarder en ligne</button>`)}
   <h2 style="margin-top:14px">💸 Pluie d'argent (chaque seconde)</h2><div class="row" style="gap:6px;flex-wrap:wrap"><input class="in" id="rnv" type="number" placeholder="€ par seconde" value="${E.rain||""}"><button class="btn" id="rnb">Activer</button><button class="btn gh" id="rnx">Arrêter</button></div>
@@ -428,6 +430,7 @@ function admin(){ const S=(t,h)=>`<h2 style="margin-top:18px">${t}</h2><div clas
   <div class="row" style="margin-top:16px"><button class="btn r" id="rs">Tout réinitialiser</button><span class="grow"></span><button class="btn gh" id="x">Fermer</button></div>`,()=>{
   const ok=t=>{ save(); head(); toast(t); };
   xAdminBind(ok);
+  document.querySelectorAll("[data-eco]").forEach(b=>b.onclick=()=>{ E.eco=+b.dataset.eco; ok("🎚️ Difficulté changée"); admin(); });
   document.querySelectorAll("[data-am]").forEach(b=>b.onclick=()=>{ E.cash+=+b.dataset.am; ok("+"+fmt(+b.dataset.am)); });
   $("inf").onclick=()=>{ E.inf=!E.inf; if(E.inf) E.cash=Math.max(E.cash,1e15); ok(E.inf?"♾️ Argent infini activé":"Argent infini désactivé"); admin(); };
   $("amg").onclick=()=>{ const v=+$("amv").value||0; if(v){ E.cash+=v; ok("+"+fmt(v)); } };
@@ -448,7 +451,7 @@ function admin(){ const S=(t,h)=>`<h2 style="margin-top:18px">${t}</h2><div clas
   $("ap4").onclick=()=>{ const g=P().blox[0]; if(g) msg("buy",`Offre exceptionnelle pour « ${g.n} » : ${fmt(5e6)} !`,{k:"game",id:g.id,price:5e6}); else msg("buy","On aimerait racheter un de tes projets… crée d'abord un jeu ou une IA !"); ok("💬 Message reçu sur Disko"); };
   $("ap5").onclick=()=>{ COMP.forEach((c,i)=>P().acq[i]=1); ok("🏢 Toutes les entreprises rachetées"); };
   $("ap6").onclick=()=>{ P().taxB=0; ok("🧾 Impôts annulés ce mois"); };
-  $("c1").onclick=()=>{ if(E.cl>=CLICK.length-1) return toast("Déjà au max"); E.cl++; ok(`💰 Clic niveau ${E.cl+1} : +${fmt(CLICK[E.cl])}/clic`); };
+  $("c1").onclick=()=>{ if(E.cl>=CLICK.length-1) return toast("Déjà au max"); E.cl++; ok(`💰 Clic niveau ${E.cl+1} : +${fmt(clickVal(),1)}/clic`); };
   $("c0").onclick=()=>{ if(E.cl<=0) return; E.cl--; ok(`Clic niveau ${E.cl+1}`); };
   $("gb1").onclick=()=>{ const k=$("gbs").value, b=newBiz(k); b.name=BT[k].n+" "+(E.biz.filter(x=>x.t===k).length+1); if(b.offers) b.offers=genJobs(b); E.biz.push(b); if(BT[k].mode==="car"&&!E.market.length) refreshMarket(); ok(`🎁 ${BT[k].ic} ${BT[k].n} ajouté`); };
   const fset=add=>{ const v=Math.floor(+$("fnb").value||0), w=$("fpl").value; if(!$("fnb").value) return toast("Écris un nombre"); if(w==="vid") P().vid.subs=Math.max(0,add?P().vid.subs+v:v); else { const so=S0()[w]; so.f=Math.max(0,add?so.f+v:v); } ok(`👥 Abonnés mis à jour`); };
@@ -466,7 +469,7 @@ function admin(){ const S=(t,h)=>`<h2 style="margin-top:18px">${t}</h2><div clas
   $("sv").onclick=async()=>{ save(); cloudDirty=true; await cloudSave(); ok(cloudOK?"☁️ Sauvegardé · code "+CID:"⚠️ Pas de connexion"); };
   $("rnb").onclick=()=>{ E.rain=Math.max(0,+$("rnv").value||0); ok(`💸 +${fmt(E.rain)} chaque seconde`); };
   $("rnx").onclick=()=>{ E.rain=0; ok("Pluie d'argent arrêtée"); };
-  $("clb").onclick=()=>{ const v=Math.max(1,Math.min(CLICK.length,Math.floor(+$("clv").value||1))); E.cl=v-1; ok(`🖱️ Clic niveau ${v} : +${fmt(CLICK[E.cl])}/clic`); };
+  $("clb").onclick=()=>{ const v=Math.max(1,Math.min(CLICK.length,Math.floor(+$("clv").value||1))); E.cl=v-1; ok(`🖱️ Clic niveau ${v} : +${fmt(clickVal(),1)}/clic`); };
   $("ac10").onclick=()=>{ E.ac=(E.ac||0)+10; ok(`🤖 ${E.ac} auto-clics/s`); };
   $("crm").onclick=()=>{ E.crit=10; ok("💥 Critique 50 %"); };
   $("agb").onclick=()=>{ const v=Math.max(10,Math.min(120,Math.floor(+$("agv").value||22))); E.age=v; ok(`🎂 ${v} ans`); };
@@ -493,7 +496,7 @@ P();
 const compute=()=>{ let c=1; PCS.forEach((p,i)=>c+=(E.ph.pcs[i]||0)*p[3]); return c; };
 const vq=()=>{ let q=1+Math.log10(compute())*1.2; CAMS.forEach((c,i)=>{ if(E.ph.cams[i]) q+=c[3]; }); return q; };
 const elec=()=>{ let e=0; PCS.forEach((p,i)=>e+=(E.ph.pcs[i]||0)*p[2]*.002); return e; };
-const acqRate=()=>{ let r=0; COMP.forEach((c,i)=>{ if(E.ph.acq[i]) r+=c[3]; }); return r; };
+const acqRate=()=>{ let r=0; COMP.forEach((c,i)=>{ if(E.ph.acq[i]) r+=c[3]; }); return r*ECO(); };
 function msg(who,t,act){ const C=E.ph.chat; (C[who]=C[who]||[]).push({f:"t",t,act,d:E.day}); if(C[who].length>60) C[who].shift(); E.ph.unread[who]=(E.ph.unread[who]||0)+1; }
 function appsTick(silent){ const A=P(); let net=0;
   A.shop&&PRODS.forEach((p,k)=>{ A.shop.tr[k]=Math.max(.2,Math.min(2.2,A.shop.tr[k]*(1+.08*gauss()))); });
@@ -542,13 +545,13 @@ function shopDay(){ const s=E.ph.shop; if(!s) return 0; let adc=0; s.bal=s.bal||
   if(s.auto) shipAll(true);
   s.rate=Math.max(1.5,Math.min(5,s.rate+(s.p.some(x=>x.m<1.1)?-.02:.01)*rnd(0,1.5))); s.last=s.p.reduce((a,x)=>a+x.last,0); return -adc; }
 function addOrders(k,n,price){ const s=E.ph.shop; s.pend.push({id:E.uid++,k,n,price,who:pick(SNAMES||["client"]),d:E.day}); s.orders+=n; if(s.pend.length>200){ const a=s.pend.shift(); s.pend[0].n+=a.n; } }
-function shipAll(silent){ const s=E.ph.shop; if(!s||!s.pend.length) return 0; let g=0, n=0; s.pend.forEach(p=>{ const c=PRODS[p.k][2]; g+=p.n*(p.price-c-1.5); n+=p.n; }); s.pend=[]; s.bal+=g; s.shipped=(s.shipped||0)+n; s.rate=Math.min(5,s.rate+.03); if(!silent) toast(`📦 ${n.toLocaleString("fr-FR")} commandes expédiées : +${fmt(g)} sur ton solde boutique`); return g; }
+function shipAll(silent){ const s=E.ph.shop; if(!s||!s.pend.length) return 0; let g=0, n=0; s.pend.forEach(p=>{ const c=PRODS[p.k][2]; g+=p.n*(p.price-c-1.5)*ECO(); n+=p.n; }); s.pend=[]; s.bal+=g; s.shipped=(s.shipped||0)+n; s.rate=Math.min(5,s.rate+.03); if(!silent) toast(`📦 ${n.toLocaleString("fr-FR")} commandes expédiées : +${fmt(g)} sur ton solde boutique`); return g; }
 const ADP=[["📸","Pixgram",1],["🎵","TokTik",1.4],["🐦","Chirp",.8],["▶️","VidTube",1.1]];
 function appShop(){ const A=P(), s=A.shop;
   if(!s){ $("main").innerHTML=back("ShopNova","🛍️")+`<div class="card" style="text-align:center"><div style="font-size:50px">🛍️</div><p>Crée ta boutique en ligne et vends des produits sans stock (dropshipping). Tu fais de la pub, les clients commandent, tu expédies, l'argent arrive sur ton <b>solde boutique</b>.</p><input class="in" id="sn" placeholder="Nom de ta boutique" style="width:100%;margin-bottom:10px"><button class="btn g" id="so" style="width:100%">Créer ma boutique · 300 €</button></div>`; bindBack();
     $("so").onclick=()=>{ const n=$("sn").value.trim()||"Ma Boutique"; if(!pay(300)) return; A.shop={n,p:[],tr:PRODS.map(()=>rnd(.5,1.6)),rate:4,orders:0,last:0,slots:3,brand:0,bal:0,pend:[],auto:0}; save(); toast("🛍️ Boutique créée !"); appShop(); }; return; }
   s.bal=s.bal||0; s.pend=s.pend||[];
-  const pn=s.pend.reduce((a,p)=>a+p.n,0), pv=s.pend.reduce((a,p)=>a+p.n*(p.price-PRODS[p.k][2]-1.5),0);
+  const pn=s.pend.reduce((a,p)=>a+p.n,0), pv=s.pend.reduce((a,p)=>a+p.n*(p.price-PRODS[p.k][2]-1.5),0)*ECO();
   $("main").innerHTML=back(esc(s.n),"🛍️")+`<div class="card" style="background:linear-gradient(135deg,#7c2d1233,var(--card))"><div class="hint">💳 Solde ShopNova (argent du dropshipping)</div><div style="font-size:30px;font-weight:900" class="up" id="sbal">${fmt(s.bal,s.bal<1e4)}</div>
   <div class="row" style="gap:6px;margin-top:8px;flex-wrap:wrap"><button class="btn g" id="wdr" ${s.bal<1?"disabled":""}>🏦 Virer sur mon compte</button><span class="hint">Note ⭐ ${s.rate.toFixed(1).replace(".",",")} · ${(s.shipped||0).toLocaleString("fr-FR")} expédiées</span></div></div>
   <div class="card"><div class="row"><b class="grow">📦 Commandes à expédier</b><b style="font-size:20px">${pn.toLocaleString("fr-FR")}</b></div><div class="hint">Valeur : <b class="up">${fmt(pv)}</b> · une commande pas expédiée en 3 jours est annulée</div>
@@ -881,9 +884,9 @@ function sitePop(s){ const st=STYPES[s.t], ai=st[2]==="ai", uc=Math.round(3000*M
 
 /* ================= 🎁 BONUS DU JOUR + 🏆 SUCCÈS ================= */
 const ACH=[["biz1","Premier business",()=>E.biz.length>=1,2000],["m1","Millionnaire (1 M€)",()=>netWorth()>=1e6,50000],["m100","100 M€ de fortune",()=>netWorth()>=1e8,2e6],["md1","Milliardaire",()=>netWorth()>=1e9,3e7],["md100","100 Md€ de fortune",()=>netWorth()>=1e11,1e9],["biz10","10 business",()=>E.biz.length>=10,5e6],["game1k","Un jeu à 1 000 joueurs",()=>(P().blox||[]).some(g=>g.pl>=1000),1e6],["f100k","100 000 abonnés sur un réseau",()=>Object.values(S0()).some(x=>x.f>=1e5)||P().vid.subs>=1e5,2e6],["site1k","Un site à 1 000 utilisateurs",()=>(P().sites||[]).some(s=>s.users>=1000),1e6],["paid100","100 abonnés payants",()=>(P().sites||[]).some(s=>s.pro+s.max>=100),3e6],["acq1","Racheter une entreprise",()=>Object.values(P().acq).some(Boolean),5e5],["club","Club de foot champion",()=>E.biz.some(b=>(b.tro||0)>0),1e8],["click","Clic niveau 10",()=>E.cl>=9,2e5],["isl","Acheter une île",()=>Object.keys(E.items).some(k=>k.startsWith("8-")),5e7]];
-function dailyCard(){ const today=new Date().toLocaleDateString("fr-CA"); const can=E.dly!==today; const streak=E.dlyS||0; const rew=Math.round(Math.max(500,netWorth()*.003)*(1+Math.min(streak,7)*.25));
+function dailyCard(){ const today=new Date().toLocaleDateString("fr-CA"); const can=E.dly!==today; const streak=E.dlyS||0; const rew=Math.round(Math.max(500,netWorth()*.003*ECO())*(1+Math.min(streak,7)*.25));
   return `<div class="card" style="background:linear-gradient(135deg,#7c3aed33,var(--card))"><div class="row"><div class="grow"><b>🎁 Bonus du jour</b><div class="hint">Reviens chaque jour : série de ${streak} jour(s) (jusqu'à +175 %)</div></div><button class="btn ${can?"o":"gh"}" id="dly" ${can?"":"disabled"}>${can?"Récupérer "+fmt(rew):"✓ Reviens demain"}</button></div></div>`; }
-function bindDaily(){ const b=$("dly"); if(!b) return; b.onclick=()=>{ const today=new Date().toLocaleDateString("fr-CA"); if(E.dly===today) return; const y=new Date(Date.now()-864e5).toLocaleDateString("fr-CA"); E.dlyS=E.dly===y?(E.dlyS||0)+1:1; const rew=Math.round(Math.max(500,netWorth()*.003)*(1+Math.min(E.dlyS-1,7)*.25)); E.dly=today; E.cash+=rew; save(); head(); toast(`🎁 +${fmt(rew)} ! Série : ${E.dlyS} jour(s)`); home(); }; }
+function bindDaily(){ const b=$("dly"); if(!b) return; b.onclick=()=>{ const today=new Date().toLocaleDateString("fr-CA"); if(E.dly===today) return; const y=new Date(Date.now()-864e5).toLocaleDateString("fr-CA"); E.dlyS=E.dly===y?(E.dlyS||0)+1:1; const rew=Math.round(Math.max(500,netWorth()*.003*ECO())*(1+Math.min(E.dlyS-1,7)*.25)); E.dly=today; E.cash+=rew; save(); head(); toast(`🎁 +${fmt(rew)} ! Série : ${E.dlyS} jour(s)`); home(); }; }
 function achHTML(){ E.ach=E.ach||{}; return `<h2>🏆 Succès (${Object.keys(E.ach).length}/${ACH.length})</h2>`+ACH.map(([id,n,ok,rw])=>{ const done=E.ach[id], can=!done&&ok(); return `<div class="item"><div class="ic">${done?"🏆":can?"🎉":"🔒"}</div><div class="grow"><div class="t">${n}</div><div class="d">Récompense : ${fmt(rw)}</div></div>${done?'<span class="tag b">✓</span>':`<button class="btn ${can?"o":"gh"}" data-ach="${id}" ${can?"":"disabled"}>${can?"Récupérer":"À faire"}</button>`}</div>`; }).join(""); }
 function bindAch(after){ document.querySelectorAll("[data-ach]").forEach(b=>b.onclick=()=>{ const a=ACH.find(x=>x[0]===b.dataset.ach); if(!a||E.ach[a[0]]||!a[2]()) return; E.ach[a[0]]=1; E.cash+=a[3]; save(); head(); toast(`🏆 Succès « ${a[1]} » : +${fmt(a[3])}`); after(); }); }
 
@@ -916,11 +919,6 @@ function bindTeam(after){ const A=P(); A.team=A.team||{};
   document.querySelectorAll("[data-tf]").forEach(b=>b.onclick=()=>{ const i=+b.dataset.tf; A.team[i]=Math.max(0,(A.team[i]||0)-1); save(); after(); });
   if($("tnow")) $("tnow").onclick=()=>{ const pw=teamPower(); if(!pay(pw.cost*2)) return; let n=0; (A.maps||[]).forEach(m=>{ n+=teamWork(m,pw.tiles*2); const g=m.pub&&A.blox.find(x=>x.id===m.pub); if(g) g.q=Math.min(100,Math.max(g.q,mapScore(m)*.9)); }); save(); toast(`⚡ Ton équipe a construit ${n} éléments d'un coup !`); after(); }; }
 
-/* ---------- DÉMARRAGE ---------- */
-if(!E.market.length) refreshMarket();
-const away=Math.min(400,Math.floor((Date.now()-(E.ts||Date.now()))/4000));
-if(away>=3){ const c0=E.cash; for(let i=0;i<away;i++) tick(1); if(E.cash<c0) E.cash=c0; save(); setTimeout(()=>popup(`<h3>👋 Bon retour !</h3><p>Pendant ton absence, <b>${away} jours</b> sont passés.</p><p style="font-size:22px;font-weight:900" class="${E.cash>=c0?"up":"dn"}">${E.cash>=c0?"+":""}${fmt(E.cash-c0)}</p><button class="btn g" id="x" style="width:100%">Super !</button>`,()=>{ $("x").onclick=closePop; }),300); }
-else if(E.day===1&&!E.taps) setTimeout(()=>popup(`<h3>💼 Bienvenue dans EMPIRE MILLIONNAIRE</h3><p>Tu commences avec <b>300 €</b>. Ton but : devenir <b>la personne la plus riche du monde</b>.</p><p class="hint">1️⃣ Touche l'écran pour gagner de l'argent et monte le niveau de ton clic.<br>2️⃣ Crée ton premier business : un magasin à 5 000 €.<br>3️⃣ Investis dans les actions, l'immobilier et la crypto.<br>4️⃣ Fusionne tes entreprises pour créer des empires.<br>5️⃣ Achète voitures, jets, yachts, tableaux et îles.<br><br>1 jour = 4 secondes, même jeu fermé. Le panel 🛠️ est en haut à droite.</p><button class="btn g" id="x" style="width:100%">C'est parti !</button>`,()=>{ $("x").onclick=closePop; }),300);
 /* ================= ✨ EXTENSIONS : Gogole, LLMMS Coin, Casino, Label, Défis, Rival, Prestige, Événements & cinématiques ================= */
 function X(){ if(!E.x) E.x={gog:null,coin:null,mus:null,ql:{},cw:0,cl:0,evOn:1,evF:45,luck:0,pres:0,rv:null,beat:0}; const x=E.x; if(!x.rv) x.rv={n:"Damien Kross",w:Math.max(5e4,netWorth()*1.6)}; return x; }
 const PMULT=()=>Math.pow(2,(E.x&&E.x.pres)||0);
@@ -958,8 +956,8 @@ const XEV=[
  ["hack","💻","ALERTE : HACKER !","","rouge",()=>{ const v=Math.round(E.cash*.04); E.cash-=v; return `Un hacker a attaqué tes serveurs. Tu as perdu ${fmt(v)} avant que tes experts le bloquent.`; }],
  ["fisc","🧾","CONTRÔLE FISCAL","","rouge",()=>{ if(E.noTax) return "Les impôts sont passés… mais tu es intouchable 😎 (0 € à payer)."; const v=Math.round(E.cash*.06); E.cash-=v; return `Les impôts ont vérifié tes comptes : amende de ${fmt(v)}.`; }],
  ["viral","🚀","TU ES VIRAL !","","violet",()=>{ const so=S0(); let tot=0; for(const k in so){ const a=Math.round(so[k].f*.5+5000); so[k].f+=a; tot+=a; } P().vid.subs=Math.round(P().vid.subs*1.3+3000); return `Ton post a explosé sur tous les réseaux : +${tot.toLocaleString("fr-FR")} abonnés !`; }],
- ["herit","👴","HÉRITAGE SURPRISE","","or",()=>{ const v=Math.max(50000,Math.round(netWorth()*.05)); E.cash+=v; return `Un oncle d'Amérique que tu ne connaissais pas t'a laissé ${fmt(v)} !`; }],
- ["loto","🎟️","JACKPOT AU LOTO !","","or",()=>{ const v=Math.max(1e7,Math.round(netWorth()*.02)); E.cash+=v; return `Tu as gagné ${fmt(v)} au loto !`; }],
+ ["herit","👴","HÉRITAGE SURPRISE","","or",()=>{ const v=Math.max(20000,Math.round(netWorth()*.012)); E.cash+=v; return `Un oncle d'Amérique que tu ne connaissais pas t'a laissé ${fmt(v)} !`; }],
+ ["loto","🎟️","JACKPOT AU LOTO !","","or",()=>{ const v=Math.max(1e6,Math.round(netWorth()*.008)); E.cash+=v; return `Tu as gagné ${fmt(v)} au loto !`; }],
  ["krach","📉","KRACH BOURSIER","","rouge",()=>{ E.mkt=-.8; E.mktT=6; return "Les marchés s'effondrent… c'est peut-être le moment d'acheter pas cher."; }],
  ["boom","📈","LA BOURSE S'ENVOLE","","vert",()=>{ E.mkt=.6; E.mktT=8; return "Toutes les actions et cryptos montent pendant plusieurs jours !"; }],
  ["pump","🪙","LLMMS COIN EXPLOSE","","or",()=>{ const c=X().coin; if(!c) { E.cash+=25000; return "Tout le monde parle de crypto… crée ta LLMMS Coin dans les applis ! (+25 000 € de bonus)"; } c.p*=5; c.hype+=3; return `Un milliardaire a tweeté sur ta crypto : le prix est x5 (${fmt(c.p,1)}) !`; }],
@@ -1021,7 +1019,7 @@ function appCoin(){ const x=X(), c=x.coin;
   const cv=$("cch"), ctx=cv.getContext("2d"); cv.width=cv.clientWidth*2; cv.height=220; const h=c.h, mn=Math.min(...h), mx=Math.max(...h); ctx.lineWidth=4; ctx.strokeStyle=h[h.length-1]>=h[0]?"#22c55e":"#ef4444"; ctx.beginPath(); h.forEach((v,i)=>{ const X0=i/(h.length-1||1)*cv.width, Y=cv.height-10-(v-mn)/((mx-mn)||1)*(cv.height-20); i?ctx.lineTo(X0,Y):ctx.moveTo(X0,Y); }); ctx.stroke();
   const hy=(cost,amt,t)=>()=>{ if(cost&&!pay(cost)) return; c.hype+=amt; coinMove(c,1); save(); toast(t); appCoin(); };
   $("ch1").onclick=hy(0,Math.min(4,.3+foll/2e5),"🐦 Post publié : la hype monte !"); $("ch2").onclick=hy(100000,2.5,"📢 Les influenceurs en parlent !"); $("ch3").onclick=hy(5e6,8,"🏟️ Ta pub passe au Super Bowl !");
-  document.querySelectorAll("[data-cs]").forEach(b=>b.onclick=()=>{ const n=c.q*(+b.dataset.cs)/100; if(n<1) return; const imp=Math.min(.6,n/c.q*.5*(1+400/(c.hold+1))); const got=n*c.p*(1-imp/2); c.q-=n; c.p*=(1-imp); c.sold+=got; E.cash+=got; c.h.push(c.p); save(); head(); toast(`💰 +${fmt(got)}`); appCoin(); }); }
+  document.querySelectorAll("[data-cs]").forEach(b=>b.onclick=()=>{ const n=c.q*(+b.dataset.cs)/100; if(n<1) return; const imp=Math.min(.6,n/c.q*.5*(1+400/(c.hold+1))); const got=n*c.p*(1-imp/2)*.85; c.q-=n; c.p*=(1-imp); c.sold+=got; E.cash+=got; c.h.push(c.p); save(); head(); toast(`💰 +${fmt(got)}`); appCoin(); }); }
 
 /* ---------- 🎰 Casino ---------- */
 const SLOT=["🍒","🍋","🔔","⭐","7️⃣","💎"];
@@ -1056,7 +1054,7 @@ function appMus(){ const x=X();
   bindBack();
   document.querySelectorAll("[data-mg]").forEach(b=>b.onclick=()=>{ const a=m.pool[+b.dataset.mg]; if(!pay(a.c)) return; m.pool.splice(+b.dataset.mg,1); m.a.push({n:a.n,g:a.g,t:a.t,str:0,songs:0}); save(); toast(`✍️ ${a.n} a signé chez ${m.n} !`); appMus(); });
   document.querySelectorAll("[data-ms]").forEach(b=>b.onclick=()=>{ const a=m.a[+b.dataset.ms]; if(!pay(5000*a.t)) return; a.songs=(a.songs||0)+1; const hit=Math.random()<.04*a.t; const s=Math.round(Math.pow(a.t,2.6)*rnd(3000,8000)*(hit?40:1)); a.str=(a.str||0)+s; save(); if(hit) cine({ic:"💿",t:"C'EST UN TUBE !",s:`Le nouveau son de ${a.n} fait ${s.toLocaleString("fr-FR")} écoutes par jour !`,col:"violet",ms:3500}); else toast(`💿 Nouveau son : +${s.toLocaleString("fr-FR")} écoutes/jour`); appMus(); });
-  document.querySelectorAll("[data-mc]").forEach(b=>b.onclick=()=>{ const a=m.a[+b.dataset.mc]; if(!pay(20000*a.t)) return; const fans=Math.round((a.str||0)*.05+a.t*800*rnd(.6,1.4)), g=fans*rnd(30,60); E.cash+=g; save(); head(); toast(`🏟️ ${fans.toLocaleString("fr-FR")} fans · +${fmt(g)}`); appMus(); });
+  document.querySelectorAll("[data-mc]").forEach(b=>b.onclick=()=>{ const a=m.a[+b.dataset.mc]; if(!pay(20000*a.t)) return; const fans=Math.round((a.str||0)*.05+a.t*800*rnd(.6,1.4)), g=fans*rnd(30,60)*ECO(); E.cash+=g; save(); head(); toast(`🏟️ ${fans.toLocaleString("fr-FR")} fans · +${fmt(g)}`); appMus(); });
   $("mrf").onclick=()=>{ if(!pay(2000)) return; m.pool=[]; save(); appMus(); }; }
 
 /* ---------- 🏆 Défis, rival & prestige ---------- */
@@ -1069,7 +1067,7 @@ const QS=[["cash","💶","Avoir {v} sur ton compte",()=>E.cash,[1e4,1e6,1e8,1e10
  ["str","🎤","Avoir {n} écoutes/jour sur ton label",()=>X().mus?X().mus.a.reduce((s,a)=>s+(a.str||0),0):0,[10000,1e6,1e8],0],
  ["biz","🏪","Posséder {n} business",()=>E.biz.length,[1,5,10,25],0],
  ["tap","👆","Toucher l'écran {n} fois",()=>E.taps||0,[100,1000,10000,1e5],0]];
-function qReward(q,l){ const t=q[4][l]; return Math.round(q[5]?t*.15:Math.max(5000,Math.pow(t,.85)*25)); }
+function qReward(q,l){ const t=q[4][l]; return Math.round((q[5]?t*.08:Math.max(3000,Math.pow(t,.85)*15))*Math.max(ECO(),.3)); }
 function rivalDay(){ const r=X().rv; r.w*=1+rnd(.001,.009); const me=netWorth(); if(r.w<me*.3&&Math.random()<.03){ r.w=me*rnd(.9,1.2); msg("rival","Je suis de retour. Et plus riche que toi 😏"); } if(!X().beat&&me>r.w){ X().beat=1; msg("rival","Quoi ?! Tu m'as dépassé ?! Ça va pas se passer comme ça… 😤"); return true; } if(me<r.w) X().beat=0; return false; }
 function appQuest(){ const x=X(), r=x.rv, me=netWorth(), pct=Math.min(100,me/(me+r.w)*100), need=1e9*Math.pow(10,x.pres);
   $("main").innerHTML=back("Défis","🏆")+`<div class="card" style="background:linear-gradient(135deg,#3b0a0a,var(--card))"><b>😈 Ton rival : ${esc(r.n)}</b><div class="row" style="margin-top:8px"><span class="grow">⭐ Toi <b class="up">${fmt(me)}</b></span><span>${fmt(r.w)} <b>😈</b></span></div><div style="height:12px;background:#ef444455;border-radius:9px;overflow:hidden;margin-top:6px"><div style="height:100%;width:${pct}%;background:#22c55e"></div></div><p class="hint" style="margin:6px 0 0">${me>r.w?"🏆 Tu es devant lui ! Il va tout faire pour te repasser…":"Dépasse sa fortune pour gagner un gros bonus."}</p></div>
@@ -1083,13 +1081,13 @@ async function doPrestige(){ const k={pres:X().pres+1,ql:{},evOn:X().evOn,evF:X(
 
 /* ---------- ⏱ Chaque jour ---------- */
 const _tick=tick;
-tick=function(silent){ const c0=E.cash; _tick(silent); const g=E.cash-c0; if(g>0&&PMULT()>1) E.cash+=g*(PMULT()-1);
-  const x=X(); let v=gogDay()+musDay(); if(x.coin) coinMove(x.coin,1); E.cash+=v>0?v*PMULT():v;
+tick=function(silent){ const c0=E.cash; _tick(silent); const g=E.cash-c0; if(g>0) E.cash+=g*(PMULT()*ECO()-1);
+  const x=X(); let v=gogDay()+musDay(); if(x.coin) coinMove(x.coin,1); E.cash+=v>0?v*PMULT()*ECO():v;
   const g2=x.gog; if(g2&&g2.top){ const s=(P().sites||[]).find(z=>z.id==g2.top); if(s) s.users=(s.users||0)+Math.round(g2.s*.003); }
   if(x.coin&&x.coin.q<1) x.coin.q=0;
-  if(rivalDay()&&!silent){ const rw=Math.round(netWorth()*.05); E.cash+=rw; logEv(`🏆 Tu as dépassé ${x.rv.n} ! Bonus ${fmt(rw)}`); cine({ic:"🏆",t:"TU AS BATTU TON RIVAL",s:`${x.rv.n} est derrière toi. Bonus : ${fmt(rw)} !`,col:"or"}); }
+  if(rivalDay()&&!silent){ const rw=Math.round(netWorth()*.01); E.cash+=rw; logEv(`🏆 Tu as dépassé ${x.rv.n} ! Bonus ${fmt(rw)}`); cine({ic:"🏆",t:"TU AS BATTU TON RIVAL",s:`${x.rv.n} est derrière toi. Bonus : ${fmt(rw)} !`,col:"or"}); }
   else if(!silent&&x.evOn&&!$("cine")&&Math.random()<1/(x.evF||45)) runEv(pick(XEV)[0]); };
-const _di=dailyIncome; dailyIncome=function(){ const x=E.x; return _di()+(x?((x.gog&&x.gog.last)||0)+((x.mus&&x.mus.last)||0):0); };
+const _di=dailyIncome; dailyIncome=function(){ const x=E.x, d=_di()+(x?((x.gog&&x.gog.last)||0)+((x.mus&&x.mus.last)||0):0); return d>0?d*PMULT()*ECO():d; };
 
 /* ---------- 🛠️ Panel : événements, cinématiques et nouveautés ---------- */
 function xAdminHTML(){ const x=X(); return `<h2 style="margin-top:18px">🎬 Événements & cinématiques</h2>
@@ -1118,6 +1116,11 @@ function xAdminBind(ok){ const x=X();
   $("xall").onclick=()=>{ if(!x.gog) x.gog={s:5000,q:1,ads:0,mk:0,last:0,top:null,tot:0}; if(!x.coin) x.coin={n:"LLMMS Coin",p:.001,q:4e8,hype:1,hold:50,h:[.001],sold:0}; if(!x.mus) x.mus={n:"LLMMS Records",a:[],pool:[],last:0}; ok("🎁 Gogole, crypto et label débloqués"); }; }
 
 
+/* ---------- DÉMARRAGE ---------- */
+if(!E.market.length) refreshMarket();
+const away=Math.min(400,Math.floor((Date.now()-(E.ts||Date.now()))/4000));
+if(away>=3){ const c0=E.cash; for(let i=0;i<away;i++) tick(1); if(E.cash<c0) E.cash=c0; save(); setTimeout(()=>popup(`<h3>👋 Bon retour !</h3><p>Pendant ton absence, <b>${away} jours</b> sont passés.</p><p style="font-size:22px;font-weight:900" class="${E.cash>=c0?"up":"dn"}">${E.cash>=c0?"+":""}${fmt(E.cash-c0)}</p><button class="btn g" id="x" style="width:100%">Super !</button>`,()=>{ $("x").onclick=closePop; }),300); }
+else if(E.day===1&&!E.taps) setTimeout(()=>popup(`<h3>💼 Bienvenue dans EMPIRE MILLIONNAIRE</h3><p>Tu commences avec <b>300 €</b>. Ton but : devenir <b>la personne la plus riche du monde</b>.</p><p class="hint">1️⃣ Touche l'écran pour gagner de l'argent et monte le niveau de ton clic.<br>2️⃣ Crée ton premier business : un magasin à 5 000 €.<br>3️⃣ Investis dans les actions, l'immobilier et la crypto.<br>4️⃣ Fusionne tes entreprises pour créer des empires.<br>5️⃣ Achète voitures, jets, yachts, tableaux et îles.<br><br>1 jour = 4 secondes, même jeu fermé. Le panel 🛠️ est en haut à droite.</p><button class="btn g" id="x" style="width:100%">C'est parti !</button>`,()=>{ $("x").onclick=closePop; }),300);
 /* ---------- 🗑️ Réinitialiser la partie ---------- */
 function askReset(){ popup(`<h3>🗑️ Réinitialiser ta partie ?</h3><p>Tout sera effacé : <b>argent, business, investissements, applis, abonnés, jeux Bloxy, prestige…</b> sur cet appareil et dans la sauvegarde en ligne.</p><p class="dn"><b>⚠️ Impossible de revenir en arrière.</b></p><p class="hint">Pour confirmer, écris <b>RESET</b> :</p><input class="in" id="rsv" placeholder="RESET" autocapitalize="characters"><div class="row" style="margin-top:12px;gap:8px"><button class="btn gh" id="rsn" style="flex:1">Annuler</button><button class="btn r" id="rsy" style="flex:1" disabled>🗑️ Tout effacer</button></div>`,()=>{
   $("rsv").oninput=()=>{ $("rsy").disabled=$("rsv").value.trim().toUpperCase()!=="RESET"; };
