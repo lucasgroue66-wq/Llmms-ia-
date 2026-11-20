@@ -135,6 +135,41 @@ globalThis.fetch = async (url, opts) => {
     return r2;
   } catch { return r; }
 };
+// ---------- Limite de messages par personne et par jour ----------
+// DAILY_LIMIT : messages par jour et par personne (30 par défaut, 0 = pas de limite)
+// OWNER_EMAILS : e-mails illimités (le propriétaire), séparés par des virgules
+// Compteur fiable : base Upstash/Vercel KV (KV_REST_API_URL + KV_REST_API_TOKEN, ou UPSTASH_REDIS_REST_URL + UPSTASH_REDIS_REST_TOKEN).
+// Sans base : compteur en mémoire (approximatif, remis à zéro quand le serveur redémarre).
+const memCount = new Map();
+async function bumpCount(key) {
+  const url = process.env.KV_REST_API_URL || process.env.UPSTASH_REDIS_REST_URL;
+  const tok = process.env.KV_REST_API_TOKEN || process.env.UPSTASH_REDIS_REST_TOKEN;
+  if (url && tok) {
+    try {
+      const r = await realFetch(`${url.replace(/\/$/, "")}/pipeline`, { method: "POST", headers: { Authorization: `Bearer ${tok}`, "Content-Type": "application/json" }, body: JSON.stringify([["INCR", key], ["EXPIRE", key, 172800]]) });
+      const j = await r.json(); const n = Number(j?.[0]?.result); if (Number.isFinite(n)) return n;
+    } catch {}
+  }
+  const n = (memCount.get(key) || 0) + 1; memCount.set(key, n);
+  if (memCount.size > 5000) memCount.clear();
+  return n;
+}
+async function dailyLimit(req, body, email) {
+  const max = Number(process.env.DAILY_LIMIT ?? 30);
+  if (!max) return null;
+  const owners = String(process.env.OWNER_EMAILS || "").split(",").map(x => x.trim().toLowerCase()).filter(Boolean);
+  if (email && owners.includes(String(email).toLowerCase())) return null;
+  // On ne compte que les vrais messages de l'utilisateur (pas les étapes internes : relecture, plan, outils…)
+  const mode = body.mode || "chat";
+  if (/^auth_/.test(mode) || ["review", "plan", "tool"].includes(mode)) return null;
+  const last = (body.messages || [])[body.messages?.length - 1];
+  if (!last || last.role !== "user" || body.light === "auto") return null;
+  const id = email || String(req.headers["x-forwarded-for"] || req.socket?.remoteAddress || "anon").split(",")[0].trim();
+  const day = new Date().toLocaleDateString("fr-CA", { timeZone: "Europe/Paris" });
+  const n = await bumpCount(`llmms:lim:${day}:${id}`);
+  if (n > max) return `Tu as utilisé tes ${max} messages gratuits d'aujourd'hui sur llmms ia 🙂 Ça revient demain matin !`;
+  return null;
+}
 let mods = null, loadErr = null;
 async function load() {
   if (mods || loadErr) return;
@@ -162,7 +197,10 @@ export default async function handler(req, res) {
     const sessionHeader = req.headers["x-llmms-session"];
     const auth = await handleAuth(body || {}, env, sessionHeader);
     if (auth) { res.status(auth.status).json(auth.json); return; }
-    if (authEnabled(env) && !(await checkSession(sessionHeader, env))) { res.status(401).json({ error: "login" }); return; }
+    const who = authEnabled(env) ? await checkSession(sessionHeader, env) : null;
+    if (authEnabled(env) && !who) { res.status(401).json({ error: "login" }); return; }
+    const lim = await dailyLimit(req, body || {}, who);
+    if (lim) { res.status(429).json({ error: lim }); return; }
 
     let out;
     try { out = await startChat(body || {}, env); }
