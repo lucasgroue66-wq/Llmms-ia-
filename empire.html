@@ -645,11 +645,11 @@ function animPost(p){ const el=document.querySelector(`[data-post="${p.id}"]`); 
 /* 🔴 LIVE VidTube */
 function startLive(){ const A=P(), V=A.vid; if(V.lcd===E.day) return toast("Tu as déjà fait un live aujourd'hui");
   const ov=document.createElement("div"); ov.style.cssText="position:fixed;inset:0;z-index:80;background:#05060a;display:flex;flex-direction:column";
-  ov.innerHTML=`<div style="flex:1;position:relative;overflow:hidden;background:radial-gradient(circle at 50% 35%,#3b0764,#05060a 70%)"><div style="position:absolute;top:14px;left:14px;display:flex;gap:8px;align-items:center"><span style="background:#ef4444;padding:4px 10px;border-radius:8px;font-weight:900">🔴 EN DIRECT</span><span class="chip">👁️ <b id="lv">0</b></span><span class="chip">⏱ <b id="lt">0:00</b></span></div>
+  ov.innerHTML=`<div style="flex:1;position:relative;overflow:hidden;background:radial-gradient(circle at 50% 35%,#3b0764,#05060a 70%)"><div style="position:absolute;top:14px;left:14px;display:flex;gap:8px;align-items:center"><span style="background:#ef4444;padding:4px 10px;border-radius:8px;font-weight:900">🔴 EN DIRECT</span><span class="chip">👁️ <b id="lv">0</b></span><span class="chip">⏱ <b id="lt">0:00</b></span></div><button class="btn r" id="lcut" style="position:absolute;top:12px;right:12px;padding:8px 12px">✂️ Couper</button>
   <div style="position:absolute;top:34%;left:0;right:0;text-align:center;font-size:90px" id="lav">🧑‍💻</div><div style="position:absolute;top:56%;left:0;right:0;text-align:center;font-weight:900;font-size:20px" id="ltt"></div>
   <div id="ldon" style="position:absolute;top:22%;left:0;right:0;text-align:center"></div>
   <div id="lchat" style="position:absolute;left:10px;right:10px;bottom:10px;height:34%;overflow:hidden;display:flex;flex-direction:column;justify-content:flex-end;gap:4px;font-size:14px"></div></div>
-  <div style="padding:10px;display:flex;gap:8px;background:#0a0d14"><button class="btn gh" id="lhi">👋 Dire bonjour</button><button class="btn gh" id="lpr">📣 Parler de mes projets</button><button class="btn r" id="lend" style="margin-left:auto">Terminer</button></div>`;
+  <div style="padding:10px 10px 16px;display:flex;flex-wrap:wrap;gap:8px;background:#0a0d14"><button class="btn gh" id="lhi" style="flex:1">👋 Dire bonjour</button><button class="btn gh" id="lpr" style="flex:1">📣 Mes projets</button><button class="btn r" id="lend" style="width:100%;font-size:18px;padding:14px">✂️ COUPER LE LIVE</button></div>`;
   document.body.appendChild(ov);
   const title=pick(["Je joue à mon jeu Bloxy en live 🔥","On parle business et argent 💸","Ouverture de packs en direct 🎁","Je code une IA en live 🤖","Q&R : comment je suis devenu riche"]); ov.querySelector("#ltt").textContent=title;
   let viewers=0, peak=0, don=0, newSub=0, sec=0, hype=1; const base=Math.max(15,V.subs*rnd(.02,.06)+rnd(10,60)*vq());
@@ -664,7 +664,7 @@ function startLive(){ const A=P(), V=A.vid; if(V.lcd===E.day) return toast("Tu a
   ov.querySelector("#lpr").onclick=()=>{ const g=A.blox.find(x=>x.live); chat("⭐ TOI",g?`Allez jouer à mon jeu « ${g.n} » sur Bloxy !`:"Abonnez-vous et activez la cloche 🔔","#fbbf24"); if(g){ g.pl+=Math.round(viewers*.03); g.vis+=Math.round(viewers*.3); } hype*=1.1; };
   let done=false; function end(){ if(done) return; done=true; clearInterval(iv); const ads=peak*sec/60*.02; V.subs+=newSub; V.lcd=E.day; E.cash+=don+ads; save(); head(); ov.remove();
     popup(`<h3>🔴 Live terminé</h3><div class="kpi" style="margin:10px 0"><div><span>Pic de spectateurs</span><b>${peak.toLocaleString("fr-FR")}</b></div><div><span>Durée</span><b>${Math.floor(sec/60)} min ${sec%60} s</b></div><div><span>💸 Dons</span><b class="up">${fmt(don)}</b></div><div><span>Pub</span><b class="up">${fmt(ads)}</b></div><div><span>Nouveaux abonnés</span><b>+${newSub.toLocaleString("fr-FR")}</b></div></div><button class="btn g" id="x" style="width:100%">Super !</button>`,()=>{ $("x").onclick=closePop; }); }
-  ov.querySelector("#lend").onclick=end; }
+  ov.querySelector("#lend").onclick=end; ov.querySelector("#lcut").onclick=end; }
 
 /* ---------- DÉMARRAGE ---------- */
 if(!E.market.length) refreshMarket();
