@@ -88,14 +88,22 @@ async function freeImage(b, opts) {
     const st = (STYLES.find(([re]) => re.test(lastUser)) || [])[1] || "";
     let prompt = await imagePrompt(b.messages || [], opts);
     if (st) prompt = `${st}. ${prompt}. Style: ${st}`;
-    const base = process.env.POLLINATIONS_TOKEN ? "https://gen.pollinations.ai/image/" : "https://image.pollinations.ai/prompt/";
-    const url = `${base}${encodeURIComponent(prompt)}?width=1024&height=1024&nologo=true&enhance=false&model=${process.env.POLLINATIONS_MODEL || "flux"}&seed=${Math.floor(Math.random() * 1e9)}`;
+    // Avec une clé : modèles plus forts d'abord (zimage, klein-large, imagen-4), sinon flux
+    const tok = process.env.POLLINATIONS_TOKEN;
+    const models = (process.env.POLLINATIONS_MODEL || (tok ? "zimage,klein-large,imagen-4,flux" : "flux")).split(",").map(x => x.trim()).filter(Boolean);
+    const base = tok ? "https://gen.pollinations.ai/image/" : "https://image.pollinations.ai/prompt/";
     let img = null;
-    for (let k = 0; k < 2 && !img; k++) {
-      const tok = process.env.POLLINATIONS_TOKEN;
-      const r = await realFetch(url, { signal: opts?.signal, headers: tok ? { Authorization: `Bearer ${tok}` } : {} });
-      if (r.ok && /^image\//.test(r.headers.get("content-type") || "")) img = r;
-      else await new Promise(res => setTimeout(res, 4000));
+    for (const model of models) {
+      if (img) break;
+      const url = `${base}${encodeURIComponent(prompt)}?width=1024&height=1024&nologo=true&enhance=false&model=${model}&seed=${Math.floor(Math.random() * 1e9)}`;
+      for (let k = 0; k < 2 && !img; k++) {
+        try {
+          const r = await realFetch(url, { signal: opts?.signal, headers: tok ? { Authorization: `Bearer ${tok}` } : {} });
+          if (r.ok && /^image\//.test(r.headers.get("content-type") || "")) { img = r; break; }
+          if (r.status !== 429 && r.status < 500) break; // modèle refusé ou non dispo : on passe au suivant
+        } catch {}
+        await new Promise(res => setTimeout(res, 3000));
+      }
     }
     if (!img) return null;
     const type = img.headers.get("content-type") || "image/jpeg";
