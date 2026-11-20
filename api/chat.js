@@ -88,7 +88,8 @@ async function freeImage(b, opts) {
     const st = (STYLES.find(([re]) => re.test(lastUser)) || [])[1] || "";
     let prompt = await imagePrompt(b.messages || [], opts);
     if (st) prompt = `${st}. ${prompt}. Style: ${st}`;
-    const url = `https://image.pollinations.ai/prompt/${encodeURIComponent(prompt)}?width=1024&height=1024&nologo=true&enhance=false&model=${process.env.POLLINATIONS_MODEL || "flux"}&seed=${Math.floor(Math.random() * 1e9)}`;
+    const base = process.env.POLLINATIONS_TOKEN ? "https://gen.pollinations.ai/image/" : "https://image.pollinations.ai/prompt/";
+    const url = `${base}${encodeURIComponent(prompt)}?width=1024&height=1024&nologo=true&enhance=false&model=${process.env.POLLINATIONS_MODEL || "flux"}&seed=${Math.floor(Math.random() * 1e9)}`;
     let img = null;
     for (let k = 0; k < 2 && !img; k++) {
       const tok = process.env.POLLINATIONS_TOKEN;
