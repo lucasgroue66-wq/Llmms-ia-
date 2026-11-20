@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>LARPVERSE — le simulateur de larp de llmms ia</title>
+<meta name="description" content="LARPVERSE : farm ton aura, deviens une légende et débloque des titres. Un jeu créé avec llmms ia.">
+<link rel="icon" href="/favicon.svg">
+<style>
+:root{--bg:#0d0b1a;--card:#17142b;--line:#2b2650;--txt:#f3f0ff;--dim:#a49dcc;--a:#ff5ec4;--b:#7c5cff;--c:#2ee6d6;--gold:#ffd34d}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;height:100%;background:radial-gradient(900px 600px at 20% -10%,#3a1f6e 0%,transparent 60%),radial-gradient(800px 600px at 110% 10%,#5a1240 0%,transparent 55%),var(--bg);color:var(--txt);font:15px/1.4 system-ui,-apple-system,Segoe UI,Roboto,sans-serif;overflow:hidden;user-select:none}
+button{font:inherit;color:inherit;cursor:pointer;border:0}
+#app{height:100%;display:grid;grid-template-rows:auto 1fr auto}
+header{display:flex;align-items:center;gap:10px;padding:10px 14px;background:rgba(13,11,26,.75);backdrop-filter:blur(8px);border-bottom:1px solid var(--line)}
+.logo{font-weight:900;letter-spacing:.04em;font-size:20px;background:linear-gradient(90deg,var(--a),var(--b),var(--c));-webkit-background-clip:text;background-clip:text;color:transparent}
+.stat{display:flex;align-items:center;gap:6px;background:var(--card);border:1px solid var(--line);border-radius:999px;padding:6px 12px;font-weight:700}
+.grow{flex:1}
+#key{background:var(--card);border:1px solid var(--line);border-radius:999px;width:38px;height:38px;font-size:17px}
+main{overflow:auto;padding:14px;display:grid;gap:14px;grid-template-columns:minmax(0,1.15fr) minmax(0,1fr);align-content:start}
+@media (max-width:820px){main{grid-template-columns:1fr}}
+.card{background:linear-gradient(180deg,rgba(255,255,255,.03),transparent),var(--card);border:1px solid var(--line);border-radius:18px;padding:14px}
+.card h2{margin:0 0 10px;font-size:14px;letter-spacing:.08em;text-transform:uppercase;color:var(--dim)}
+#stage{position:relative;height:360px;display:grid;place-items:center;overflow:hidden;border-radius:14px;background:radial-gradient(circle at 50% 60%,rgba(124,92,255,.25),transparent 60%)}
+#avatar{position:relative;width:170px;height:240px;transition:transform .08s}
+#avatar:active{transform:scale(.94)}
+#aura{position:absolute;inset:-40px;border-radius:50%;filter:blur(18px);opacity:.7;animation:pulse 2s infinite ease-in-out}
+@keyframes pulse{50%{transform:scale(1.12);opacity:1}}
+.part{position:absolute;border-radius:8px;box-shadow:inset 0 -8px 0 rgba(0,0,0,.18)}
+#tap{position:absolute;bottom:10px;left:50%;transform:translateX(-50%);font-size:13px;color:var(--dim)}
+.float{position:absolute;font-weight:900;pointer-events:none;animation:up 1s ease-out forwards;text-shadow:0 2px 8px #000}
+@keyframes up{to{transform:translateY(-90px) scale(1.2);opacity:0}}
+#title{display:inline-flex;align-items:center;gap:6px;font-weight:800;font-size:18px}
+.badge{display:inline-grid;place-items:center;width:22px;height:22px;border-radius:7px;background:conic-gradient(var(--gold),#ff9f1c,var(--gold));color:#2a1a00;font-size:13px;box-shadow:0 0 12px rgba(255,211,77,.6)}
+.row{display:flex;gap:10px;align-items:center}
+.shop{display:grid;gap:8px}
+.item{display:flex;align-items:center;gap:10px;background:#1d1937;border:1px solid var(--line);border-radius:14px;padding:10px;text-align:left;width:100%}
+.item .ic{font-size:24px;width:40px;height:40px;display:grid;place-items:center;border-radius:12px;background:#28224d}
+.item .nm{font-weight:700}.item .ds{font-size:12.5px;color:var(--dim)}
+.item .pr{margin-left:auto;font-weight:800;white-space:nowrap}
+.item[disabled]{opacity:.45}
+.lb{display:grid;gap:6px}
+.lb div{display:flex;gap:10px;align-items:center;padding:7px 10px;border-radius:10px;background:#1d1937}
+.lb .me{outline:2px solid var(--a)}
+.lb b{width:24px;color:var(--dim)}
+.lb span:last-child{margin-left:auto;font-weight:700}
+footer{display:flex;gap:8px;padding:10px 14px;border-top:1px solid var(--line);background:rgba(13,11,26,.75)}
+footer button{flex:1;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:10px;font-weight:700}
+footer button.on{background:linear-gradient(90deg,var(--a),var(--b));border-color:transparent}
+#toast{position:fixed;left:50%;top:70px;transform:translateX(-50%) scale(.9);opacity:0;background:linear-gradient(90deg,var(--a),var(--b));padding:12px 18px;border-radius:14px;font-weight:800;transition:.25s;z-index:9;text-align:center;box-shadow:0 10px 40px -10px var(--a)}
+#toast.show{opacity:1;transform:translateX(-50%) scale(1)}
+#codes{position:fixed;inset:0;background:rgba(0,0,0,.6);display:none;place-items:center;z-index:8}
+#codes.open{display:grid}
+#codes .card{width:min(360px,90vw)}
+#codes input{width:100%;padding:12px;border-radius:12px;border:1px solid var(--line);background:#0f0d20;color:var(--txt);font-size:18px;text-transform:uppercase;letter-spacing:.1em;text-align:center}
+#codes .row button{flex:1;padding:10px;border-radius:12px;background:#28224d;font-weight:700}
+#codes .row button.go{background:linear-gradient(90deg,var(--a),var(--b))}
+.pcard{display:flex;gap:14px;align-items:center}
+.mini{width:64px;height:64px;border-radius:18px;background:linear-gradient(135deg,var(--a),var(--b));display:grid;place-items:center;font-size:30px}
+.pc-name{font-size:20px;font-weight:900}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+.chip{background:#28224d;border-radius:999px;padding:5px 10px;font-size:12.5px}
+.gen{background:linear-gradient(90deg,var(--a),var(--b));border-radius:12px;padding:10px 14px;font-weight:800}
+.notice{font-size:12px;color:var(--dim);margin-top:8px}
+.hide{display:none}
+</style>
+</head>
+<body>
+<div id="app">
+  <header>
+    <span class="logo">LARPVERSE</span>
+    <span class="grow"></span>
+    <span class="stat">💎 <span id="gems">0</span></span>
+    <span class="stat">✨ <span id="auraN">0</span></span>
+    <button id="key" title="Codes de triche">🔑</button>
+  </header>
+  <main id="pg-play">
+    <section class="card">
+      <div class="row" style="justify-content:space-between"><span id="title"></span><span class="stat" style="font-size:13px">+<span id="perTap">1</span> / tap · +<span id="perSec">0</span>/s</span></div>
+      <div id="stage"><div id="avatar"><div id="aura"></div></div><span id="tap">Tape sur ton perso pour farmer l'aura</span></div>
+    </section>
+    <section class="card">
+      <h2>Boutique</h2>
+      <div class="shop" id="shop"></div>
+    </section>
+  </main>
+  <main id="pg-rank" class="hide">
+    <section class="card"><h2>Classement des légendes</h2><div class="lb" id="lb"></div></section>
+    <section class="card"><h2>Titres</h2><div class="shop" id="titles"></div></section>
+  </main>
+  <main id="pg-me" class="hide">
+    <section class="card">
+      <h2>Mon profil</h2>
+      <div class="pcard"><div class="mini" id="miniIc">😎</div><div><div class="pc-name"><span id="pname">Joueur</span> <span id="pbadge"></span></div><div style="color:var(--dim)" id="ptitle"></div></div></div>
+      <div class="chips" id="pchips"></div>
+      <div class="row" style="margin-top:12px;gap:8px"><button class="gen" id="rename">✏️ Changer de pseudo</button><button class="gen" id="reset" style="background:#28224d">↺ Recommencer</button></div>
+      <p class="notice">LARPVERSE est un jeu : les 💎 et l'✨ n'ont aucune valeur réelle et ne viennent d'aucune autre plateforme.</p>
+    </section>
+    <section class="card"><h2>Succès</h2><div class="chips" id="ach"></div></section>
+  </main>
+  <footer><button data-pg="play" class="on">🎮 Jouer</button><button data-pg="rank">🏆 Classement</button><button data-pg="me">👤 Profil</button></footer>
+</div>
+<div id="toast"></div>
+<div id="codes"><div class="card"><h2>🔑 Code de triche</h2><input id="codeIn" placeholder="TAPE UN CODE" maxlength="16" autocomplete="off"><div class="row" style="margin-top:10px;gap:8px"><button id="codeX">Fermer</button><button class="go" id="codeOk">Valider</button></div><p class="notice">Indice : LARP, AURA, LEGENDE, TURBO, GEANT, ARCENCIEL…</p></div></div>
+<script>
+(function(){
+const $=id=>document.getElementById(id);
+const fmt=n=>{n=Math.floor(n);const u=["","k","M","Md","T","Qa","Qi","Sx"];let i=0;while(Math.abs(n)>=1000&&i<u.length-1){n/=1000;i++;}return (i?n.toFixed(n<10?2:n<100?1:0):n)+u[i];};
+const save=()=>{try{localStorage.setItem("larpverse",JSON.stringify(S));}catch{}};
+const DEF={gems:0,aura:0,taps:0,name:"Joueur",items:{},titles:["Débutant"],title:"Débutant",badge:false,giant:false,rainbow:false,turboUntil:0,codes:[]};
+let S=DEF; try{S=Object.assign({},DEF,JSON.parse(localStorage.getItem("larpverse")||"{}"));}catch{}
+const ITEMS=[
+ {id:"chain",ic:"⛓️",nm:"Chaîne en or",ds:"+1 aura par tap",base:15,tap:1},
+ {id:"shades",ic:"🕶️",nm:"Lunettes de star",ds:"+3 aura par tap",base:120,tap:3},
+ {id:"fans",ic:"📣",nm:"Fan club",ds:"+2 aura par seconde",base:250,sec:2},
+ {id:"drip",ic:"🧥",nm:"Drip légendaire",ds:"+12 aura par tap",base:1500,tap:12},
+ {id:"studio",ic:"🎬",nm:"Équipe de tournage",ds:"+25 aura par seconde",base:6000,sec:25},
+ {id:"jet",ic:"🛩️",nm:"Jet privé (en carton)",ds:"+150 aura par seconde",base:60000,sec:150},
+ {id:"aura9",ic:"🌌",nm:"Aura cosmique",ds:"+900 aura par tap",base:400000,tap:900}
+];
+const TITLES=[["Débutant",0],["Stylé",500],["Influenceur",5000],["Icône",50000],["Star mondiale",500000],["Légende vivante",5e6],["Dieu du larp",5e7]];
+const NPC=["NeoFlex","AuraKing","Drip_Lord","Mr.Swag","Ziggy777","Larpinator","PixelQueen","TheGoat","Sigma_Max"];
+const cnt=id=>S.items[id]||0, price=it=>Math.ceil(it.base*Math.pow(1.17,cnt(it.id)));
+const perTap=()=>Math.round((1+ITEMS.reduce((a,it)=>a+(it.tap||0)*cnt(it.id),0))*(Date.now()<S.turboUntil?2:1));
+const perSec=()=>ITEMS.reduce((a,it)=>a+(it.sec||0)*cnt(it.id),0)*(Date.now()<S.turboUntil?2:1);
+let AC=null; const beep=(f,d=.08,t="triangle",v=.08)=>{try{AC=AC||new (window.AudioContext||window.webkitAudioContext)();const o=AC.createOscillator(),g=AC.createGain();o.type=t;o.frequency.value=f;g.gain.value=v;g.gain.exponentialRampToValueAtTime(.0001,AC.currentTime+d);o.connect(g).connect(AC.destination);o.start();o.stop(AC.currentTime+d);}catch{}};
+function toast(t){const e=$("toast");e.innerHTML=t;e.classList.add("show");clearTimeout(toast.t);toast.t=setTimeout(()=>e.classList.remove("show"),1800);}
+// Avatar original en blocs (perso inventé)
+function drawAvatar(){
+  const a=$("avatar"); a.querySelectorAll(".part").forEach(e=>e.remove());
+  const sc=S.giant?1.25:1; a.style.transform=`scale(${sc})`;
+  const skin="#f2c79a", shirt=S.rainbow?"linear-gradient(90deg,#ff5e5e,#ffd34d,#5eff8f,#5ec8ff,#b25eff)":(cnt("drip")?"linear-gradient(135deg,#1b1b1b,#444)":"#4f7cff"), pants="#2b2d42";
+  const P=(x,y,w,h,bg,extra="")=>{const d=document.createElement("div");d.className="part";d.style.cssText=`left:${x}px;top:${y}px;width:${w}px;height:${h}px;background:${bg};${extra}`;a.appendChild(d);return d;};
+  P(55,8,60,56,skin); const eyes=cnt("shades")?P(60,26,50,12,"#111","border-radius:6px"):null;
+  if(!eyes){P(68,28,8,8,"#222","border-radius:50%");P(94,28,8,8,"#222","border-radius:50%");}
+  P(72,46,26,5,"#a0522d","border-radius:4px");
+  P(45,68,80,80,shirt); P(15,70,28,72,shirt); P(127,70,28,72,shirt);
+  P(15,140,28,14,skin); P(127,140,28,14,skin);
+  P(47,150,36,80,pants); P(87,150,36,80,pants);
+  if(cnt("chain")) P(62,70,46,10,"linear-gradient(90deg,#ffd34d,#fff2a8,#ffd34d)","border-radius:10px;box-shadow:0 0 10px #ffd34d");
+  const hue=S.rainbow?"conic-gradient(red,yellow,lime,cyan,blue,magenta,red)":S.aura>5e6?"radial-gradient(#fff,#ffd34d,transparent 70%)":S.aura>50000?"radial-gradient(#ff5ec4,#7c5cff,transparent 70%)":"radial-gradient(#2ee6d6,transparent 70%)";
+  $("aura").style.background=hue;
+}
+function ui(){
+  $("gems").textContent=fmt(S.gems); $("auraN").textContent=fmt(S.aura); $("perTap").textContent=fmt(perTap()); $("perSec").textContent=fmt(perSec());
+  $("title").innerHTML=`${esc(S.title)}${S.badge?' <span class="badge">★</span>':""}`;
+  const sh=$("shop"); sh.innerHTML=ITEMS.map(it=>`<button class="item" data-buy="${it.id}" ${S.gems<price(it)?"disabled":""}><span class="ic">${it.ic}</span><span><div class="nm">${it.nm} <span style="color:var(--dim);font-weight:500">x${cnt(it.id)}</span></div><div class="ds">${it.ds}</div></span><span class="pr">💎 ${fmt(price(it))}</span></button>`).join("");
+  sh.querySelectorAll("[data-buy]").forEach(b=>b.onclick=()=>buy(b.dataset.buy));
+}
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+function buy(id){const it=ITEMS.find(x=>x.id===id),p=price(it); if(S.gems<p) return; S.gems-=p; S.items[id]=cnt(id)+1; beep(660,.12); beep(990,.12); toast(`${it.ic} ${it.nm} acheté !`); drawAvatar(); ui(); save();}
+function checkTitles(){ for(const [t,need] of TITLES){ if(S.aura>=need&&!S.titles.includes(t)){ S.titles.push(t); S.title=t; toast(`🏅 Nouveau titre : <b>${t}</b>`); beep(523,.15);beep(784,.25); drawAvatar(); } } }
+function gain(n,x,y){ S.aura+=n; S.gems+=n; checkTitles(); if(x!=null){ const f=document.createElement("div"); f.className="float"; f.textContent="+"+fmt(n)+" ✨"; f.style.left=(x-30)+"px"; f.style.top=(y-20)+"px"; f.style.color=["#ff5ec4","#2ee6d6","#ffd34d"][S.taps%3]; $("stage").appendChild(f); setTimeout(()=>f.remove(),1000);} }
+$("avatar").addEventListener("pointerdown",e=>{ const r=$("stage").getBoundingClientRect(); S.taps++; gain(perTap(),e.clientX-r.left,e.clientY-r.top); beep(300+Math.random()*300,.05); ui(); });
+let last=Date.now(); setInterval(()=>{ const now=Date.now(),dt=(now-last)/1000; last=now; const g=perSec()*dt; if(g>0){ S.aura+=g; S.gems+=g; checkTitles(); } ui(); },250);
+setInterval(save,3000);
+// Codes de triche
+const CODES={
+  LARP:()=>{S.gems+=1e9;S.aura+=1e9;return "💎 +1 milliard ! Larp activé 😎";},
+  AURA:()=>{S.aura*=10;S.aura+=1000;return "✨ Aura x10 !";},
+  LEGENDE:()=>{S.badge=true;S.title="Légende vivante";if(!S.titles.includes("Légende vivante"))S.titles.push("Légende vivante");return "★ Badge de légende débloqué !";},
+  TURBO:()=>{S.turboUntil=Date.now()+60000;return "⚡ Tout x2 pendant 60 s !";},
+  GEANT:()=>{S.giant=!S.giant;drawAvatar();return S.giant?"🦍 Mode géant !":"Taille normale";},
+  ARCENCIEL:()=>{S.rainbow=!S.rainbow;drawAvatar();return S.rainbow?"🌈 Mode arc-en-ciel !":"Arc-en-ciel désactivé";},
+  TOUT:()=>{ITEMS.forEach(it=>S.items[it.id]=cnt(it.id)+10);drawAvatar();return "🛍️ +10 de chaque objet !";},
+  LLMMS:()=>{S.gems+=777777;return "✨ Cadeau de llmms ia : 777 777 💎";}
+};
+function useCode(c){ c=String(c||"").trim().toUpperCase(); const f=CODES[c]; if(!f){ toast("❌ Code inconnu"); beep(150,.2,"sawtooth",.05); return false; } toast("🔑 "+f()); beep(523,.1);beep(659,.1);beep(784,.2); if(!S.codes.includes(c)) S.codes.push(c); checkTitles(); ui(); save(); return true; }
+$("key").onclick=()=>{ $("codes").classList.add("open"); setTimeout(()=>$("codeIn").focus(),50); };
+$("codeX").onclick=()=>$("codes").classList.remove("open");
+$("codeOk").onclick=()=>{ if(useCode($("codeIn").value)){ $("codeIn").value=""; $("codes").classList.remove("open"); } };
+$("codeIn").addEventListener("keydown",e=>{ if(e.key==="Enter") $("codeOk").click(); });
+let typed=""; addEventListener("keydown",e=>{ if(document.activeElement===$("codeIn")||e.key.length!==1) return; typed=(typed+e.key.toUpperCase()).slice(-12); for(const c in CODES) if(typed.endsWith(c)){ useCode(c); typed=""; } });
+// Pages
+document.querySelectorAll("footer button").forEach(b=>b.onclick=()=>{ document.querySelectorAll("footer button").forEach(x=>x.classList.toggle("on",x===b)); ["play","rank","me"].forEach(p=>$("pg-"+p).classList.toggle("hide",p!==b.dataset.pg)); if(b.dataset.pg==="rank") rank(); if(b.dataset.pg==="me") me(); });
+function rank(){ const base=[5e8,1.2e8,4e7,9e6,2.5e6,600000,90000,12000,800]; const list=NPC.map((n,i)=>({n,v:base[i]*(1+((S.taps+i)%7)/50)})).concat([{n:S.name,v:S.aura,me:1}]).sort((a,b)=>b.v-a.v);
+  $("lb").innerHTML=list.map((p,i)=>`<div class="${p.me?"me":""}"><b>#${i+1}</b><span>${["👑","🥈","🥉"][i]||"🙂"} ${esc(p.n)}${p.me&&S.badge?' <span class="badge">★</span>':""}</span><span>✨ ${fmt(p.v)}</span></div>`).join("");
+  $("titles").innerHTML=TITLES.map(([t,need])=>`<button class="item" data-t="${esc(t)}" ${S.titles.includes(t)?"":"disabled"}><span class="ic">${S.title===t?"✅":"🏅"}</span><span><div class="nm">${t}</div><div class="ds">${need?"à "+fmt(need)+" ✨":"de base"}</div></span></button>`).join("");
+  $("titles").querySelectorAll("[data-t]").forEach(b=>b.onclick=()=>{ S.title=b.dataset.t; save(); ui(); rank(); });
+}
+function me(){ $("pname").textContent=S.name; $("pbadge").innerHTML=S.badge?'<span class="badge">★</span>':""; $("ptitle").textContent=S.title+" · ✨ "+fmt(S.aura);
+  $("miniIc").textContent=S.rainbow?"🌈":S.giant?"🦍":cnt("shades")?"😎":"🙂";
+  $("pchips").innerHTML=ITEMS.filter(it=>cnt(it.id)).map(it=>`<span class="chip">${it.ic} ${it.nm} x${cnt(it.id)}</span>`).join("")||'<span class="chip">Aucun objet pour l\'instant</span>';
+  const A=[["👆 100 taps",S.taps>=100],["👆 1000 taps",S.taps>=1000],["✨ 1M d'aura",S.aura>=1e6],["🔑 Premier code",S.codes.length>0],["🔑 Tous les codes",S.codes.length>=Object.keys(CODES).length],["★ Légende",S.badge]];
+  $("ach").innerHTML=A.map(([t,ok])=>`<span class="chip" style="${ok?"background:linear-gradient(90deg,#ff5ec4,#7c5cff)":"opacity:.45"}">${t}</span>`).join(""); }
+$("rename").onclick=()=>{ const box=$("codes"); /* réutilise la fenêtre pour le pseudo */
+  const n=window.__n||""; $("codeIn").value=""; $("codeIn").placeholder="TON PSEUDO"; box.querySelector("h2").textContent="✏️ Ton pseudo"; box.classList.add("open");
+  $("codeOk").onclick=()=>{ const v=$("codeIn").value.trim().slice(0,16); if(v){ S.name=v; save(); me(); } box.classList.remove("open"); $("codeIn").placeholder="TAPE UN CODE"; box.querySelector("h2").textContent="🔑 Code de triche"; $("codeOk").onclick=()=>{ if(useCode($("codeIn").value)){ $("codeIn").value=""; box.classList.remove("open"); } }; }; };
+$("reset").onclick=()=>{ if(S.__confirm){ S=Object.assign({},DEF,{items:{},titles:["Débutant"],codes:[]}); save(); drawAvatar(); ui(); me(); toast("Partie recommencée"); } else { S.__confirm=true; toast("Appuie encore pour tout effacer"); setTimeout(()=>delete S.__confirm,3000); } };
+drawAvatar(); ui();
+})();
+</script>
+</body>
+</html>

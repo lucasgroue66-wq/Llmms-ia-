@@ -867,8 +867,8 @@ function render(){
     if(mode==="chat"||mode==="dev"){ const box=document.createElement("div"); box.className="ideas";
       box.innerHTML=`<p class="ih">Pas d'idée ? Crée en un clic</p><div class="ig">${IDEAS.map((x,i)=>`<button type="button" data-idea="${i}"><span class="em">${x[0]}</span><span>${esc(x[1])}</span></button>`).join("")}</div>`;
       thread.querySelector(".empty").appendChild(box);
-      box.querySelectorAll("[data-idea]").forEach(b=>b.onclick=()=>{ let it=IDEAS[+b.dataset.idea]; if(it[2]==="?") it=IDEAS[Math.floor(Math.random()*(IDEAS.length-1))];
-        if(it[3]==="roblox"){ tier="studio"; modelUI(); save(); } else if(tier==="studio"){ tier="5.5"; modelUI(); save(); }
+      box.querySelectorAll("[data-idea]").forEach(b=>b.onclick=()=>{ let it=IDEAS[+b.dataset.idea]; if(it[2]==="?"){ const pool=IDEAS.filter(x=>x[2]!=="?"&&x[3]!=="link"); it=pool[Math.floor(Math.random()*pool.length)]; }
+        if(it[3]==="link"){ location.href=it[2]; return; } if(it[3]==="roblox"){ tier="studio"; modelUI(); save(); } else if(tier==="studio"){ tier="5.5"; modelUI(); save(); }
         sendText(it[2]); }); }
     return;
   }
@@ -1431,6 +1431,7 @@ const IDEAS=[
   ["🎬","Intro style GTA","Fais-moi une cinématique d'intro style GTA 6 : ville au coucher du soleil, palmiers, néons, plans de caméra, titres stylés et musique d'ambiance générée."],
   ["🧱","Obby Roblox","Crée-moi un obby complet pour Roblox Studio : 20 étapes de difficulté croissante, checkpoints sauvegardés, plateformes qui bougent, lave, sauts, classement des étapes et GUI moderne.","roblox"],
   ["🏭","Tycoon Roblox","Crée-moi un tycoon complet pour Roblox Studio : boutons d'achat, droppers, convoyeur, argent sauvegardé, rebirth, GUI moderne et effets.","roblox"],
+  ["🤑","LARPVERSE (jeu)","/larp.html","link"],
   ["🎲","Surprends-moi","?"]
 ];
 function sendText(t){ if(busy) return; input.value=t; grow(); send(); }
