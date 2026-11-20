@@ -89,7 +89,7 @@ const pct=x=>(x>=0?"+":"")+(x*100).toFixed(2).replace(".",",")+" %";
 const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
 
 /* ================= CATALOGUES (tout est inventé) ================= */
-const CLICK=[1,2,4,7,12,20,35,60,100,160];            // revenu par clic selon le niveau
+const CLICK=[1,2,4,7,12,20,35,60,100,160,250,400,650,1000,1600,2500,4000,6500,10000,16000,25000,40000,65000,100000,160000];            // revenu par clic selon le niveau
 const CLICKGOAL=L=>Math.round(150*Math.pow(3.1,L));   // prix pour passer au niveau suivant
 const BT={
  shop:{n:"Magasin",ic:"🛒",cost:5000,mode:"out",base:80,oi:60,oc:4000,od:2,max:60,d:"Revenu garanti. Ouvre de nouvelles boutiques (ça prend du temps)."},
@@ -101,13 +101,21 @@ const BT={
  it:{n:"Entreprise IT",ic:"💻",cost:350000,mode:"it",d:"Réalise des projets. Attention : les salaires sont payés même sans projet !"},
  bank:{n:"Banque",ic:"🏦",cost:50e6,mode:"pas",r:.0085,risk:.15,d:"Revenu stable, peu risqué."},
  oil:{n:"Pétrole & gaz",ic:"🛢️",cost:200e6,mode:"pas",r:.012,risk:.55,oil:1,d:"Dépend du prix du baril : très rentable mais risqué."},
- foot:{n:"Club de football",ic:"⚽",cost:500e6,mode:"pas",r:.008,risk:.45,d:"Billetterie, maillots, droits TV… et parfois des trophées."}
+ foot:{n:"Club de football",ic:"⚽",cost:500e6,mode:"pas",r:.008,risk:.45,d:"Achète des stars, gagne des matchs et des trophées. Plus ton équipe est forte, plus le club rapporte."},
+ rest:{n:"Chaîne de restaurants",ic:"🍔",cost:60000,mode:"out",base:650,oi:500,oc:40000,od:3,max:80,d:"Revenu garanti. Ouvre de nouveaux restaurants."},
+ gym:{n:"Salles de sport",ic:"🏋️",cost:120000,mode:"out",base:1300,oi:950,oc:80000,od:4,max:60,d:"Abonnements chaque mois. Ouvre de nouvelles salles."},
+ air:{n:"Compagnie aérienne",ic:"✈️",cost:50e6,mode:"fleet",gar:3,veh:[["🛩️","Avion régional",30e6,280000,300],["✈️","Moyen-courrier",110e6,950000,400],["🛫","Long-courrier",320e6,2.7e6,500]],d:"Achète des avions et fais voler des millions de passagers."},
+ gold:{n:"Mine d'or",ic:"⛏️",cost:900e6,mode:"pas",r:.011,risk:.5,d:"Très rentable, mais la production varie beaucoup."},
+ lux:{n:"Hôtels de luxe",ic:"🏰",cost:2e9,mode:"pas",r:.0075,risk:.18,d:"Palaces dans le monde entier : revenu stable et énorme."},
+ game:{n:"Studio de jeux vidéo",ic:"🎮",cost:8e6,mode:"pas",r:.013,risk:.6,d:"Un hit peut tout changer… ou faire un flop."}
 };
 const MERGE=[["👕","Marque de vêtements",["shop","fac","ship"],3e6,.3,"Magasin + Usine + Transport"],
  ["🚘","Groupe automobile",["fac","car","taxi"],25e6,.3,"Usine + Concession + Taxis"],
  ["🌐","Empire tech & finance",["it","bank"],120e6,.35,"Entreprise IT + Banque"],
  ["⚡","Conglomérat de l'énergie",["oil","ship","btp"],1.5e9,.4,"Pétrole + Transport + BTP"],
- ["🏟️","Groupe sport & médias",["foot","it","shop"],2e9,.4,"Club de foot + IT + Magasin"]];
+ ["🏟️","Groupe sport & médias",["foot","it","shop"],2e9,.4,"Club de foot + IT + Magasin"],
+ ["🌍","Empire du voyage",["air","lux","rest"],5e9,.45,"Compagnie aérienne + Hôtels de luxe + Restaurants"],
+ ["🎬","Empire du divertissement",["game","gym","foot"],8e9,.45,"Studio de jeux + Salles de sport + Club de foot"]];
 const CARS=[["Citadine",9000],["Compacte",16000],["Berline",28000],["SUV",42000],["Sportive",85000],["Voiture de luxe",160000],["Hypercar",900000]];
 const BTPJ=["Rénovation d'appartement","Maison individuelle","Parking","Immeuble de bureaux","École","Pont","Centre commercial","Stade","Gratte-ciel","Aéroport"];
 const ITJ=["Site vitrine","Appli mobile","Boutique en ligne","Logiciel de gestion","Jeu vidéo","Plateforme cloud","IA pour hôpital","Système bancaire","Réseau social","Satellite connecté"];
@@ -126,7 +134,10 @@ const ITEMS=[["🚗 Voitures",[["🚙","Citadine",15000],["🚘","Berline sport"
  ["🖼️ NFT",[["👾","NFT pixel",3000],["🐵","NFT singe rare",400000],["🌌","NFT légendaire",12e6]]],
  ["🏝️ Îles",[["🏝️","Petite île",15e6],["🌴","Île tropicale",250e6],["🗺️","Archipel privé",2e9]]]];
 const RICH=[["Victor Ardent",420e9],["Amelia Strand",310e9],["Kenzo Hart",240e9],["Sofia Marlowe",180e9],["Liam Okoro",120e9],["Nora Velasquez",75e9],["Hugo Lenoir",40e9],["Maya Chen-Ruiz",18e9],["Oscar Blum",6e9],["Inès Fabre",1.5e9],["Tom Keller",400e6],["Léa Dumont",80e6],["Sam Rivera",12e6],["Jade Moreau",1.5e6],["Paul Girard",200000]];
-const TAX=.1; // taxe de vente sur business et immobilier
+const TAX=.1;
+const FOOTP=[["Zayn Okafor-Reyes","ATT",99],["Léo Marchetti","MIL",98],["Aurelio Vantez","ATT",97],["Kenji Dalvaro","ATT",96],["Iker Solvay","GB",96],["Kaïs Morelon","ATT",95],["Raphaël N'Gessa","DEF",95],["Dario Belcastro","MIL",94],["Ismaël Okonta","MIL",93],["Léandre Moutou","GB",93],["Sven Halvorsen","DEF",92],["Thiago Almeira","ATT",92],["Valentin Sorrel","ATT",91],["Ezio Brancati","MIL",90],["Noé Kerbrat","DEF",89],["Ibrahim Saldor","ATT",89],["Ruben Ostergaard","GB",88],["Yuto Shirakawa","MIL",88],["Lorenzo Fiamma","DEF",87],["Malick Diatta","ATT",87],["Mathis Varenne","MIL",86],["Joaquim Ferraz","DEF",86],["Paolo Ventrini","ATT",85],["Tobias Granlund","GB",85]];
+const fPrice=r=>Math.round(8e6*Math.pow(1.32,r-80)), fSal=r=>Math.round(fPrice(r)*.0006);
+function clubRating(b){ const r=(b.squad||[]).map(i=>FOOTP[i][2]).sort((x,y)=>y-x).slice(0,11); return Math.round((r.reduce((a,x)=>a+x,0)+(11-r.length)*68)/11); } // taxe de vente sur business et immobilier
 
 /* ================= ÉTAT ================= */
 const KEY="empire_mil2";
@@ -137,8 +148,18 @@ function fresh(){ const st={}, cr={}; STOCKS.forEach(s=>st[s[0]]={p:s[3],h:[s[3]
   const e={cash:300,day:1,age:22,cl:0,taps:0,tapE:0,bizE:0,invE:0,biz:[],merged:{},st,cr,re,items:{},sav:0,loan:0,hist:[300],spd:1,ts:Date.now(),log:[],best:300,boost:0,bcd:0,oil:80,mkt:0,mktT:0,inf:0,uid:1,market:[]};
   return e; }
 try{ E=JSON.parse(localStorage.getItem(KEY)||"null"); }catch{}
+if(!E){ try{ E=JSON.parse(localStorage.getItem(KEY+"_bak")||"null"); }catch{} }
 if(!E){ E=fresh(); for(let i=0;i<45;i++){ step(E.st,STOCKS); step(E.cr,CRYPTO); } }
-function save(){ E.ts=Date.now(); try{ localStorage.setItem(KEY,JSON.stringify(E)); }catch{} }
+let nSave=0;
+function save(){ E.ts=Date.now(); const j=JSON.stringify(E); try{ localStorage.setItem(KEY,j); }catch{ try{ E.hist=E.hist.slice(-40); E.log=E.log.slice(0,10); localStorage.setItem(KEY,JSON.stringify(E)); }catch{} } if(++nSave%15===0) try{ localStorage.setItem(KEY+"_bak",j); }catch{} cloudDirty=true; }
+const LOCAL_TS=E.ts||0;
+const CID=(()=>{ let id=null; try{ id=localStorage.getItem("empire_cloud"); }catch{} if(!/^[A-Z0-9]{8,16}$/.test(id||"")){ id=Array.from(crypto.getRandomValues(new Uint8Array(10)),x=>"ABCDEFGHJKLMNPQRSTUVWXYZ23456789"[x%32]).join(""); try{ localStorage.setItem("empire_cloud",id); }catch{} } return id; })();
+let cloudDirty=false, cloudOK=null;
+async function cloudSave(){ if(!cloudDirty) return; cloudDirty=false; try{ const r=await fetch("/api/save",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({id:CID,data:E})}); cloudOK=r.ok; }catch{ cloudOK=false; cloudDirty=true; } }
+async function cloudLoad(id){ const r=await fetch("/api/save?id="+encodeURIComponent(id)).then(r=>r.json()); if(r.error) throw new Error(r.error); return r.data; }
+setInterval(cloudSave,20000);
+addEventListener("pagehide",()=>{ try{ localStorage.setItem(KEY,JSON.stringify(E)); }catch{} try{ const b=JSON.stringify({id:CID,data:E}); if(b.length<63000) navigator.sendBeacon("/api/save",new Blob([b],{type:"application/json"})); else cloudSave(); }catch{} });
+document.addEventListener("visibilitychange",()=>{ if(document.hidden){ save(); cloudDirty=true; cloudSave(); } });
 
 /* ================= CALCULS ================= */
 const T=b=>BT[b.t];
@@ -149,13 +170,15 @@ function bEst(b){ const t=T(b); let v=0;
   else if(t.mode==="btp") v=-b.wk*60+(b.jobs.reduce((a,j)=>a+j.pay/j.d0,0));
   else if(t.mode==="it") v=-b.dev*450+(b.jobs.reduce((a,j)=>a+j.pay/j.d0,0));
   else if(t.mode==="pas") v=t.cost*t.r*Math.pow(1.25,b.lvl-1)*(t.oil?E.oil/80:1);
+  if(b.t==="foot"){ v*=1+(clubRating(b)-68)/22; v-=(b.squad||[]).reduce((x,i)=>x+fSal(FOOTP[i][2]),0); }
   return v*mergeBonus(b.t); }
 function bValue(b){ const t=T(b); let v=t.cost; if(t.mode==="out") v+=b.out*t.oc*1.3; if(t.mode==="fleet") b.veh.forEach(x=>{ const V=t.veh[x.k]; v+=V[2]*Math.max(.1,1-x.w/V[4]); }); if(t.mode==="pas") v*=1+(b.lvl-1)*.3; if(t.mode==="car") b.stock.forEach(c=>v+=c.paid); return v; }
 const rent=id=>{ const r=E.re[id]; return r.v*.0011*(1+r.u*.15); };
 function itemsVal(){ let v=0; ITEMS.forEach(([,l],g)=>l.forEach((x,i)=>{ if(E.items[g+"-"+i]) v+=x[2]*.6; })); return v; }
 function netWorth(){ let n=E.cash+E.sav-E.loan; E.biz.forEach(b=>n+=bValue(b)*(1-TAX)); STOCKS.forEach(s=>n+=E.st[s[0]].q*E.st[s[0]].p); CRYPTO.forEach(s=>n+=E.cr[s[0]].q*E.cr[s[0]].p); for(const id in E.re) if(E.re[id].own) n+=E.re[id].v*(1-TAX); if(E.ph){ if(E.ph.shop) n+=E.ph.shop.bal||0; COMP.forEach((c,i)=>{ if(E.ph.acq[i]) n+=c[2]*.85; }); PCS.forEach((p,i)=>n+=(E.ph.pcs[i]||0)*p[2]*.5); } return n+itemsVal(); }
 function dailyIncome(){ let n=0; E.biz.forEach(b=>n+=bEst(b)); for(const id in E.re) if(E.re[id].own) n+=rent(id); return n+E.sav*.0004-E.loan*.0008+(E.ph?appsDaily():0); }
-const clickVal=()=>CLICK[E.cl]*(E.boost>0?6.49:1);
+const clickVal=()=>CLICK[Math.min(E.cl,CLICK.length-1)]*(E.boost>0?6.49:1);
+const acCost=()=>Math.round(400*Math.pow(2.1,E.ac||0)), critCost=()=>Math.round(3000*Math.pow(3.2,E.crit||0));
 
 /* ================= TEMPS ================= */
 function tick(silent){ E.day++; if(E.day%120===0) E.age++; if(E.mktT>0) E.mktT--;
@@ -165,7 +188,10 @@ function tick(silent){ E.day++; if(E.day%120===0) E.age++; if(E.mktT>0) E.mktT--
     if(t.mode==="out"){ v=(t.base+b.out*t.oi)*(1+.1*gauss()); if(b.bq>0){ b.bl--; if(b.bl<=0){ b.out++; b.bq--; b.bl=b.bq>0?t.od:0; if(!silent) logEv(`🏗️ ${b.name} : nouvelle ${t.mode==="out"&&b.t==="fac"?"ligne de production":"boutique"} ouverte !`); } } }
     else if(t.mode==="fleet"){ b.veh.forEach(x=>{ const V=t.veh[x.k]; if(x.w<V[4]){ v+=V[3]*(1+.15*gauss()); x.w++; if(x.w>=V[4]&&!silent) logEv(`🔧 ${b.name} : un(e) ${V[1]} est usé(e), remplace-le !`); } }); }
     else if(t.mode==="btp"||t.mode==="it"){ v-=t.mode==="btp"?b.wk*60:b.dev*450; b.jobs=b.jobs.filter(j=>{ j.d--; if(j.d<=0){ v+=j.pay; b.done++; if(!silent) logEv(`✅ ${b.name} : « ${j.n} » terminé, +${fmt(j.pay)}`); return false; } return true; }); if(E.day%4===0||!b.offers.length) b.offers=genJobs(b); }
-    else if(t.mode==="pas"){ v=t.cost*t.r*Math.pow(1.25,b.lvl-1)*(t.oil?E.oil/80:1)*(1+gauss()*t.risk*.5); if(b.t==="foot"&&Math.random()<.01){ v+=t.cost*.02; if(!silent) logEv(`🏆 ${b.name} remporte un trophée ! Bonus de sponsors`); } }
+    else if(t.mode==="pas"){ v=t.cost*t.r*Math.pow(1.25,b.lvl-1)*(t.oil?E.oil/80:1)*(1+gauss()*t.risk*.5);
+      if(b.t==="foot"){ b.squad=b.squad||[]; const cr=clubRating(b); v*=1+(cr-68)/22; v-=b.squad.reduce((a,i)=>a+fSal(FOOTP[i][2]),0);
+        if(E.day%3===0){ const win=Math.random()<Math.max(.1,Math.min(.92,(cr-58)/42)); b.w=(b.w||0)+(win?1:0); b.mj=(b.mj||0)+1; if(win) v+=t.cost*.002; }
+        if(E.day%30===0&&b.mj){ if(b.w/b.mj>=.7){ b.tro=(b.tro||0)+1; v+=t.cost*.04; if(!silent) logEv(`🏆 ${b.name} est CHAMPION ! (${b.w} victoires sur ${b.mj})`); } b.w=0; b.mj=0; } } if(b.t==="foot"&&Math.random()<.01){ v+=t.cost*.02; if(!silent) logEv(`🏆 ${b.name} remporte un trophée ! Bonus de sponsors`); } }
     v*=mergeBonus(b.t); b.last=v; tot+=v; });
   let rents=0; for(const id in E.re){ const r=E.re[id]; r.v*=1+.0003+.006*gauss()+(E.mktT>0?E.mkt*.004:0); if(r.own) rents+=rent(id); }
   if(E.day%2===0) refreshMarket();
@@ -189,7 +215,7 @@ function randomEvent(){ pick([
   ()=>{ const g=Math.max(300,netWorth()*.004); E.cash+=g; logEv(`🎁 Héritage d'un oncle éloigné : +${fmt(g)}`); }])(); }
 let timer=null;
 function startClock(){ clearInterval(timer); timer=setInterval(()=>{ for(let i=0;i<E.spd;i++) tick(); save(); head(); if(page==="inv"&&!$("pop").classList.contains("on")) draw(); if(curAsset&&$("pop").classList.contains("on")) assetPop(curAsset[0],curAsset[1]); if(curBiz!=null&&$("pop").classList.contains("on")) bizPop(curBiz,true); },4000);
-  setInterval(()=>{ if(E.boost>0){ E.boost--; if(page==="home") homeTap(); } if(E.bcd>0) E.bcd--; },1000); }
+  setInterval(()=>{ if(E.boost>0){ E.boost--; if(page==="home") homeTap(); } if(E.bcd>0) E.bcd--; let g=0; if(E.ac) g+=clickVal()*E.ac; if(E.rain>0) g+=E.rain; if(g){ E.cash+=g; E.tapE+=E.ac?clickVal()*E.ac:0; head(); } },1000); }
 
 /* ================= UI ================= */
 let page="home", sub={inv:"st",biz:"mine"};
@@ -220,7 +246,7 @@ function home(){ const nw=netWorth(), list=RICH.concat([["⭐ TOI",nw]]).sort((a
   <div class="row" style="margin-top:10px;flex-wrap:wrap;gap:6px"><button class="btn gh" id="dep">Déposer</button><button class="btn gh" id="wd">Retirer</button><button class="btn gh" id="ln">Emprunter</button><button class="btn gh" id="rp" ${E.loan?"":"disabled"}>Rembourser</button></div></div>
   <h2>📰 Actualités</h2><div class="card ev">${E.log.slice(0,6).map(l=>`<div class="hint" style="padding:4px 0">${l}</div>`).join("")||'<div class="hint">1 jour = 4 secondes. Le temps continue même jeu fermé.</div>'}</div>`;
   homeTap();
-  $("work").onclick=e=>{ const g=clickVal(); E.cash+=g; E.taps++; E.tapE+=g; head(); $("wv").textContent="+"+fmt(g,1); const f=document.createElement("div"); f.className="float"; f.textContent="+"+fmt(g,1); f.style.left=(e.clientX-20)+"px"; f.style.top=(e.clientY-20)+"px"; document.body.appendChild(f); setTimeout(()=>f.remove(),900); homeTap(); if(E.taps%10===0) save(); };
+  $("work").onclick=e=>{ const crit=Math.random()<(E.crit||0)*.05, g=clickVal()*(crit?10:1); E.cash+=g; E.taps++; E.tapE+=g; head(); $("wv").textContent="+"+fmt(g,1); const f=document.createElement("div"); f.className="float"; f.textContent=(crit?"💥 ":"+")+fmt(g,1); if(crit){ f.style.color="#fbbf24"; f.style.fontSize="28px"; } f.style.left=(e.clientX-20)+"px"; f.style.top=(e.clientY-20)+"px"; document.body.appendChild(f); setTimeout(()=>f.remove(),900); homeTap(); if(E.taps%10===0) save(); };
   const amt=(title,max,fn)=>popup(`<h3>${title}</h3><p class="hint">Maximum : ${fmt(max)}</p><div class="qty">${[.1,.25,.5,1].map(f=>`<button data-f="${f}">${f===1?"Max":f*100+" %"}</button>`).join("")}</div><button class="btn gh" id="x" style="width:100%">Annuler</button>`,()=>{ document.querySelectorAll("[data-f]").forEach(b=>b.onclick=()=>{ const v=Math.floor(max*+b.dataset.f); if(v>0) fn(v); save(); closePop(); }); $("x").onclick=closePop; });
   $("dep").onclick=()=>amt("Déposer sur l'épargne",Math.max(0,E.cash),v=>{ E.cash-=v; E.sav+=v; });
   $("wd").onclick=()=>amt("Retirer de l'épargne",E.sav,v=>{ E.sav-=v; E.cash+=v; });
@@ -228,10 +254,13 @@ function home(){ const nw=netWorth(), list=RICH.concat([["⭐ TOI",nw]]).sort((a
   $("rp").onclick=()=>amt("Rembourser le prêt",Math.min(E.loan,Math.max(0,E.cash)),v=>{ E.loan-=v; E.cash-=v; });
 }
 function homeTap(){ const z=$("tapz"); if(!z) return; const L=E.cl, goal=CLICKGOAL(L), max=L>=CLICK.length-1;
-  z.innerHTML=`<div class="row"><b class="grow">💰 Revenu du clic · niveau ${L+1}/10</b>${E.boost>0?`<span class="tag b">⚡ x6,49 · ${E.boost}s</span>`:""}</div>
+  z.innerHTML=`<div class="row"><b class="grow">💰 Revenu du clic · niveau ${L+1}/${CLICK.length}</b>${E.boost>0?`<span class="tag b">⚡ x6,49 · ${E.boost}s</span>`:""}</div>
   ${max?'<p class="hint">Niveau maximum atteint 🔥</p>':`<div class="row" style="margin-top:8px"><span class="hint grow">Niveau suivant : <b style="color:#fff">+${fmt(CLICK[L+1])} par clic</b></span><button class="btn o" id="lvl" ${E.cash<goal?"disabled":""}>Améliorer · ${fmt(goal)}</button></div>`}
+  <div class="row" style="margin-top:8px;gap:6px;flex-wrap:wrap"><button class="btn gh" id="acb" ${E.cash<acCost()?"disabled":""}>🤖 Auto-clic : ${E.ac||0}/s → +1 · ${fmt(acCost())}</button><button class="btn gh" id="crb" ${(E.crit||0)>=10||E.cash<critCost()?"disabled":""}>💥 Critique ${(E.crit||0)*5} % ${(E.crit||0)>=10?"· MAX":"· "+fmt(critCost())}</button></div>
   <button class="btn ${E.bcd>0?"gh":"g"}" id="bst" style="width:100%;margin-top:10px" ${E.bcd>0||E.boost>0?"disabled":""}>${E.boost>0?"⚡ Boost actif !":E.bcd>0?`⏳ Boost dispo dans ${E.bcd}s`:"⚡ BOOST : clics x6,49 pendant 30 s"}</button>`;
   if(!max) $("lvl").onclick=()=>{ if(!pay(goal)) return; E.cl++; E.tapBase=E.taps; save(); toast(`💰 Clic niveau ${E.cl+1} : +${fmt(CLICK[E.cl])} par clic`); home(); };
+  $("acb").onclick=()=>{ if(!pay(acCost())) return; E.ac=(E.ac||0)+1; save(); toast(`🤖 Auto-clic : ${E.ac} clic(s) par seconde`); homeTap(); };
+  $("crb").onclick=()=>{ if((E.crit||0)>=10||!pay(critCost())) return; E.crit=(E.crit||0)+1; save(); toast(`💥 Clic critique : ${E.crit*5} % de chance de x10`); homeTap(); };
   $("bst").onclick=()=>{ E.boost=30; E.bcd=180; toast("⚡ Boost activé !"); homeTap(); $("wv").textContent="+"+fmt(clickVal(),1); };
 }
 
@@ -316,6 +345,12 @@ function bizPop(k,keep){ const b=E.biz[k], t=T(b); curBiz=k; let body="";
     ${b.stock.length?`<h2>Ton showroom</h2>`+b.stock.map((c,i)=>{ const sp=Math.round(c.base*(.3+.75*c.cond/100)), rc=Math.round((100-c.cond)*c.base*.009*(1-b.skill*.05)); return row(`🚗 ${c.n}`,`État ${c.cond} % · payé ${fmt(c.paid)}`,`<div style="display:flex;flex-direction:column;gap:4px">${c.cond<100?`<button class="btn" data-rp="${i}" ${E.cash<rc?"disabled":""}>Réparer ${fmt(rc)}</button>`:""}<button class="btn g" data-sc="${i}">Vendre ${fmt(sp)}</button></div>`); }).join(""):""}
     <h2>Marché de l'occasion</h2>${E.market.map((c,i)=>{ const lo=Math.max(0,c.cond-err), hi=Math.min(100,c.cond+err); return row(`🚙 ${c.n}`,`État ${c.insp?`<b>${c.cond} %</b>`:`estimé ${lo}–${hi} %`}`,`<div style="display:flex;flex-direction:column;gap:4px"><button class="btn g" data-bc="${i}" ${E.cash<c.price||b.stock.length>=b.slots?"disabled":""}>${fmt(c.price)}</button>${c.insp?"":`<button class="btn gh" data-in="${i}">🔍 Inspecter ${fmt(c.base*.01)}</button>`}</div>`); }).join("")}
     <p class="hint">Les voitures en mauvais état coûtent cher à réparer : inspecte-les avant d'acheter ! Plus tu répares, plus ton niveau monte (réparations moins chères, meilleures estimations).</p>`; }
+  else if(b.t==="foot"){ const uc=t.cost*.35*Math.pow(1.4,b.lvl-1); b.squad=b.squad||[];
+    body=`<div class="kpi"><div><span>⭐ Note de l'équipe</span><b>${clubRating(b)}</b></div><div><span>Revenu moyen / j</span><b class="${bEst(b)>=0?"up":"dn"}">${fmt(bEst(b))}</b></div><div><span>🏆 Titres</span><b>${b.tro||0}</b></div><div><span>Ce mois</span><b>${b.w||0} V / ${b.mj||0} matchs</b></div></div>
+    ${row("🏟️ Agrandir le stade","+25 % de revenus",`<button class="btn" id="up" ${b.lvl>=10||E.cash<uc?"disabled":""}>${b.lvl>=10?"MAX":fmt(uc)}</button>`)}
+    <h2>Ton effectif (${b.squad.length})</h2>${b.squad.length?b.squad.map(i=>{ const p=FOOTP[i]; return row(`⚽ ${p[0]} <span class="tag">${p[1]}</span>`,`Note ${p[2]} · salaire ${fmt(fSal(p[2]))}/j`,`<button class="btn r" data-fs="${i}">Vendre ${fmt(fPrice(p[2])*.8)}</button>`); }).join(""):'<p class="hint">Achète des stars pour rendre ton équipe plus forte : elle gagne plus de matchs et le club rapporte plus.</p>'}
+    <h2>🔁 Marché des transferts</h2>${FOOTP.map((p,i)=>b.squad.includes(i)?"":row(`${p[2]>=95?"🌟":"⚽"} ${p[0]} <span class="tag">${p[1]}</span>`,`Note <b>${p[2]}</b> · salaire ${fmt(fSal(p[2]))}/j`,`<button class="btn g" data-fb="${i}" ${E.cash<fPrice(p[2])?"disabled":""}>${fmt(fPrice(p[2]))}</button>`)).join("")}
+    <p class="hint">Les joueurs sont inventés (pas de vraies stars, c'est interdit d'utiliser leurs noms dans un jeu).</p>`; }
   else { const uc=t.cost*.35*Math.pow(1.4,b.lvl-1);
     body=`<div class="kpi"><div><span>Niveau</span><b>${b.lvl}/10</b></div><div><span>Revenu moyen / j</span><b class="up">${fmt(bEst(b))}</b></div>${t.oil?`<div><span>🛢️ Prix du baril</span><b>${E.oil.toFixed(1).replace(".",",")} $</b></div>`:""}</div>
     ${row("⬆️ Agrandir","+25 % de revenus",`<button class="btn" id="up" ${b.lvl>=10||E.cash<uc?"disabled":""}>${b.lvl>=10?"MAX":fmt(uc)}</button>`)}`; }
@@ -335,6 +370,8 @@ function bizPop(k,keep){ const b=E.biz[k], t=T(b); curBiz=k; let body="";
     on("[data-bc]",d=>{ const c=E.market[+d.bc]; if(b.stock.length>=b.slots||!pay(c.price)) return; b.stock.push({n:c.n,base:c.base,cond:c.cond,paid:c.price}); E.market.splice(+d.bc,1); toast(`🚗 ${c.n} acheté (état réel ${c.cond} %)`); re(); });
     on("[data-rp]",d=>{ const c=b.stock[+d.rp], rc=Math.round((100-c.cond)*c.base*.009*(1-b.skill*.05)); if(!pay(rc)) return; c.paid+=rc; c.cond=100; b.xp++; if(b.xp>=3&&b.skill<10){ b.skill++; b.xp=0; toast(`🔧 Niveau de réparation ${b.skill} !`); } re(); });
     on("[data-sc]",d=>{ const c=b.stock[+d.sc], sp=Math.round(c.base*(.3+.75*c.cond/100)); E.cash+=sp; b.last=sp-c.paid; E.bizE+=sp-c.paid; b.stock.splice(+d.sc,1); toast(`${sp>=c.paid?"💰 Bénéfice":"📉 Perte"} : ${fmt(sp-c.paid)}`); re(); });
+    on("[data-fb]",d=>{ const i=+d.fb, p=FOOTP[i]; if(!pay(fPrice(p[2]))) return; b.squad.push(i); logEv(`✍️ ${p[0]} signe à ${b.name} !`); re(); });
+    on("[data-fs]",d=>{ const i=+d.fs; b.squad=b.squad.filter(x=>x!==i); E.cash+=fPrice(FOOTP[i][2])*.8; toast(`${FOOTP[i][0]} vendu`); re(); });
     if($("up")) $("up").onclick=()=>{ const uc=t.cost*.35*Math.pow(1.4,b.lvl-1); if(b.lvl>=10||!pay(uc)) return; b.lvl++; toast("⬆️ Niveau "+b.lvl); re(); };
     $("rn").onclick=()=>{ const n=prompt("Nouveau nom :",b.name); if(!n||!n.trim()) return; if(!pay(Math.max(1000,t.cost*.02))) return; b.name=n.trim().slice(0,24); re(); };
     $("sb").onclick=()=>{ if(!$("sb").dataset.k){ $("sb").dataset.k=1; $("sb").textContent="Confirmer la vente ?"; return; } E.cash+=bValue(b)*(1-TAX); E.biz.splice(k,1); save(); toast("Business vendu"); closePop(); };
@@ -357,10 +394,13 @@ function prof(){ const nw=netWorth(); let st=0,cr=0,re=0,nre=0; STOCKS.forEach(s
   <h2>Répartition de ta fortune</h2><div class="card"><div style="display:flex;height:16px;border-radius:9px;overflow:hidden;margin-bottom:10px">${parts.map(p=>`<i style="width:${p[1]/tot*100}%;background:${p[2]}"></i>`).join("")}</div>${parts.map(p=>`<div class="row" style="padding:4px 0"><span class="grow">${p[0]}</span><b>${fmt(p[1])}</b><span class="hint" style="width:52px;text-align:right">${Math.round(p[1]/tot*100)} %</span></div>`).join("")}</div>
   <h2>Statistiques</h2><div class="card kpi"><div><span>Gagné en cliquant</span><b>${fmt(E.tapE)}</b></div><div><span>Clics</span><b>${E.taps.toLocaleString("fr-FR")}</b></div><div><span>Gagné par les business</span><b>${fmt(E.bizE)}</b></div><div><span>Gagné en investissant</span><b>${fmt(E.invE)}</b></div><div><span>Business</span><b>${E.biz.length}</b></div><div><span>Biens immobiliers</span><b>${nre}</b></div></div>
   <h2>🏆 Classement des plus riches</h2><div class="card">${list.map((r,i)=>`<div class="row" style="padding:6px 0;border-bottom:1px solid var(--line);${r[0]==="⭐ TOI"?"color:#fbbf24;font-weight:900":""}"><b style="width:34px">#${i+1}</b><span class="grow">${r[0]}</span><b>${fmt(r[1])}</b></div>`).join("")}</div>
-  <h2>📰 Historique</h2><div class="card ev">${E.log.map(l=>`<div class="hint" style="padding:3px 0">${l}</div>`).join("")||'<div class="hint">Rien pour l’instant.</div>'}</div>`; }
+  <h2>☁️ Sauvegarde</h2><div class="card"><p style="margin:0">Ta partie est sauvegardée <b>sur ton appareil et en ligne</b>${cloudOK===false?' <span class="tag h">hors ligne</span>':""}. Ton code : <b style="font-family:monospace;font-size:18px;letter-spacing:.1em;user-select:all">${CID}</b></p><p class="hint">Garde ce code : il te permet de retrouver ta partie sur un autre téléphone ou navigateur.</p><div class="row" style="gap:6px;flex-wrap:wrap"><input class="in" id="rcode" placeholder="Code d'une partie" style="width:170px;text-transform:uppercase"><button class="btn" id="rload">Charger cette partie</button><button class="btn gh" id="rnow">☁️ Sauvegarder maintenant</button></div></div>
+  <h2>📰 Historique</h2><div class="card ev">${E.log.map(l=>`<div class="hint" style="padding:3px 0">${l}</div>`).join("")||'<div class="hint">Rien pour l’instant.</div>'}</div>`;
+  $("rnow").onclick=async()=>{ save(); cloudDirty=true; await cloudSave(); toast(cloudOK?"☁️ Partie sauvegardée en ligne":"⚠️ Sauvegarde en ligne impossible (gardée sur l'appareil)"); prof(); };
+  $("rload").onclick=async()=>{ const c=$("rcode").value.trim().toUpperCase(); if(!c) return; try{ const d=await cloudLoad(c); if(!d) return toast("Aucune partie avec ce code"); localStorage.setItem("empire_cloud",c); localStorage.setItem(KEY,JSON.stringify(d)); toast("✅ Partie chargée !"); setTimeout(()=>location.reload(),600); }catch(e){ toast("Erreur : "+e.message); } }; }
 
 /* ---------- VITESSE + PANEL ADMIN ---------- */
-$("spd").onclick=()=>{ E.spd=E.spd===1?2:E.spd===2?5:E.spd===5?20:1; save(); head(); toast(`Vitesse x${E.spd}`); };
+$("spd").onclick=()=>{ E.spd=E.spd===1?2:E.spd===2?5:E.spd===5?20:E.spd===20?100:1; save(); head(); toast(`Vitesse x${E.spd}`); };
 function admin(){ const S=(t,h)=>`<h2 style="margin-top:18px">${t}</h2><div class="qty">${h}</div>`;
   popup(`<h3>🛠️ Panel admin</h3><p class="hint">Fais défiler vers le bas pour tout voir ↓</p>
   ${S("💶 Argent",[1e3,1e5,1e6,1e9,1e12].map(v=>`<button data-am="${v}">+${fmt(v)}</button>`).join("")+`<button id="inf">${E.inf?"✅":"⬜"} Argent infini</button>`)}
@@ -369,10 +409,14 @@ function admin(){ const S=(t,h)=>`<h2 style="margin-top:18px">${t}</h2><div clas
   ${S("📈 Investissements",`<button id="gs">+1 000 de chaque action</button><button id="gc">+10 de chaque crypto</button><button id="bm">📈 BOOM</button><button id="kr">📉 KRACH</button><button id="ol">🛢️ Pétrole x2</button>`)}
   ${S("🏢 Immobilier & objets",`<button id="gr">🔑 Tous les biens immobiliers</button><button id="ur">⭐ Améliorer tous mes biens</button><button id="gi">💎 Tous les objets de luxe</button>`)}
   ${S("📱 Applis",`<button id="ap1">🖥️ +10 Méga data centers</button><button id="ap4">🤝 Recevoir une offre de rachat</button><button id="ap6">🧾 Pas d'impôts ce mois</button>`)}
-  <h2 style="margin-top:14px">👥 Abonnés (tu choisis le nombre)</h2><div class="row" style="gap:6px;flex-wrap:wrap"><select class="in" id="fpl" style="width:auto"><option value="vid">▶️ VidTube</option><option value="pix">📸 Pixgram</option><option value="chirp">🐦 Chirp</option><option value="tok">🎵 TokTik</option></select><input class="in" id="fnb" type="number" placeholder="Nombre"><button class="btn" id="fad">Ajouter</button><button class="btn gh" id="fst">Mettre exactement</button></div>
+  <h2 style="margin-top:14px">👥 Abonnés (tu choisis le nombre)</h2><div class="row" style="gap:6px;flex-wrap:wrap"><select class="in" id="fpl" style="width:auto"><option value="vid">▶️ VidTube</option><option value="pix">📸 Pixgram</option><option value="chirp">🐦 Chirp</option><option value="tok">🎵 TokTik</option><option value="face">👥 Facely</option><option value="snap">👻 Snappo</option></select><input class="in" id="fnb" type="number" placeholder="Nombre"><button class="btn" id="fad">Ajouter</button><button class="btn gh" id="fst">Mettre exactement</button></div>
   <h2 style="margin-top:14px">🛍️ Dropshipping</h2><div class="row" style="gap:6px;flex-wrap:wrap"><input class="in" id="dno" type="number" placeholder="Commandes"><button class="btn" id="dad">+ Commandes</button><input class="in" id="dbl" type="number" placeholder="Solde €"><button class="btn gh" id="dsb">Mettre le solde</button></div>
   <h2 style="margin-top:14px">🧱 Joueurs de mes jeux Bloxy</h2><div class="row" style="gap:6px;flex-wrap:wrap"><select class="in" id="bgs" style="width:auto">${(P().blox.length?P().blox:[{id:"",n:"(aucun jeu)"}]).map(g=>`<option value="${g.id}">${esc(g.n)}</option>`).join("")}</select><input class="in" id="bnb" type="number" placeholder="Joueurs"><button class="btn" id="bad">Mettre</button></div>
   <h2 style="margin-top:14px">🏢 Racheter une entreprise</h2><div class="row" style="gap:6px;flex-wrap:wrap"><select class="in" id="cps" style="width:auto">${COMP.map((c,i)=>`<option value="${i}">${c[0]} ${c[1]} (+${fmt(c[3])}/min)</option>`).join("")}</select><button class="btn" id="cpb">Me la donner</button><button class="btn gh" id="ap5">Toutes</button></div>
+  ${S("⭐ Encore plus",`<button id="x100">⏩ Vitesse x100</button><button id="ntx">${E.noTax?"✅":"⬜"} Plus jamais d'impôts</button><button id="bz1">📈 Tous mes business +1 niveau</button><button id="fl">⚽ Toutes les stars dans mon club</button><button id="mx">💰 Monétisation max sur mes jeux</button><button id="sv">☁️ Sauvegarder en ligne</button>`)}
+  <h2 style="margin-top:14px">💸 Pluie d'argent (chaque seconde)</h2><div class="row" style="gap:6px;flex-wrap:wrap"><input class="in" id="rnv" type="number" placeholder="€ par seconde" value="${E.rain||""}"><button class="btn" id="rnb">Activer</button><button class="btn gh" id="rnx">Arrêter</button></div>
+  <h2 style="margin-top:14px">🖱️ Clic : niveau exact</h2><div class="row" style="gap:6px;flex-wrap:wrap"><input class="in" id="clv" type="number" min="1" max="${CLICK.length}" placeholder="1 à ${CLICK.length}" value="${E.cl+1}"><button class="btn" id="clb">Mettre</button><button class="btn gh" id="ac10">🤖 +10 auto-clics</button><button class="btn gh" id="crm">💥 Critique max</button></div>
+  <h2 style="margin-top:14px">🎂 Âge et jour</h2><div class="row" style="gap:6px;flex-wrap:wrap"><input class="in" id="agv" type="number" placeholder="Âge" value="${E.age}"><button class="btn" id="agb">Mettre l'âge</button></div>
   ${S("💰 Clic",`<button id="c1">+1 niveau de clic</button><button id="c0">-1 niveau</button><button id="cm">Clic niveau max</button><button id="cb">⚡ Boost x6,49 (5 min)</button>`)}
   ${S("⏱ Temps",`<button data-sk="1">+1 jour</button><button data-sk="30">+30 jours</button><button data-sk="365">+1 an</button><button id="ag">🎂 -5 ans (plus jeune)</button>`)}
   <div class="row" style="margin-top:16px"><button class="btn r" id="rs">Tout réinitialiser</button><span class="grow"></span><button class="btn gh" id="x">Fermer</button></div>`,()=>{
@@ -406,6 +450,18 @@ function admin(){ const S=(t,h)=>`<h2 style="margin-top:18px">${t}</h2><div clas
   $("dad").onclick=()=>{ const s=P().shop, n=Math.floor(+$("dno").value||0); if(!s||!s.p.length) return toast("Crée ta boutique et ajoute un produit"); if(n<=0) return; s.pend=s.pend||[]; const per=Math.max(1,Math.floor(n/s.p.length)); s.p.forEach(x=>addOrders(x.k,per,PRODS[x.k][3]*x.m*(s.brand?1.25:1))); ok(`📦 +${(per*s.p.length).toLocaleString("fr-FR")} commandes`); };
   $("dsb").onclick=()=>{ const s=P().shop; if(!s) return toast("Crée d'abord ta boutique"); s.bal=Math.max(0,+$("dbl").value||0); ok("💳 Solde boutique : "+fmt(s.bal)); };
   $("cpb").onclick=()=>{ const i=+$("cps").value; P().acq[i]=1; ok(`🏢 ${COMP[i][1]} est à toi`); };
+  $("x100").onclick=()=>{ E.spd=100; ok("⏩ Vitesse x100"); };
+  $("ntx").onclick=()=>{ E.noTax=!E.noTax; ok(E.noTax?"🧾 Plus d'impôts !":"Impôts réactivés"); admin(); };
+  $("bz1").onclick=()=>{ E.biz.forEach(b=>{ const t=T(b); if(t.mode==="pas") b.lvl=Math.min(10,b.lvl+1); if(t.mode==="out") b.out=Math.min(t.max,b.out+5); if(t.mode==="fleet"){ b.gar+=5; } }); ok("📈 +1 niveau partout"); };
+  $("fl").onclick=()=>{ const b=E.biz.find(x=>x.t==="foot"); if(!b) return toast("Achète ou donne-toi d'abord un club de foot"); b.squad=FOOTP.map((p,i)=>i); ok("⚽ Toutes les stars ont signé !"); };
+  $("mx").onclick=()=>{ P().blox.forEach(g=>{ g.gp=GPASS.map(([,n,pr])=>({n,price:pr})); g.vip=1; g.adsIn=1; g.merch=1; }); ok(P().blox.length?"💰 Monétisation max":"Crée d'abord un jeu Bloxy"); };
+  $("sv").onclick=async()=>{ save(); cloudDirty=true; await cloudSave(); ok(cloudOK?"☁️ Sauvegardé · code "+CID:"⚠️ Pas de connexion"); };
+  $("rnb").onclick=()=>{ E.rain=Math.max(0,+$("rnv").value||0); ok(`💸 +${fmt(E.rain)} chaque seconde`); };
+  $("rnx").onclick=()=>{ E.rain=0; ok("Pluie d'argent arrêtée"); };
+  $("clb").onclick=()=>{ const v=Math.max(1,Math.min(CLICK.length,Math.floor(+$("clv").value||1))); E.cl=v-1; ok(`🖱️ Clic niveau ${v} : +${fmt(CLICK[E.cl])}/clic`); };
+  $("ac10").onclick=()=>{ E.ac=(E.ac||0)+10; ok(`🤖 ${E.ac} auto-clics/s`); };
+  $("crm").onclick=()=>{ E.crit=10; ok("💥 Critique 50 %"); };
+  $("agb").onclick=()=>{ const v=Math.max(10,Math.min(120,Math.floor(+$("agv").value||22))); E.age=v; ok(`🎂 ${v} ans`); };
   $("cm").onclick=()=>{ E.cl=CLICK.length-1; ok("💰 Clic au max"); };
   $("cb").onclick=()=>{ E.boost=300; ok("⚡ Boost 5 min"); };
   document.querySelectorAll("[data-sk]").forEach(b=>b.onclick=()=>{ const n=+b.dataset.sk; for(let i=0;i<n;i++) tick(n>1); ok(`+${n} jour(s)`); });
@@ -443,19 +499,21 @@ function appsTick(silent){ const A=P(); let net=0;
   A.form.forEach(f=>{ const s=Math.max(0,Math.round(V.subs*.00035*Math.pow(99/f.price,.8)*f.q*rnd(.5,1.5))); const ref=Math.round(s*(f.q<.8?.15:.03)); f.sales+=s-ref; const rv=(s-ref)*f.price*.92; f.last=rv; net+=rv; });
   A.blox.forEach(g=>{ if(g.dev>0){ g.dev--; if(g.dev===0&&!silent) logEv(`🧱 Ton jeu Bloxy « ${g.n} » est ${g.live?"mis à jour":"publié"} !`); g.live=1; return; }
     const target=g.fix?g.fix*rnd(.97,1.03):Math.pow(g.q,2.2)/30*(g.hype||1); g.pl=g.fix?Math.round(target):Math.max(0,Math.round(g.pl+(target-g.pl)*.15+gauss()*Math.sqrt(g.pl+1))); g.vis+=g.pl*rnd(20,40)|0; g.hype=Math.max(1,(g.hype||1)*.93);
-    const rv=g.pl*24*.035; g.last=rv; g.earn+=rv; net+=rv;
+    const gp=(g.gp||[]).reduce((a,p)=>a+p.price,0), mon=g.pl*(gp*.0012+(g.vip?3:0)+(g.adsIn?.6:0)+(g.merch?1.5:0))*(g.ev>0?1.8:1); if(g.ev>0) g.ev--;
+    const rv=g.pl*24*.035+mon; g.mon=mon; g.last=rv; g.earn+=rv; net+=rv;
     if(!silent&&g.pl>=25&&Math.random()<.06){ const pr=Math.round(rv*rnd(90,260)+g.q*2000); msg("buy",pick([`Yo, j'adore ton jeu « ${g.n} » 🔥 Je te le rachète ${fmt(pr)}, deal ?`,`Notre studio veut acheter « ${g.n} » (${g.pl} joueurs en ligne). Offre : ${fmt(pr)}.`,`Bonjour, on investit dans les jeux Bloxy. Pour « ${g.n} » on propose ${fmt(pr)}.`]),{k:"game",id:g.id,price:pr}); } });
   if(!silent&&Math.random()<.18) msg("gen",pick(["💬 Quelqu'un a testé le dropshipping de lampes galaxie ? ça marche fort en ce moment","💬 Le marché crypto est fou aujourd'hui 😳","💬 Astuce : achetez des PC GPU, ça accélère l'entraînement des IA","💬 Mon jeu Bloxy vient de passer 100 joueurs 🎉","💬 Les formations c'est rentable seulement si t'as une audience","💬 Quelqu'un a racheté une entreprise dans l'appli Rachat ? ça rapporte chaque minute 🤑","💬 Les produits à petite marge ruinent ta note de boutique, attention","💬 Une vidéo virale peut te faire gagner des milliers d'abonnés d'un coup"]));
   if(!silent&&E.day%25===0&&netWorth()>20000&&Math.random()<.5){ const inv=Math.round(netWorth()*rnd(.1,.3)); msg("kaia",`Je crois en toi. Je t'investis ${fmt(inv)} contre 10 % des revenus de tes applis. Partant ?`,{k:"inv",price:inv}); }
   const life=25+Object.keys(E.items).length*40, el=elec(); net-=life+el;
   const share=net>0?net*A.share:0; net-=share; A.appE+=net; A.taxB+=Math.max(0,net)+Math.max(0,E.biz.reduce((a,b)=>a+(b.last||0),0));
-  if(E.day%30===0&&A.taxB>0){ const tx=A.taxB*.2; E.cash-=tx; A.taxB=0; if(!silent) logEv(`🧾 Impôts du mois (20 % des bénéfices) : -${fmt(tx)}`); }
+  if(E.day%30===0&&A.taxB>0&&E.noTax){ A.taxB=0; }
+  if(E.day%30===0&&A.taxB>0&&!E.noTax){ const tx=A.taxB*.2; E.cash-=tx; A.taxB=0; if(!silent) logEv(`🧾 Impôts du mois (20 % des bénéfices) : -${fmt(tx)}`); }
   return net; }
 function appsDaily(){ const A=P(); let n=0; if(A.shop) n-=A.shop.p.reduce((a,x)=>a+x.ads,0); A.ai.forEach(m=>n+=m.last||0); n+=A.vid.last||0; A.form.forEach(f=>n+=f.last||0); A.blox.forEach(g=>n+=g.last||0); return n-25-Object.keys(E.items).length*40-elec(); }
 setInterval(()=>{ const r=acqRate(); if(r>0){ E.cash+=r; E.ph.acqE=(E.ph.acqE||0)+r; head(); const el=$("acqT"); if(el) el.textContent="+"+fmt(r); } },10000);
 
 /* ---------- écran Apps ---------- */
-const APPS=[["shop","🛍️","ShopNova","Dropshipping & e-commerce","#f97316"],["ai","🤖","Neura Studio","Crée tes IA","#8b5cf6"],["vid","▶️","VidTube","Fais des vidéos","#ef4444"],["form","🎓","Academy","Vends des formations","#0ea5e9"],["blox","🧱","Bloxy Studio","Crée ton jeu","#22c55e"],["chat","💬","Disko","Discute avec des gens","#5865f2"],["s:pix","📸","Pixgram","Photos","#e1306c"],["s:chirp","🐦","Chirp","Posts","#1d9bf0"],["s:tok","🎵","TokTik","Vidéos courtes","#ff0050"],["pc","🖥️","PC Store","Achète des PC","#64748b"],["acq","🏢","Rachat","Rachète des entreprises","#eab308"]];
+const APPS=[["shop","🛍️","ShopNova","Dropshipping & e-commerce","#f97316"],["ai","🤖","Neura Studio","Crée tes IA","#8b5cf6"],["vid","▶️","VidTube","Fais des vidéos","#ef4444"],["form","🎓","Academy","Vends des formations","#0ea5e9"],["blox","🧱","Bloxy Studio","Crée ton jeu","#22c55e"],["chat","💬","Disko","Discute avec des gens","#5865f2"],["s:face","👥","Facely","Réseau social","#1877f2"],["s:snap","👻","Snappo","Stories","#eab308"],["s:pix","📸","Pixgram","Photos","#e1306c"],["s:chirp","🐦","Chirp","Posts","#1d9bf0"],["s:tok","🎵","TokTik","Vidéos courtes","#ff0050"],["pc","🖥️","PC Store","Achète des PC","#64748b"],["acq","🏢","Rachat","Rachète des entreprises","#eab308"]];
 let app=null;
 function apps(){ const A=P(); if(app&&app.startsWith("s:")){ socApp=app.slice(2); return appSoc(); } if(app) return ({shop:appShop,ai:appAI,vid:appVid,form:appForm,blox:appBlox,chat:appChat,pc:appPC,acq:appAcq})[app]();
   const unread=Object.values(A.unread).reduce((a,b)=>a+b,0);
@@ -538,13 +596,32 @@ function appForm(){ const A=P(), V=A.vid;
 function appBlox(){ const A=P();
   $("main").innerHTML=back("Bloxy Studio","🧱")+`<div class="card"><p style="margin:0">Crée ton jeu sur <b>Bloxy</b>, fais des mises à jour, joue dessus, gagne des Bloxbux… et des studios peuvent te le <b>racheter très cher</b> (les offres arrivent sur Disko 💬).</p></div>
   ${A.blox.map(g=>`<div class="item" style="flex-wrap:wrap"><div class="ic">${BGEN[g.g][0]}</div><div class="grow"><div class="t">${esc(g.n)} <span class="tag">${BGEN[g.g][1]}</span></div><div class="d">${g.dev>0?`🛠️ En développement · ${g.dev} j`:`🟢 ${g.pl.toLocaleString("fr-FR")} joueurs en ligne · ${g.vis.toLocaleString("fr-FR")} visites · <span class="up">${fmt(g.last||0)}/j</span>`} · ⭐ ${Math.round(g.q)}</div></div>
-  <div class="qty" style="width:100%;margin:6px 0 0">${g.live?`<button class="btn g" data-pl="${g.id}" style="padding:8px 12px">▶️ JOUER</button>`:""}<button data-gj="${g.id}">👥 Choisir les joueurs</button><button data-gu="${g.id}" ${g.dev>0?"disabled":""}>🛠️ Mise à jour · ${fmt(g.q*150)}</button><button data-ga="${g.id}" ${g.dev>0?"disabled":""}>📣 Pub · ${fmt(g.q*100)}</button></div></div>`).join("")}
+  <div class="qty" style="width:100%;margin:6px 0 0">${g.live?`<button class="btn g" data-pl="${g.id}" style="padding:8px 12px">▶️ JOUER</button>`:""}<button data-gm="${g.id}" class="on">💰 Gagner de l'argent</button><button data-gj="${g.id}">👥 Choisir les joueurs</button><button data-gu="${g.id}" ${g.dev>0?"disabled":""}>🛠️ Mise à jour · ${fmt(g.q*150)}</button><button data-ga="${g.id}" ${g.dev>0?"disabled":""}>📣 Pub · ${fmt(g.q*100)}</button></div></div>`).join("")}
   <h2>Créer un nouveau jeu</h2><div class="qty">${BGEN.map((t,i)=>`<button data-ng="${i}">${t[0]} ${t[1]}</button>`).join("")}</div><p class="hint">Un jeu se développe en quelques jours. Plus tes PC sont puissants et plus tu fais de mises à jour, plus il devient populaire.</p>`; bindBack();
   document.querySelectorAll("[data-ng]").forEach(b=>b.onclick=()=>{ const n=prompt("Nom de ton jeu :",pick(["Steal a Pizza","Obby Galaxy","Mega Tycoon","Escape the School","Brainrot Battle"])); if(!n) return; A.blox.push({id:A.uid++,n:n.slice(0,28),g:+b.dataset.ng,q:Math.min(60,12+Math.log10(compute())*6+rnd(0,8)),pl:0,vis:0,earn:0,dev:3,live:0,hype:1}); save(); toast("🧱 Développement lancé !"); appBlox(); });
   document.querySelectorAll("[data-gu]").forEach(b=>b.onclick=()=>{ const g=A.blox.find(x=>x.id==b.dataset.gu); if(!pay(g.q*150)) return; g.q=Math.min(100,g.q+rnd(3,8)+Math.log10(compute())); g.dev=Math.max(1,3-Math.floor(Math.log10(compute()))); g.hype=(g.hype||1)*1.6; save(); appBlox(); });
   document.querySelectorAll("[data-ga]").forEach(b=>b.onclick=()=>{ const g=A.blox.find(x=>x.id==b.dataset.ga); if(!pay(g.q*100)) return; g.hype=(g.hype||1)*2.2; save(); toast("📣 Ton jeu est en page d'accueil Bloxy !"); appBlox(); });
+  document.querySelectorAll("[data-gm]").forEach(b=>b.onclick=()=>monPop(A.blox.find(x=>x.id==b.dataset.gm)));
   document.querySelectorAll("[data-gj]").forEach(b=>b.onclick=()=>{ const g=A.blox.find(x=>x.id==b.dataset.gj); const v=prompt(`Combien de joueurs en ligne sur « ${g.n} » ? (0 = normal)`,g.fix||g.pl); if(v===null) return; const n=Math.max(0,Math.floor(+v||0)); g.fix=n; g.pl=n||g.pl; g.dev=0; g.live=1; save(); toast(n?`👥 ${n.toLocaleString("fr-FR")} joueurs sur « ${g.n} »`:"Joueurs en mode normal"); appBlox(); });
   document.querySelectorAll("[data-pl]").forEach(b=>b.onclick=()=>playBlox(A.blox.find(x=>x.id==b.dataset.pl))); }
+const GPASS=[["⚡","Vitesse x2",199],["👑","VIP",499],["💰","Argent x2",399],["🗡️","Arme légendaire",799],["🐾","Animal de compagnie",249],["🚀","Pack de départ",99],["🌈","Effets arc-en-ciel",149],["🏠","Base secrète",349]];
+function monPop(g){ g.gp=g.gp||[];
+  const has=n=>g.gp.some(p=>p.n===n), estPass=p=>g.pl*p*.0012;
+  popup(`<h3>💰 Gagner de l'argent avec « ${esc(g.n)} »</h3><div class="kpi" style="margin:10px 0"><div><span>Joueurs en ligne</span><b>${g.pl.toLocaleString("fr-FR")}</b></div><div><span>Monétisation / jour</span><b class="up">${fmt(g.mon||0)}</b></div><div><span>Gagné au total</span><b>${fmt(g.earn||0)}</b></div><div><span>Gamepasses</span><b>${g.gp.length}</b></div></div>
+  <h2>🎟️ Gamepasses (les joueurs les achètent)</h2>${GPASS.map(([ic,n,pr])=>`<div class="item"><div class="ic">${ic}</div><div class="grow"><div class="t">${n}</div><div class="d">${pr} Bloxbux · ~${fmt(estPass(pr))}/jour</div></div><button class="btn ${has(n)?"r":"g"}" data-gp="${n}:${pr}">${has(n)?"Retirer":"Créer"}</button></div>`).join("")}
+  <h2>⚙️ Autres sources d'argent</h2>
+  <div class="item"><div class="ic">🔒</div><div class="grow"><div class="t">Serveurs VIP privés</div><div class="d">~${fmt(g.pl*3)}/jour · gratuit</div></div><button class="btn ${g.vip?"r":"g"}" id="mv">${g.vip?"Désactiver":"Activer"}</button></div>
+  <div class="item"><div class="ic">📺</div><div class="grow"><div class="t">Pubs dans le jeu</div><div class="d">~${fmt(g.pl*.6)}/jour</div></div>${g.adsIn?'<span class="tag b">Actif</span>':`<button class="btn g" id="ma">${fmt(5000)}</button>`}</div>
+  <div class="item"><div class="ic">👕</div><div class="grow"><div class="t">Boutique de vêtements du jeu</div><div class="d">~${fmt(g.pl*1.5)}/jour</div></div>${g.merch?'<span class="tag b">Actif</span>':`<button class="btn g" id="mm">${fmt(20000)}</button>`}</div>
+  <div class="item"><div class="ic">🎉</div><div class="grow"><div class="t">Événement spécial (7 jours)</div><div class="d">Monétisation x1,8 + beaucoup de nouveaux joueurs</div></div>${g.ev>0?`<span class="tag b">${g.ev} j</span>`:`<button class="btn o" id="me">${fmt(Math.max(2000,g.q*500))}</button>`}</div>
+  <p class="hint">Plus ton jeu a de joueurs, plus ça rapporte. Fais de la pub sur TokTik, Pixgram, Facely… pour en attirer.</p><button class="btn gh" id="x" style="width:100%">Fermer</button>`,()=>{
+    const re=()=>{ save(); head(); monPop(g); };
+    document.querySelectorAll("[data-gp]").forEach(b=>b.onclick=()=>{ const [n,pr]=b.dataset.gp.split(":"); if(has(n)) g.gp=g.gp.filter(p=>p.n!==n); else { g.gp.push({n,price:+pr}); toast(`🎟️ Gamepass « ${n} » créé !`); } re(); });
+    $("mv").onclick=()=>{ g.vip=!g.vip; re(); };
+    if($("ma")) $("ma").onclick=()=>{ if(!pay(5000)) return; g.adsIn=1; re(); };
+    if($("mm")) $("mm").onclick=()=>{ if(!pay(20000)) return; g.merch=1; re(); };
+    if($("me")) $("me").onclick=()=>{ if(!pay(Math.max(2000,g.q*500))) return; g.ev=7; g.hype=(g.hype||1)*3; g.pl=Math.round(g.pl*1.5)+50; toast("🎉 Événement lancé : les joueurs affluent !"); re(); };
+    $("x").onclick=closePop; },true); }
 function playBlox(g){ const ov=document.createElement("div"); ov.style.cssText="position:fixed;inset:0;z-index:80;background:#000"; ov.innerHTML=`<canvas style="width:100%;height:100%;display:block;touch-action:none"></canvas><div style="position:absolute;top:12px;left:0;right:0;text-align:center;font-weight:900;font-size:18px;text-shadow:0 2px 6px #000;pointer-events:none" id="bxh"></div><button class="btn gh" style="position:absolute;top:10px;right:10px">✖</button>`; document.body.appendChild(ov);
   const cv=ov.querySelector("canvas"), c=cv.getContext("2d"), dpr=Math.min(2,devicePixelRatio||1); const W=innerWidth,H=innerHeight; cv.width=W*dpr; cv.height=H*dpr; c.scale(dpr,dpr);
   const th=[["#38bdf8","#a3e635"],["#f472b6","#facc15"],["#94a3b8","#f97316"],["#111827","#7f1d1d"],["#f87171","#64748b"],["#c084fc","#22d3ee"]][g.g];
@@ -610,10 +687,10 @@ function appAcq(){ const A=P();
   document.querySelectorAll("[data-cs]").forEach(b=>b.onclick=()=>{ const i=+b.dataset.cs; if(!b.dataset.k){ b.dataset.k=1; b.textContent="Confirmer ?"; return; } A.acq[i]=0; E.cash+=COMP[i][2]*.85; save(); appAcq(); }); }
 
 /* ================= RÉSEAUX SOCIAUX (Pixgram, Chirp, TokTik) + LIVES ================= */
-const SOC={pix:["📸","Pixgram","Photos & stories","#e1306c",1],chirp:["🐦","Chirp","Messages courts","#1d9bf0",.8],tok:["🎵","TokTik","Vidéos courtes","#ff0050",2.2]};
+const SOC={face:["👥","Facely","Réseau social","#1877f2",1.2],snap:["👻","Snappo","Stories","#eab308",1.5],pix:["📸","Pixgram","Photos & stories","#e1306c",1],chirp:["🐦","Chirp","Messages courts","#1d9bf0",.8],tok:["🎵","TokTik","Vidéos courtes","#ff0050",2.2]};
 const SNAMES=["kevin_92","lea.pxl","noahgamer","sarah_bzz","mehdi.ytb","jade_lol","enzo_off","ines.mp4","tom_brk","lina_dev","yanis.47","clara🌸","rayan_fr","emma.jpg","bilal_zz"];
 const SCOM=["🔥🔥🔥","trop fort","je teste direct !","c'est quoi le lien ?","GOAT 🐐","j'ai joué 3h mdr","incroyable 😳","first !","t'es trop chaud","on veut une suite","abonné ✅","ça mérite plus de vues","le boss 👑"];
-function S0(){ const A=P(); if(!A.soc) A.soc={pix:{f:0,posts:[],n:0},chirp:{f:0,posts:[],n:0},tok:{f:0,posts:[],n:0}}; return A.soc; }
+function S0(){ const A=P(); if(!A.soc) A.soc={}; for(const k in SOC) if(!A.soc[k]) A.soc[k]={f:0,posts:[],n:0}; return A.soc; }
 function promoList(){ const A=P(), L=[["none","Rien, juste un post"]]; A.blox.forEach(g=>{ if(g.live) L.push(["g:"+g.id,`🧱 Jouer à mon jeu « ${g.n} »`]); }); if(A.shop) L.push(["shop",`🛍️ Ma boutique ${A.shop.n}`]); A.ai.forEach(m=>{ if(m.st==="live") L.push(["ai:"+m.id,`🤖 Mon IA « ${m.n} »`]); }); if(A.form.length) L.push(["form","🎓 Mes formations"]); L.push(["vid","▶️ Ma chaîne VidTube"]); return L; }
 const TEMPL={none:["Nouvelle journée, nouveaux objectifs 💼","Le travail paie toujours 🔥","Merci pour votre soutien ❤️"],g:["🧱 Venez jouer à mon jeu « %s » sur Bloxy !! Nouvelle mise à jour 🔥","Mon jeu « %s » est en ligne, qui me bat ? 😏"],shop:["🛍️ Promo sur ma boutique %s ! Livraison offerte 🚚"],ai:["🤖 Testez mon IA « %s », elle est incroyable !"],form:["🎓 Ma formation pour devenir riche est dispo 💸"],vid:["▶️ Nouvelle vidéo sur ma chaîne, foncez !"]};
 let socApp=null;
@@ -669,9 +746,11 @@ function startLive(){ const A=P(), V=A.vid; if(V.lcd===E.day) return toast("Tu a
 /* ---------- DÉMARRAGE ---------- */
 if(!E.market.length) refreshMarket();
 const away=Math.min(400,Math.floor((Date.now()-(E.ts||Date.now()))/4000));
-if(away>=3){ const c0=E.cash; for(let i=0;i<away;i++) tick(1); save(); setTimeout(()=>popup(`<h3>👋 Bon retour !</h3><p>Pendant ton absence, <b>${away} jours</b> sont passés.</p><p style="font-size:22px;font-weight:900" class="${E.cash>=c0?"up":"dn"}">${E.cash>=c0?"+":""}${fmt(E.cash-c0)}</p><button class="btn g" id="x" style="width:100%">Super !</button>`,()=>{ $("x").onclick=closePop; }),300); }
+if(away>=3){ const c0=E.cash; for(let i=0;i<away;i++) tick(1); if(E.cash<c0) E.cash=c0; save(); setTimeout(()=>popup(`<h3>👋 Bon retour !</h3><p>Pendant ton absence, <b>${away} jours</b> sont passés.</p><p style="font-size:22px;font-weight:900" class="${E.cash>=c0?"up":"dn"}">${E.cash>=c0?"+":""}${fmt(E.cash-c0)}</p><button class="btn g" id="x" style="width:100%">Super !</button>`,()=>{ $("x").onclick=closePop; }),300); }
 else if(E.day===1&&!E.taps) setTimeout(()=>popup(`<h3>💼 Bienvenue dans EMPIRE MILLIONNAIRE</h3><p>Tu commences avec <b>300 €</b>. Ton but : devenir <b>la personne la plus riche du monde</b>.</p><p class="hint">1️⃣ Touche l'écran pour gagner de l'argent et monte le niveau de ton clic.<br>2️⃣ Crée ton premier business : un magasin à 5 000 €.<br>3️⃣ Investis dans les actions, l'immobilier et la crypto.<br>4️⃣ Fusionne tes entreprises pour créer des empires.<br>5️⃣ Achète voitures, jets, yachts, tableaux et îles.<br><br>1 jour = 4 secondes, même jeu fermé. Le panel 🛠️ est en haut à droite.</p><button class="btn g" id="x" style="width:100%">C'est parti !</button>`,()=>{ $("x").onclick=closePop; }),300);
 draw(); startClock();
+// partie plus récente en ligne (autre appareil / navigateur) → on la reprend
+(async()=>{ try{ const d=await cloudLoad(CID); if(d&&d.ts&&d.ts>LOCAL_TS+10000&&typeof d.cash==="number"){ localStorage.setItem(KEY,JSON.stringify(d)); location.reload(); } else { cloudDirty=true; cloudSave(); } }catch{} })();
 window.__E=E;
 })();
 </script>

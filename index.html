@@ -1277,6 +1277,16 @@ async function send(){
 
   // JSON MCP collé (comme dans Claude) → paramètres développeur
   if(/"mcpServers"\s*:/.test(text)){ input.value=""; grow(); openDev(); $("devAdv").open=true; $("devJson").value=text; useMcpJson(text); return; }
+  // « t'es connectée ? » → réponse directe avec le VRAI statut (pas besoin de l'IA)
+  if(text.length<70&&/\b(co|connect\w*|reli\w*|branch\w*)\b/i.test(text)&&/(t'?es|tu es|es[- ]tu|est[- ]ce que tu|elle est|studio|roblox)/i.test(text)&&!/compte|mail|abonn|connexion à mon compte/i.test(text)&&!attachments.length){
+    input.value=""; grow(); const n=note("Je vérifie la connexion à Roblox Studio…");
+    let ok=mcp.connected, place="";
+    if(mcp.plugin){ try{ const j=await fetch(`/api/studio?op=status&code=${mcp.plugin}`).then(r=>r.json()); ok=!!j.online; place=j.place||""; }catch{ ok=false; } }
+    else if(mcp.connected){ try{ await mcp.rpc("ping",{},8000); }catch{ try{ await mcp.rpc("tools/list",{},8000); }catch{ ok=false; } } }
+    n.className="note "+(ok?"ok":"bad");
+    n.textContent=ok?`✅ Oui, je suis connectée à Roblox Studio${place?" (place : "+place+")":""} — ${mcp.list.length} outils prêts. Dis-moi quoi construire !`:"❌ Non, je ne suis pas connectée à Roblox Studio. Va dans ⚙ → Paramètres développeur → 🎮 Connecter mon Roblox Studio.";
+    return;
+  }
   // lien MCP collé → connexion à Studio
   const mcpUrl=(text.match(/https?:\/\/[^\s<>"']+/gi)||[]).find(isMcpUrl);
   if(mcpUrl){
