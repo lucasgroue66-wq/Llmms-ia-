@@ -1308,13 +1308,27 @@ async function photoStudio(bot,status,setStatus){
     box.querySelector("img").onclick=()=>window.open(url,"_blank"); bot.txt.insertBefore(box,status); toBottom(); }catch{}
 }
 
+let testPhotoShown=false;
+function showTestPhotos(P,bot,status){
+  const imgs=P.shots.map(sh=>{ const cv=document.createElement("canvas"); cv.width=P.w; cv.height=P.h; const c=cv.getContext("2d"), id=c.createImageData(P.w,P.h);
+    for(let i=0;i<P.w*P.h;i++){ const h=sh.d.substr(i*3,3); id.data[i*4]=parseInt(h[0],16)*17; id.data[i*4+1]=parseInt(h[1],16)*17; id.data[i*4+2]=parseInt(h[2],16)*17; id.data[i*4+3]=255; }
+    c.putImageData(id,0,0); const big=document.createElement("canvas"); big.width=P.w*5; big.height=P.h*5; const b=big.getContext("2d"); b.imageSmoothingEnabled=true; b.imageSmoothingQuality="high"; b.drawImage(cv,0,0,big.width,big.height);
+    return {name:sh.name,url:big.toDataURL("image/jpeg",.88)}; });
+  const box=document.createElement("div"); box.className="studio-photo";
+  box.innerHTML=`<div class="chips"><span class="chip ok">📸 Photos prises en mode testeur dans Roblox Studio</span></div>`+imgs.map(i=>`<div style="margin-top:8px"><div style="font-size:13px;color:var(--dim);margin-bottom:4px">${esc(i.name)}</div><img src="${i.url}" alt="${esc(i.name)}" style="width:100%;border-radius:14px;cursor:zoom-in"></div>`).join("");
+  box.querySelectorAll("img").forEach((im,k)=>im.onclick=()=>window.open(imgs[k].url,"_blank"));
+  bot.txt.insertBefore(box,status); toBottom(); }
+
 /* ---------------- 🧪 mode testeur : lance le jeu dans Studio et lit les erreurs ---------------- */
 async function testerStudio(bot,status,setStatus){
   const has=mcp.list.find(t=>t.name==="playtest"); if(!has) return null;
   setStatus("🧪 Mode testeur : lance le jeu dans Studio…");
   const chips=document.createElement("div"); chips.className="chips"; chips.innerHTML=`<span class="chip run">🧪 Test du jeu en cours…</span>`; bot.txt.insertBefore(chips,status);
   let r; try{ r=await mcp.call("playtest",{seconds:8}); }catch(e){ r={text:e.message,isError:true}; }
-  const txt=String(r.text||""), bad=r.isError||/❌|⚠/.test(txt.replace("✅ Aucune erreur dans la console",""));
+  let txt=String(r.text||"");
+  // photos prises pendant le test (rayons depuis la caméra) → affichées dans le chat, pas envoyées à l'IA
+  const pi=txt.indexOf("@@PHOTOS@@"); if(pi>=0){ try{ showTestPhotos(JSON.parse(txt.slice(pi+10)),bot,status); testPhotoShown=true; }catch{} txt=txt.slice(0,pi).trim(); }
+  const bad=r.isError||/❌|⚠/.test(txt.replace("✅ Aucune erreur dans la console",""));
   if(/Impossible de lancer le test/.test(txt)){ chips.innerHTML=`<span class="chip">🧪 Test impossible : arrête le test en cours dans Studio</span>`; return null; }
   if(/Outil inconnu/.test(txt)){ chips.innerHTML=`<span class="chip">🧪 Recopie le plugin pour activer le mode testeur</span>`; return null; }
   chips.innerHTML=`<span class="chip ${bad?"err":"ok"}">${bad?"🧪 Le test a trouvé des problèmes → correction":"🧪 Test réussi : aucune erreur ✓"}</span>`;
@@ -1577,7 +1591,8 @@ async function agent(c){
       const ch=document.createElement("div"); ch.className="chips"; ch.innerHTML=`<span class="chip ok">✓ ${corrections?`Code vérifié et corrigé (${corrections} correction${corrections>1?"s":""})`:"Code vérifié"}</span>`; bot.txt.insertBefore(ch,status);
     }
     // Filet de sécurité : Studio connecté mais l'IA a seulement écrit du code → on l'installe nous-mêmes dans la place
-    if((usedTools||applyRounds>0)&&mcp.connected&&c.mode!=="image") await photoStudio(bot,status,setStatus);
+    if((usedTools||applyRounds>0)&&mcp.connected&&c.mode!=="image"){ if(!testPhotoShown){ const rep=await testerStudio(bot,status,setStatus); } if(!testPhotoShown) await photoStudio(bot,status,setStatus); }
+    testPhotoShown=false;
     status?.remove(); status=null;
   }catch(e){
     status?.remove(); status=null; Steps.fail();

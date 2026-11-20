@@ -198,6 +198,68 @@ local extraOk, extra = pcall(function()
 end)
 if not extraOk then table.insert(r, "❌ Vérification personnalisée : " .. tostring(extra)) elseif extra ~= nil then table.insert(r, "Vérification : " .. tostring(extra)) end
 table.insert(r, #logs == 0 and "✅ Aucune erreur dans la console" or ("Erreurs / avertissements (" .. #logs .. ") :\n" .. table.concat(logs, "\n")))
+-- 📸 PHOTOS DU TEST : on « photographie » le jeu avec des rayons depuis une caméra (comme un appareil photo)
+local photos = {}
+pcall(function()
+	local HS, Lighting = game:GetService("HttpService"), game:GetService("Lighting")
+	local W, H = 192, 108
+	local sun = Lighting:GetSunDirection(); if sun.Y < 0.2 then sun = Vector3.new(0.4, 0.8, 0.3).Unit end
+	local SKY1, SKY2 = Color3.fromRGB(120, 175, 235), Color3.fromRGB(205, 225, 245)
+	local function hex(c) return string.format("%x%x%x", math.clamp(math.floor(c.R * 15 + 0.5), 0, 15), math.clamp(math.floor(c.G * 15 + 0.5), 0, 15), math.clamp(math.floor(c.B * 15 + 0.5), 0, 15)) end
+	local function colorOf(hit)
+		if hit.Instance:IsA("Terrain") then
+			if hit.Material == Enum.Material.Water then return workspace.Terrain.WaterColor end
+			local ok, c = pcall(function() return workspace.Terrain:GetMaterialColor(hit.Material) end)
+			return ok and c or Color3.fromRGB(90, 140, 70)
+		end
+		return hit.Instance.Color
+	end
+	local function shoot(name, cam, fov)
+		local params = RaycastParams.new(); params.FilterType = Enum.RaycastFilterType.Exclude
+		local skip = {}; params.FilterDescendantsInstances = skip
+		local tY = math.tan(math.rad(fov / 2)); local tX = tY * W / H
+		local out = table.create(W * H)
+		for y = 0, H - 1 do
+			for x = 0, W - 1 do
+				local u, v = ((x + 0.5) / W * 2 - 1) * tX, (1 - (y + 0.5) / H * 2) * tY
+				local dir = (cam.LookVector + cam.RightVector * u + cam.UpVector * v).Unit * 2000
+				local hit
+				for _ = 1, 4 do
+					hit = workspace:Raycast(cam.Position, dir, params)
+					if hit and hit.Instance:IsA("BasePart") and hit.Instance.Transparency > 0.9 then table.insert(skip, hit.Instance); params.FilterDescendantsInstances = skip; hit = nil else break end
+				end
+				local col
+				if hit then
+					local c = colorOf(hit)
+					local l = 0.5 + 0.5 * math.max(0, hit.Normal:Dot(sun))
+					c = Color3.new(c.R * l, c.G * l, c.B * l)
+					col = c:Lerp(SKY2, math.clamp((hit.Distance - 250) / 900, 0, 0.85))
+				else
+					col = SKY1:Lerp(SKY2, math.clamp(1 - v / tY, 0, 1) * 0.8)
+				end
+				out[#out + 1] = hex(col)
+			end
+			if y % 12 == 0 then task.wait() end
+		end
+		table.insert(photos, { name = name, d = table.concat(out) })
+	end
+	local pl = Players:GetPlayers()[1]
+	local root = pl and pl.Character and pl.Character:FindFirstChild("HumanoidRootPart")
+	if root then
+		local pos = (root.CFrame * CFrame.new(0, 4.5, 13)).Position
+		shoot("Vue du joueur", CFrame.lookAt(pos, root.Position + Vector3.new(0, 2, 0)), 70)
+	end
+	local parts = {}
+	for _, o in ipairs(workspace:GetDescendants()) do if o:IsA("BasePart") and not o:IsA("Terrain") and o.Size.Magnitude < 400 and o.Transparency < 0.9 then table.insert(parts, o.Position) end end
+	if #parts > 0 then
+		local mn, mx = parts[1], parts[1]
+		for _, p in ipairs(parts) do mn = mn:Min(p); mx = mx:Max(p) end
+		local c, size = (mn + mx) / 2, (mx - mn).Magnitude
+		local d = math.clamp(size * 0.75, 40, 600)
+		shoot("Vue d'ensemble", CFrame.lookAt(c + Vector3.new(d * 0.55, d * 0.6, d * 0.55), c), 60)
+	end
+	if #photos > 0 then table.insert(r, "@@PHOTOS@@" .. HS:JSONEncode({ w = W, h = H, shots = photos })) end
+end)
 STS:EndTest(table.concat(r, "\n"))
 ]]
 	server.Parent = SSS
