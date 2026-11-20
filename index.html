@@ -1965,12 +1965,12 @@ let billing=null;
 async function loadBilling(){
   try{ const r=await apiFetch({method:"POST",headers:headers(),body:JSON.stringify({mode:"billing_status"})}); if(!r.ok) return; const j=await r.json(); if(!j||!j.plan) return; billing=j; }catch{ return; }
   const names={free:"Gratuit",pro:"Pro",max:"Max",owner:"Propriétaire 👑"};
-  $("subT2").textContent=billing.plan==="owner"?"Propriétaire 👑 · illimité":`${names[billing.plan]} · ${Math.max(0,billing.limit-billing.used)}/${billing.limit} restants aujourd'hui`;
+  $("subT2").textContent=billing.plan==="owner"?"Propriétaire 👑 · illimité":(billing.limit?`${names[billing.plan]} · ${Math.max(0,billing.limit-billing.used)}/${billing.limit} restants aujourd'hui`:"Messages illimités ♾️");
 }
 function subsUI(){
   const b=billing||{plan:"free",limit:15,used:0,links:{}};
   const names={free:"Gratuit",pro:"Pro",max:"Max",owner:"Propriétaire 👑"};
-  $("subsMe").textContent=b.plan==="owner"?"Tu es le propriétaire : messages illimités 👑":`Ton plan : ${names[b.plan]} — ${b.used}/${b.limit} messages utilisés aujourd'hui${b.email?" ("+b.email+")":""}.`;
+  $("subsMe").textContent=b.plan==="owner"?"Tu es le propriétaire : messages illimités 👑":(b.limit?`Ton plan : ${names[b.plan]} — ${b.used}/${b.limit} messages utilisés aujourd'hui${b.email?" ("+b.email+")":""}.`:"Messages illimités pour tout le monde ♾️");
   document.querySelectorAll("#subs .plan").forEach(p=>p.classList.toggle("cur",p.dataset.plan===b.plan));
   document.querySelectorAll("#subs [data-buy]").forEach(btn=>{ const pl=btn.dataset.buy, has=!!b.links?.[pl];
     btn.disabled=!has||b.plan===pl||b.plan==="owner"; btn.textContent=b.plan===pl?"Ton plan actuel":has?"S'abonner":"Bientôt disponible";

@@ -242,7 +242,9 @@ async function loadRes(rid) {
   try { return v ? JSON.parse(v) : null; } catch { return null; }
 }
 // ---------- Abonnements (Stripe) : Gratuit 15/jour, Pro 30/jour, Max 50/jour ----------
-const PLAN_LIMITS = { free: () => Number(process.env.DAILY_LIMIT ?? 15), pro: () => Number(process.env.PRO_LIMIT ?? 30), max: () => Number(process.env.MAX_LIMIT ?? 50) };
+// Plus aucune limite de messages pour personne (0 = illimité). Pour remettre une limite un jour : variable LIMITS_ON=1 dans Vercel.
+const LIM = (v, d) => process.env.LIMITS_ON === "1" ? Number(v ?? d) : 0;
+const PLAN_LIMITS = { free: () => LIM(process.env.DAILY_LIMIT, 15), pro: () => LIM(process.env.PRO_LIMIT, 30), max: () => LIM(process.env.MAX_LIMIT, 50) };
 const isOwner = email => !!email && ("lucasgroue5@gmail.com,lucasgroue66@gmail.com," + String(process.env.OWNER_EMAILS || "")).split(",").map(x => x.trim().toLowerCase()).filter(Boolean).includes(String(email).toLowerCase());
 async function planOf(email) {
   if (!email) return "free";
