@@ -385,6 +385,50 @@ body.dragging .drop{display:grid}
 #gate input{background:var(--field);border:1px solid var(--line2);border-radius:10px;padding:11px 13px;outline:none}
 #gate button{background:var(--accent);color:var(--accent-ink);border-radius:10px;padding:11px;font-weight:600}
 @media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+
+/* ===================== Décor premium ===================== */
+body{background:#0f100d}
+.chatcol{isolation:isolate;background:
+  radial-gradient(1200px 700px at 85% -10%,rgba(236,164,116,.10),transparent 60%),
+  radial-gradient(900px 600px at -10% 110%,rgba(124,92,255,.07),transparent 60%),
+  linear-gradient(180deg,#151612 0%,#11120f 100%)}
+.chatcol::before{content:"";position:absolute;inset:-20%;z-index:-1;pointer-events:none;
+  background:
+    radial-gradient(38% 30% at 70% 20%,rgba(236,164,116,.13),transparent 70%),
+    radial-gradient(30% 26% at 20% 70%,rgba(229,139,82,.08),transparent 70%),
+    radial-gradient(26% 22% at 85% 80%,rgba(124,92,255,.07),transparent 70%);
+  filter:blur(30px);animation:llmmsAurora 26s ease-in-out infinite alternate}
+.chatcol::after{content:"";position:absolute;inset:0;z-index:-1;pointer-events:none;opacity:.05;mix-blend-mode:overlay;
+  background-image:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='160' height='160'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/></filter><rect width='100%' height='100%' filter='url(%23n)'/></svg>")}
+@keyframes llmmsAurora{0%{transform:translate3d(0,0,0) rotate(0deg)}50%{transform:translate3d(-4%,3%,0) rotate(6deg)}100%{transform:translate3d(3%,-2%,0) rotate(-4deg)}}
+aside{background:linear-gradient(180deg,#1b1d18 0%,#151612 100%);box-shadow:inset -1px 0 0 rgba(255,255,255,.03)}
+.topbar{background:rgba(20,21,18,.72);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px)}
+/* titre d'accueil en dégradé lumineux */
+.empty .big span{background:linear-gradient(100deg,#f6efe4 0%,#f3cfae 45%,#eca474 70%,#f6efe4 100%);background-size:220% 100%;-webkit-background-clip:text;background-clip:text;color:transparent;animation:llmmsShine 9s ease-in-out infinite}
+.empty .big svg{filter:drop-shadow(0 0 14px rgba(236,164,116,.55))}
+@keyframes llmmsShine{0%,100%{background-position:0% 0}50%{background-position:100% 0}}
+/* cartes : profondeur + reflet */
+.sugg button,.ideas button{background:linear-gradient(180deg,rgba(255,255,255,.035),rgba(255,255,255,0)),rgba(29,31,27,.82);backdrop-filter:blur(6px);box-shadow:0 1px 0 rgba(255,255,255,.04) inset,0 10px 30px -18px rgba(0,0,0,.8);transition:transform .18s ease,border-color .18s,box-shadow .18s,background .18s}
+.sugg button:hover,.ideas button:hover{transform:translateY(-2px);border-color:rgba(236,164,116,.45);box-shadow:0 1px 0 rgba(255,255,255,.06) inset,0 16px 34px -16px rgba(236,164,116,.35)}
+.ideas button .em{filter:drop-shadow(0 4px 8px rgba(0,0,0,.45))}
+/* zone de saisie en verre */
+.composer{background:linear-gradient(180deg,rgba(255,255,255,.04),rgba(255,255,255,.01)),rgba(30,32,27,.78);backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);border-color:rgba(255,255,255,.09);box-shadow:0 1px 0 rgba(255,255,255,.05) inset,0 24px 60px -30px rgba(0,0,0,.9);transition:border-color .2s,box-shadow .2s}
+.composer:focus-within{border-color:rgba(236,164,116,.55);box-shadow:0 1px 0 rgba(255,255,255,.06) inset,0 0 0 4px rgba(236,164,116,.10),0 24px 60px -24px rgba(236,164,116,.25)}
+.send{box-shadow:0 8px 22px -8px rgba(236,164,116,.7);transition:transform .15s,filter .15s}
+.send:hover{transform:translateY(-1px);filter:brightness(1.07)}
+/* messages qui apparaissent en douceur */
+#thread>.row{animation:llmmsIn .35s ease both}
+@keyframes llmmsIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+.av{box-shadow:0 6px 18px -8px rgba(0,0,0,.8),0 1px 0 rgba(255,255,255,.06) inset}
+/* blocs de code plus nets */
+.pre{box-shadow:0 18px 40px -26px rgba(0,0,0,.9);border-color:rgba(255,255,255,.08)!important}
+.pre .pv.play{box-shadow:0 6px 18px -6px rgba(236,164,116,.8)}
+.improve button{transition:transform .15s,border-color .15s}
+.improve button:hover{transform:translateY(-1px);border-color:rgba(236,164,116,.5)}
+/* barre de défilement discrète */
+*{scrollbar-width:thin;scrollbar-color:#3a3d35 transparent}
+::-webkit-scrollbar{width:9px;height:9px}::-webkit-scrollbar-thumb{background:#33362f;border-radius:9px;border:2px solid transparent;background-clip:padding-box}
+@media (prefers-reduced-motion:reduce){.chatcol::before,.empty .big span,#thread>.row{animation:none}}
 </style>
 </head>
 <body>
