@@ -1345,7 +1345,9 @@ async function askSolve(img,text,signal){
     const r=await sample([{role:"user",content:SOLVE_PROMPT+"\n\n"+prompt}],{model:"claude-opus-5-5",modelTier:"complex",effort:"high",cache:false,signal,images:[dataUrlToBlob(img)]});
     return r.text||"";
   }
-  const r=await apiFetch({method:"POST",headers:headers(),signal,body:JSON.stringify({mode:"solve",tier:tier==="studio"?"studio":tier==="5"?"5":"5.5",messages:[{role:"user",content:[{type:"text",text:prompt},{type:"image_url",image_url:{url:img}}]}]})});
+  // photo allégée (plus rapide à envoyer et à lire)
+  let small=img; try{ const im=new Image(); im.src=img; await im.decode(); small=drawTo(im,im.naturalWidth,im.naturalHeight,1600,0.82); }catch{}
+  const r=await apiFetch({method:"POST",headers:headers(),signal,body:JSON.stringify({mode:"solve",effort,tier:tier==="studio"?"studio":tier==="5"?"5":"5.5",messages:[{role:"user",content:[{type:"text",text:prompt},{type:"image_url",image_url:{url:small}}]}]})});
   if(!r.ok||!r.body) throw Object.assign(new Error("Le serveur de l'IA ne répond pas."),{nice:true});
   let out=""; await readLlmms(r,ev=>{ if(ev.t==="text") out+=ev.v; }); return out;
 }
@@ -2771,6 +2773,7 @@ async function* runImage(body, env) {
 function effortOf(body, tier, mode) {
   if (body?.effort === "max") return "high";
   if (body?.effort === "fast") return tier.effort ? "low" : null;
+  if (mode === "solve") return tier.effort ? "low" : null; // devoirs : réponse rapide (Effort max garde la réflexion maximale)
   if (!tier.effort) return null;
   return (body?.light || (!tier.only && !["roblox", "dev", "review", "plan", "vision", "solve"].includes(mode))) && tier.effort === "high" ? "medium" : tier.effort;
 }

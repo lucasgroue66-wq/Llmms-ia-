@@ -43,7 +43,10 @@ async function tryGemini(b, opts) {
   const key = process.env.GEMINI_API_KEY; if (!key) return null;
   const maxMode = (b.messages || []).some(m => m.role === "system" && typeof m.content === "string" && m.content.includes("EFFORT MAX"));
   const effort = maxMode ? "high" : b.reasoning?.effort === "low" ? "low" : b.reasoning ? "medium" : "low";
-  for (const model of await gemModels(key)) {
+  let list = await gemModels(key);
+  // réflexion courte demandée : on commence par les modèles « Flash » (les plus rapides), pas les Pro
+  if (effort === "low") list = [...list.filter(m => /flash/.test(m) && !/lite/.test(m)), ...list.filter(m => !(/flash/.test(m) && !/lite/.test(m)))];
+  for (const model of list) {
     if ((gemDead.get(model) || 0) > Date.now()) continue;
     const g = { model, stream: !!b.stream, messages: boostSystem(b.messages || []), max_tokens: Math.min(Math.max(b.max_tokens || 32000, 32000), 60000) };
     if (!/gemma/i.test(model)) g.reasoning_effort = effort === "low" ? "low" : effort === "medium" ? "medium" : "high";
