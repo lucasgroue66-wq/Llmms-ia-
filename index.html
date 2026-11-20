@@ -249,6 +249,7 @@ textarea::placeholder{color:var(--muted)}
 body.dragging .drop{display:grid}
 #preview{position:fixed;inset:0;z-index:58;display:none;flex-direction:column;background:#000}
 #preview.open{display:flex}
+.pre .pv.play{background:var(--accent);color:var(--accent-ink);font-weight:600}
 .pverr{color:#ff9b8a;font-size:12.5px;max-width:45vw;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .pvbar{display:flex;align-items:center;gap:8px;padding:10px 12px;background:var(--side);border-bottom:1px solid var(--line)}
 .pvt{font-weight:600;color:var(--soft)}
@@ -440,7 +441,7 @@ body.dragging .drop{display:grid}
 <div class="drop">Lâchez votre vidéo ou votre image</div>
 <div id="preview" role="dialog" aria-modal="true" aria-label="Aperçu">
   <div class="pvbar"><span class="pvt">▶ Aperçu</span><span class="grow"></span><span id="pvErr" class="pverr" hidden></span><button class="dbtn" id="pvFix" type="button">🔧 Réparer</button><button class="dbtn" id="pvReplay" type="button">↻ Rejouer</button><button class="dbtn" id="pvClose" type="button">Fermer</button></div>
-  <iframe id="pvFrame" title="Aperçu" sandbox="allow-scripts allow-pointer-lock" referrerpolicy="no-referrer"></iframe>
+  <iframe id="pvFrame" title="Aperçu" sandbox="allow-scripts allow-pointer-lock" allow="fullscreen; autoplay; gamepad" referrerpolicy="no-referrer"></iframe>
 </div>
 <div id="login" role="dialog" aria-modal="true" aria-labelledby="loginTitle" hidden>
   <div class="lbox">
@@ -668,7 +669,8 @@ function md(src){
   const out=[]; String(src||"").split(/```/).forEach((part,i)=>{
     if(i%2){ const nl=part.indexOf("\n"); const lang=nl>-1?part.slice(0,nl).trim():""; const code=nl>-1?part.slice(nl+1):part;
       const pv=/^(html|svg)$/i.test(lang)||(!lang&&/^\s*<(!doctype|html|svg)/i.test(code));
-      out.push(`<div class="pre"><div class="head"><span>${esc(lang||"code")}</span><span class="hbtns">${pv?`<button type="button" class="pv" data-preview>▶ Aperçu</button>`:""}<button type="button" data-copy>Copier</button></span></div><pre><code>${esc(code.replace(/\n$/,""))}</code></pre></div>`); return; }
+      const game=pv&&isGameCode(code);
+      out.push(`<div class="pre"><div class="head"><span>${esc(lang||"code")}</span><span class="hbtns">${pv?`<button type="button" class="pv${game?" play":""}" data-preview>${game?"🎮 Jouer":"▶ Aperçu"}</button>`:""}<button type="button" data-copy>Copier</button></span></div><pre><code>${esc(code.replace(/\n$/,""))}</code></pre></div>`); return; }
     let list=null, para=[];
     const fp=()=>{ if(para.length){ out.push("<p>"+para.map(inline).join("<br>")+"</p>"); para=[]; } };
     const fl=()=>{ if(list){ out.push(`</${list}>`); list=null; } };
@@ -1038,7 +1040,7 @@ async function agent(c){
       let r, ct="";
       const lastIsAuto=c.messages.at(-1)?._auto;
       curStep=Steps.add(lastIsAuto?"Vérification dans Studio : console et explorateur":step===0?(c.mode==="image"?"Création de l'image":"Réflexion"):"Suite du travail"); Steps.trackReset(curStep);
-      try{ r=await apiFetch({method:"POST",headers:headers(),signal:ctl.signal,body:JSON.stringify({messages:forApi(c),mode:c.mode,tier,search:web,lang:replyLang(),plan,spec,light:isAnimReq(c)&&c.mode!=="roblox",tools:c.mode==="image"||!autoStudio?[]:mcp.tools()})}); }
+      try{ r=await apiFetch({method:"POST",headers:headers(),signal:ctl.signal,body:JSON.stringify({messages:forApi(c),mode:c.mode,tier,search:web,lang:replyLang(),plan,spec,light:(isAnimReq(c)||isGameReq(c))&&c.mode!=="roblox",tools:c.mode==="image"||!autoStudio?[]:mcp.tools()})}); }
       catch(e){ throw e; }
       ct=r.headers.get("content-type")||"";
       if(r.status===401){ let er=""; try{ er=(await r.clone().json()).error; }catch{} status?.remove(); status=null; bot.txt.closest(".row").remove(); if(er==="login"){ showLogin(); } else { $("gate").style.display="grid"; $("gateCode").focus(); } return; }
@@ -1367,13 +1369,17 @@ function wrapPreview(code){
   const g=PV_GUARD+(trunc?`<script>parent.postMessage({llmmsPv:"Le code est incomplet (coupé avant la fin)"},"*")<\/script>`:"");
   return /<head[^>]*>/i.test(code)?code.replace(/<head[^>]*>/i,m=>m+g):g+code;
 }
+function isGameCode(code){ return /requestAnimationFrame/.test(code)&&/(keydown|touchstart|pointerdown)/.test(code)&&/(score|game ?over|gameover|vies|lives|niveau|level)/i.test(code); }
+const isGameReq=c=>{ const u=[...c.messages].reverse().find(m=>m.role==="user"&&!m._auto); const t=textOf(u?.content||""); return /\bjeux?\b|\bgame\b|jouable|snake|tetris|pong|flappy|plateforme|platformer|shooter/i.test(t)&&!/roblox|studio|luau/i.test(t); };
 let pvSrc="", pvLastErr="";
-function openPreview(code){ pvSrc=code; pvLastErr=""; $("pvErr").hidden=true; pvCode=wrapPreview(code); $("pvFrame").srcdoc=""; $("preview").classList.add("open");
+function openPreview(code){ pvSrc=code; pvLastErr=""; $("pvErr").hidden=true; const g=isGameCode(code); $("preview").querySelector(".pvt").textContent=g?"🎮 Jeu":"▶ Aperçu"; $("pvFix").title=g?"Le jeu bugue ? L'IA le corrige":""; pvCode=wrapPreview(code); $("pvFrame").srcdoc=""; $("preview").classList.add("open");
   // On ouvre d'abord l'aperçu, PUIS on charge l'animation : sinon elle démarre dans une fenêtre cachée de taille 0 (écran noir)
   requestAnimationFrame(()=>requestAnimationFrame(()=>{ $("pvFrame").srcdoc=pvCode; })); }
+$("pvFrame").addEventListener("load",()=>{ try{ $("pvFrame").focus(); $("pvFrame").contentWindow.focus(); }catch{} });
 addEventListener("message",e=>{ if(e.source!==$("pvFrame").contentWindow||!e.data||typeof e.data.llmmsPv!=="string") return; if(!pvLastErr){ pvLastErr=e.data.llmmsPv; $("pvErr").textContent="⚠ "+pvLastErr; $("pvErr").hidden=false; } });
 $("pvFix").onclick=()=>{ if(busy) return; $("pvClose").click();
-  input.value=(pvLastErr?`L'aperçu de l'animation reste noir et affiche cette erreur : « ${pvLastErr} ».`:`L'aperçu de l'animation reste noir ou ne marche pas.`)+` Trouve la cause, corrige-la et renvoie la page HTML COMPLÈTE dans un seul bloc \`\`\`html (code qui marche du premier coup : chaque plan dessiné dans un try/catch, le dessin commence dès la première image, pas d'écran noir).`;
+  const g=isGameCode(pvSrc), what=g?"Le jeu":"L'aperçu de l'animation";
+  input.value=(pvLastErr?`${what} plante avec cette erreur : « ${pvLastErr} ».`:g?`Le jeu ne marche pas bien (écran noir, commandes ou bugs).`:`L'aperçu de l'animation reste noir ou ne marche pas.`)+` Trouve la cause, corrige-la et renvoie la page HTML COMPLÈTE dans un seul bloc \`\`\`html (code qui marche du premier coup, boucle protégée par try/catch, pas d'écran noir${g?", commandes tactiles et clavier qui marchent":""}).`;
   grow(); send(); };
 $("pvReplay").onclick=()=>{ $("pvFrame").srcdoc=""; setTimeout(()=>$("pvFrame").srcdoc=pvCode,30); };
 $("pvClose").onclick=()=>{ $("preview").classList.remove("open"); $("pvFrame").srcdoc=""; };
@@ -1461,7 +1467,7 @@ function drawFiles(){
     const d=document.createElement("div"); d.className="fitem";
     if(fTab==="code"){
       const pv=/^(html|svg)$/.test(it.lang);
-      d.innerHTML=`<div class="fh"><span class="fi">${esc(it.lang.slice(0,4))}</span><div><div class="fn">${esc(it.name)}</div><div class="fm">${esc(it.where||it.lang)} · ${it.lines} lignes</div></div></div><div class="fa">${pv?'<button type="button" class="pv" data-a="pv">▶ Aperçu</button>':""}<button type="button" data-a="see">Voir</button><button type="button" data-a="copy">Copier</button><button type="button" data-a="dl">Télécharger</button></div><pre></pre>`;
+      d.innerHTML=`<div class="fh"><span class="fi">${esc(it.lang.slice(0,4))}</span><div><div class="fn">${esc(it.name)}</div><div class="fm">${esc(it.where||it.lang)} · ${it.lines} lignes</div></div></div><div class="fa">${pv?`<button type="button" class="pv" data-a="pv">${isGameCode(it.code)?"🎮 Jouer":"▶ Aperçu"}</button>`:""}<button type="button" data-a="see">Voir</button><button type="button" data-a="copy">Copier</button><button type="button" data-a="dl">Télécharger</button></div><pre></pre>`;
       d.querySelector("pre").textContent=it.code;
       d.querySelector('[data-a="see"]').onclick=e=>{ d.classList.toggle("open"); e.target.textContent=d.classList.contains("open")?"Masquer":"Voir"; };
       d.querySelector('[data-a="copy"]').onclick=async e=>{ try{ await navigator.clipboard.writeText(it.code); e.target.textContent="Copié ✓"; }catch{ e.target.textContent="Sélectionne dans Voir"; } };
@@ -2235,6 +2241,7 @@ const BASE = `Tu es {NAME}, l'assistant de l'espace « llmms ia ».
 - Si on te demande à quel point tu es fort, réponds avec assurance en montrant ce que tu sais faire (systèmes complets, GUI pro, builds, sécurité, sauvegarde, reproduction de jeux) et propose de le prouver tout de suite sur un vrai projet.
 - Reste honnête : si une chose est vraiment impossible ou risquée, dis-le clairement en une phrase et propose la meilleure solution possible.
 - Recréer une animation, une intro, une cinématique, un trailer ou un passage connu de N'IMPORTE QUEL jeu, film ou pub (GTA, Call of Duty, Fortnite, Minecraft, Valorant, Apex, FIFA/EA FC, Brawl Stars, Clash Royale, jeux Roblox connus…), y compris leurs écrans de menu, intros de match, killcams, écrans de victoire, bus/saut de début de partie, transitions et effets signature : 1) si tu as l'outil recherche_web, cherche d'abord une description précise plan par plan ; 2) écris le découpage : chaque plan avec durée, cadrage et mouvement de caméra, décor, personnages, action, lumière et couleurs, textes à l'écran, rythme ; 3) construis-le en entier. Dans Roblox Studio, ça devient une vraie cinématique (décor + caméra + effets). Ailleurs, fais UNE page HTML animée complète et autonome dans un seul bloc \`\`\`html (l'utilisateur la regarde avec le bouton Aperçu) : durée 40 à 90 s, 6 à 12 plans enchaînés par une timeline JavaScript (tableau de plans avec durée), code COMPACT (moins de 450 lignes, fonctions de dessin réutilisables), chaque plan DESSINÉ en détail (canvas 2D : ciel en dégradé, soleil, mer, skyline, palmiers, néons, voitures, silhouettes de personnages, reflets, particules, pluie…), vrais mouvements de caméra (zoom, travelling, panoramique via transformations), transitions de cinéma (fondu au noir, flash blanc, coupe sèche, flou), bandes noires 2.39:1, grain de film, étalonnage de couleurs fidèle à l'original, titres et textes à l'écran au bon moment, plein écran responsive, démarrage automatique, bouton rejouer. Code soigné, sans bibliothèque externe. Va droit au but : pas de long blabla avant le code. Ne dis JAMAIS de copier le code dans un fichier, de l'enregistrer, de l'héberger ou de le mettre en ligne pour voir l'animation : l'utilisateur appuie simplement sur ▶ Aperçu sous le code, l'animation se lance direct dans le chat. Termine juste par « Appuie sur ▶ Aperçu pour la voir. »
+- Créer un JEU jouable : quand on te demande un jeu (« fais-moi un jeu… », « crée un jeu de course / plateforme / tir / snake / tycoon / obby / horreur… », « refais tel jeu ») SANS préciser Roblox ni Studio, crée un vrai jeu jouable DIRECTEMENT dans le site : UNE page HTML complète et autonome dans un seul bloc \`\`\`html (l'utilisateur appuie sur 🎮 Jouer sous le code et joue tout de suite). Exigences : canvas plein écran responsive (2D canvas, ou 3D en WebGL écrit à la main si c'est un jeu 3D, sans bibliothèque externe) ; écran titre avec le nom du jeu et un bouton JOUER ; vraies règles, score, vies ou chrono, niveaux ou difficulté qui monte, écran Game Over avec meilleur score et bouton Rejouer ; commandes TACTILES visibles et grosses (joystick ou flèches + boutons d'action à l'écran, l'utilisateur joue souvent sur tablette/téléphone) ET clavier (flèches/ZQSD/espace) ; sons générés avec WebAudio (démarrés au premier toucher) ; graphismes soignés (dégradés, particules, ombres, animations, effets de caméra), 60 FPS avec requestAnimationFrame et delta-time ; collisions correctes ; boucle de jeu protégée par try/catch pour ne jamais rester sur un écran noir ; pas de localStorage obligatoire (s'il est utilisé, entoure-le de try/catch) ; pas d'alert/prompt ; code COMPLET sans « ... », moins de 900 lignes. Va droit au but (2 lignes max avant le code) et termine juste par « Appuie sur 🎮 Jouer pour lancer le jeu. » Ne dis JAMAIS de copier le code dans un fichier ou de l'héberger. Si l'utilisateur parle de Roblox/Studio, c'est un jeu Roblox (règles Roblox) à la place.
 - Vidéos existantes : quand une vraie vidéo existe (trailer officiel, clip…), donne aussi son lien YouTube direct (youtube.com/watch?v=…) trouvé avec recherche_web : le site l'affiche en lecteur vidéo dans le chat. Tu ne peux pas télécharger ni envoyer de fichier vidéo : ne le promets jamais. Reproduis la mise en scène, l'ambiance, les couleurs et le rythme avec tes propres décors et personnages ; n'utilise pas les logos officiels, la musique ou les images protégées de l'œuvre d'origine.
 - Ne dis JAMAIS à l'utilisateur d'aller chercher lui-même (« va sur Google », « consulte un site météo », « regarde sur internet »…). C'est toi qui réponds : avec tes outils de recherche quand tu en as, sinon avec la meilleure réponse possible tirée de tes connaissances, en précisant en une courte phrase que l'info peut avoir changé.`;
 
@@ -2548,7 +2555,7 @@ async function startChat(body, env) {
   const { r, error } = await callOpenRouter(env, list(env, "LLMMS_MODEL_" + tierKey.replace(".", "_"), tier.models), {
     stream: true,
     max_tokens: body?.light ? 64000 : tier.max,
-    ...(tier.effort ? { reasoning: { effort: body?.light && tier.effort === "high" ? "medium" : tier.effort } } : {}),
+    ...(tier.effort ? { reasoning: { effort: (body?.light || (!tier.only && !["roblox", "dev", "review", "plan", "vision", "solve"].includes(mode))) && tier.effort === "high" ? "medium" : tier.effort } } : {}),
     messages: [{ role: "system", content: system }, ...messages],
     ...(tools ? { tools, tool_choice: "auto", parallel_tool_calls: false } : {}),
   });
@@ -2584,7 +2591,7 @@ async function* runChat(body, env) {
   const { r, error } = await callOpenRouter(env, list(env, "LLMMS_MODEL_" + tierKey.replace(".", "_"), tier.models), {
     stream: true,
     max_tokens: tier.max,
-    ...(tier.effort ? { reasoning: { effort: tier.effort } } : {}),
+    ...(tier.effort ? { reasoning: { effort: (body?.light || (!tier.only && !["roblox", "dev", "review", "plan", "vision", "solve"].includes(mode))) && tier.effort === "high" ? "medium" : tier.effort } } : {}),
     messages: [{ role: "system", content: system }, ...messages],
     ...(tools ? { tools, tool_choice: "auto", parallel_tool_calls: false } : {}),
   });
