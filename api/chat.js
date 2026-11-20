@@ -1,4 +1,17 @@
 // Vercel : /api/chat (Node 20+). La logique est dans lib/core.js.
+// Mode gratuit : si OpenRouter dit « plus de crédits » (402), on renvoie la demande au routeur gratuit.
+const realFetch = globalThis.fetch;
+globalThis.fetch = async (url, opts) => {
+  const r = await realFetch(url, opts);
+  if (r.status !== 402 || !String(url).includes("openrouter.ai/api/v1/chat/completions")) return r;
+  try {
+    const b = JSON.parse(opts.body);
+    b.model = "openrouter/free"; delete b.reasoning; b.max_tokens = Math.min(b.max_tokens || 16000, 16000);
+    let r2 = await realFetch(url, { ...opts, body: JSON.stringify(b) });
+    if (!r2.ok && b.tools) { delete b.tools; delete b.tool_choice; delete b.parallel_tool_calls; r2 = await realFetch(url, { ...opts, body: JSON.stringify(b) }); }
+    return r2;
+  } catch { return r; }
+};
 let mods = null, loadErr = null;
 async function load() {
   if (mods || loadErr) return;
