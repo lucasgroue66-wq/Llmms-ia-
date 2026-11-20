@@ -1747,7 +1747,7 @@ function effortUI(){ const e=EFFORTS.find(x=>x[0]===effort); $("effIc").textCont
 $("effBtn").onclick=e=>{ e.stopPropagation(); $("mmenu").classList.remove("open"); const o=$("effMenu").classList.toggle("open"); $("effBtn").setAttribute("aria-expanded",String(o)); };
 document.addEventListener("click",e=>{ if(!e.target.closest("#effPicker")) $("effMenu").classList.remove("open"); });
 effortUI();
-const boosted=c=>effort==="max"&&(c.mode==="roblox"||(c.mode==="dev"&&!isAnimReq(c)));
+const boosted=c=>effort!=="fast"&&(effort==="max"||tier==="studio")&&(c.mode==="roblox"||(c.mode==="dev"&&!isAnimReq(c)));
 
 async function reviewCode(c,answer,signal){
   try{
@@ -2516,12 +2516,30 @@ Patterns de pro (à utiliser dès que c'est pertinent) :
 - Test : explique comment tester (Play, et Test > Clients et serveurs pour le multijoueur) et ce qui doit se passer.
 - Cinématiques / intros / cutscenes : un LocalScript pilote la caméra (Scriptable) plan par plan avec des mouvements doux (travellings, panoramiques, survols, courbes), FOV qui change, bandes noires, fondus, titres et sous-titres, étalonnage (ColorCorrection, Bloom, Blur, DepthOfField), tremblement léger, bouton « Passer », puis caméra rendue au joueur. Construis aussi le décor et les personnages des plans (modèles, poses, déplacements avec Humanoid:MoveTo ou TweenService, animations) et lance la cinématique au bon moment (arrivée du joueur, RemoteEvent, ProximityPrompt).`;
 
+const ROBLOX_GENRES = `Plans de jeux à succès (à suivre quand la demande correspond, en adaptant le thème) :
+- « Steal a … » (style Steal a Brainrot) : chaque joueur a une BASE assignée à son arrivée (plots numérotés, libérés au départ) ; un tapis roulant central fait apparaître des personnages/objets avec rareté (Common → Secret, poids de probabilité), prix et revenu/seconde ; on achète avec un ProximityPrompt, l'objet marche jusqu'à la base et se pose sur un emplacement libre ; chaque objet posé rapporte de l'argent/seconde, cumulé dans un « collecteur » à toucher ; VOL : on peut prendre un objet dans la base d'un autre (ProximityPrompt « Voler », objet porté au-dessus de la tête, vitesse réduite) et le ramener dans SA base ; si le porteur est touché/tué, l'objet retourne chez le propriétaire ; bouton « Verrouiller la base » (barrière 60 s, recharge) ; vente, rebirth (multiplicateur), sauvegarde des objets et de l'argent, classement, événements (pluie de rareté), boutique Robux (ProcessReceipt). Tout est vérifié côté serveur (distance, propriété, cooldown).
+- Simulateur : stat qui monte au clic (avec outil), zones débloquées par palier, pets avec œufs (probabilités, équiper 3, multiplicateurs), rebirths, boosts, quêtes, classement.
+- Tycoon : plot attribué, boutons d'achat dans l'ordre (dépendances), droppers → convoyeur → collecteur, argent et achats sauvegardés, rebirth.
+- Obby : étapes avec checkpoints sauvegardés, kill bricks, plateformes mobiles (TweenService/PrismaticConstraint), compteur d'étapes, skip stage (produit développeur), effets à chaque checkpoint.
+- Tower defense : chemin à waypoints, vagues en table, ennemis gérés par le serveur, tours plaçables (position validée), argent par kill, upgrades.
+- Combat / PvP : armes en Tool, hitbox serveur (OverlapParams/Raycast), combos, cooldowns, knockback (LinearVelocity court), barres de vie, kill feed.
+- Horreur / histoire : chapitres, cinématiques, PNJ poursuivant (PathfindingService recalculé), lampe torche, jumpscares, sons d'ambiance, sauvegarde du chapitre.
+Pour tout jeu complet : livre une base JOUABLE tout de suite (boucle de jeu complète de bout en bout), puis les finitions. Mets les réglages (prix, probabilités, vitesses) dans un ModuleScript Config facile à modifier.`;
+
 const MODES = {
   chat: `Tu aides sur tous les sujets. Si on te demande du code, applique les exigences de qualité ci-dessous.\n\n${QUALITY}`,
   dev: `Mode Développement : tu es un développeur senior de très haut niveau (web, JS/TS, Python, Luau…).\n\n${QUALITY}`,
   roblox: `Mode Roblox Studio : tu es l'un des meilleurs développeurs Roblox au monde (scripts, GUI, builds, maps, VFX, gameplay, systèmes de jeux à succès).
 
 ${ROBLOX}
+
+${ROBLOX_GENRES}
+
+Méthode obligatoire avant d'écrire du code :
+1. Liste mentalement TOUS les scripts nécessaires (serveur, client, modules, config) et comment ils communiquent (quels RemoteEvents, quelles données).
+2. Vérifie qu'aucune fonctionnalité demandée n'est oubliée et que la boucle de jeu marche de bout en bout.
+3. Écris chaque script COMPLET (zéro « ... », zéro TODO), avec son type et son emplacement exact dans l'Explorer en titre.
+4. Relis comme un testeur : chaque variable déclarée, chaque WaitForChild, chaque Remote créé côté serveur avant d'être utilisé côté client, chaque :Connect nettoyé, aucune action du client acceptée sans validation serveur.
 
 ${QUALITY}
 
