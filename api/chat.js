@@ -73,7 +73,7 @@ async function imagePrompt(msgs, opts) {
       if ((gemDead.get(model) || 0) > Date.now()) continue;
       try {
         const r = await realFetch(`${GEM_BASE}/chat/completions`, { method: "POST", headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json" }, signal: opts?.signal,
-          body: JSON.stringify({ model, max_tokens: 4000, reasoning_effort: "medium", messages: [{ role: "system", content: "You write prompts for an AI image generator (FLUX) that does NOT know nicknames and often gets people wrong. From the conversation, describe in ONE detailed English paragraph (max 110 words) the image the user wants NOW, applying their latest edits to the previous image. VERY IMPORTANT: when the user names a real person, athlete, celebrity, character, team, game or brand (even by a nickname like CR7, Messi, Mbappé, Neymar, Spider-Man, Roblox), START the prompt with the full real name and gender, then describe precisely what they look like at the requested time (age, face, hair, skin tone, body, typical outfit/jersey with colors and number, team, era, accessories) so the image is clearly recognizable; e.g. CR7 prime 2008 = Cristiano Ronaldo, 23-year-old Portuguese male footballer, short dark gelled hair, athletic, Manchester United red #7 jersey. Include EVERY object the user asked for, described visually (e.g. Ballon d'Or = holding the golden Ballon d'Or trophy, a gold ball on a pedestal). Keep the requested style and write it at the very beginning of the prompt (pencil drawing, colored pencils, manga, realistic, watercolor, Roblox…). Include composition, background, lighting, quality words. Text in the image goes in quotes. Think like a professional illustrator: strong composition, dynamic pose, expressive face, detailed background that fits the scene, beautiful lighting. First line: FORMAT: portrait, landscape or square (portrait for one person/character, landscape for scenes, games, thumbnails). Then on the next line the prompt only." }, { role: "user", content: conv }] }) });
+          body: JSON.stringify({ model, max_tokens: 3000, reasoning_effort: "low", messages: [{ role: "system", content: "You write prompts for an AI image generator (FLUX) that does NOT know nicknames and often gets people wrong. From the conversation, describe in ONE detailed English paragraph (max 110 words) the image the user wants NOW, applying their latest edits to the previous image. VERY IMPORTANT: when the user names a real person, athlete, celebrity, character, team, game or brand (even by a nickname like CR7, Messi, Mbappé, Neymar, Spider-Man, Roblox), START the prompt with the full real name and gender, then describe precisely what they look like at the requested time (age, face, hair, skin tone, body, typical outfit/jersey with colors and number, team, era, accessories) so the image is clearly recognizable; e.g. CR7 prime 2008 = Cristiano Ronaldo, 23-year-old Portuguese male footballer, short dark gelled hair, athletic, Manchester United red #7 jersey. Include EVERY object the user asked for, described visually (e.g. Ballon d'Or = holding the golden Ballon d'Or trophy, a gold ball on a pedestal). Keep the requested style and write it at the very beginning of the prompt (pencil drawing, colored pencils, manga, realistic, watercolor, Roblox…). Include composition, background, lighting, quality words. Text in the image goes in quotes. Think like a professional illustrator: strong composition, dynamic pose, expressive face, detailed background that fits the scene, beautiful lighting. First line: FORMAT: portrait, landscape or square (portrait for one person/character, landscape for scenes, games, thumbnails). Then on the next line the prompt only." }, { role: "user", content: conv }] }) });
         if (r.ok) { const j = await r.json(); const t = j?.choices?.[0]?.message?.content?.trim(); if (t) return t.slice(0, 1200); }
         else if (r.status === 429) gemDead.set(model, Date.now() + 60e3);
       } catch {}
@@ -93,7 +93,7 @@ async function freeImage(b, opts) {
     prompt = `${st ? st + ". " : ""}${prompt}. Masterpiece, best quality, highly detailed, sharp focus, beautiful composition${st ? ". Style: " + st : ""}`;
     // Avec une clé : modèles plus forts d'abord (zimage, klein-large, imagen-4), sinon flux
     const tok = process.env.POLLINATIONS_TOKEN;
-    const models = (process.env.POLLINATIONS_MODEL || (tok ? "gptimage,zimage,imagen-4,klein-large,flux" : "flux")).split(",").map(x => x.trim()).filter(Boolean);
+    const models = (process.env.POLLINATIONS_MODEL || (tok ? "zimage,gptimage,imagen-4,klein-large,flux" : "flux")).split(",").map(x => x.trim()).filter(Boolean);
     const base = tok ? "https://gen.pollinations.ai/image/" : "https://image.pollinations.ai/prompt/";
     let img = null;
     for (const model of models) {
@@ -105,7 +105,7 @@ async function freeImage(b, opts) {
           if (r.ok && /^image\//.test(r.headers.get("content-type") || "")) { img = r; break; }
           if (r.status !== 429 && r.status < 500) break; // modèle refusé ou non dispo : on passe au suivant
         } catch {}
-        await new Promise(res => setTimeout(res, 3000));
+        await new Promise(res => setTimeout(res, 1500));
       }
     }
     if (!img) return null;
