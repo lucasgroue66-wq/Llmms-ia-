@@ -271,7 +271,7 @@ async function dailyLimit(req, body, email) {
   if (!max) return null;
   const n = await bumpCount(`llmms:lim:${today()}:${limitId(req, email)}`);
   if (n > max) return plan === "free"
-    ? `Tu as utilisé tes ${max} messages gratuits d'aujourd'hui 🙂 Ça revient demain matin, ou passe à llmms ia Pro (30/jour) ou Max (50/jour) avec le bouton ⭐ Abonnements.`
+    ? `Tu as utilisé tes ${max} messages gratuits d'aujourd'hui 🙂 Ça revient demain matin, ou passe à llmms ia Pro (30/jour) ou Max (50/jour) avec le bouton ⭐ Abonnements. (Tu es le propriétaire ? ⚙ → Connexion propriétaire : illimité.)`
     : `Tu as utilisé tes ${max} messages ${plan === "max" ? "Max" : "Pro"} d'aujourd'hui 🙂 Ça revient demain matin !`;
   return null;
 }
@@ -312,7 +312,8 @@ export default async function handler(req, res) {
     if (auth) { res.status(auth.status).json(auth.json); return; }
     // Plus de connexion obligatoire : tout le monde utilise le site (15 messages/jour par connexion internet).
     // Seul le propriétaire se connecte (menu ⚙ → Connexion propriétaire) pour être illimité.
-    const who = authEnabled(env) ? await checkSession(sessionHeader, env) : null;
+    // la session signée reste valable même si l'envoi d'e-mails est coupé (le propriétaire reste illimité)
+    const who = await checkSession(sessionHeader, env);
     if (body?.mode === "billing_status") { res.status(200).json(await billingStatus(req, who)); return; }
     const lim = await dailyLimit(req, body || {}, who);
     if (lim) { res.status(429).json({ error: lim }); return; }
