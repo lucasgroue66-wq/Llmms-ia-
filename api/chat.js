@@ -62,12 +62,47 @@ async function tryGemini(b, opts) {
   }
   return null;
 }
+// Images gratuites : Gemini écrit un prompt détaillé en anglais, puis Pollinations dessine (gratuit, sans clé)
+const textOfMsg = c => typeof c === "string" ? c : Array.isArray(c) ? c.filter(p => p.type === "text").map(p => p.text).join(" ") : "";
+async function imagePrompt(msgs, opts) {
+  const conv = msgs.filter(m => m.role !== "system").slice(-8).map(m => `${m.role === "user" ? "Utilisateur" : "Assistant"} : ${textOfMsg(m.content).slice(0, 1500)}`).join("\n");
+  const last = textOfMsg([...msgs].reverse().find(m => m.role === "user")?.content || "");
+  const key = process.env.GEMINI_API_KEY;
+  if (key) {
+    for (const model of (await gemModels(key)).filter(m => !/gemma/i.test(m)).slice(0, 4)) {
+      if ((gemDead.get(model) || 0) > Date.now()) continue;
+      try {
+        const r = await realFetch(`${GEM_BASE}/chat/completions`, { method: "POST", headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json" }, signal: opts?.signal,
+          body: JSON.stringify({ model, max_tokens: 400, messages: [{ role: "system", content: "You write prompts for an AI image generator (FLUX). From the conversation, describe in ONE detailed English paragraph (max 90 words) the image the user wants NOW, applying their latest edits to the previous image description. Include subject, style (keep the requested style: pencil drawing, manga, realistic, Roblox, logo…), composition, colors, lighting, quality words. If text must appear in the image, put it in quotes. Output only the prompt." }, { role: "user", content: conv }] }) });
+        if (r.ok) { const j = await r.json(); const t = j?.choices?.[0]?.message?.content?.trim(); if (t) return t.slice(0, 900); }
+        else if (r.status === 429) gemDead.set(model, Date.now() + 60e3);
+      } catch {}
+    }
+  }
+  return last.slice(0, 600) || "a beautiful illustration";
+}
+async function freeImage(b, opts) {
+  try {
+    const prompt = await imagePrompt(b.messages || [], opts);
+    const url = `https://image.pollinations.ai/prompt/${encodeURIComponent(prompt)}?width=1024&height=1024&nologo=true&model=flux&seed=${Math.floor(Math.random() * 1e9)}`;
+    let img = null;
+    for (let k = 0; k < 2 && !img; k++) {
+      const r = await realFetch(url, { signal: opts?.signal });
+      if (r.ok && /^image\//.test(r.headers.get("content-type") || "")) img = r;
+      else await new Promise(res => setTimeout(res, 4000));
+    }
+    if (!img) return null;
+    const type = img.headers.get("content-type") || "image/jpeg";
+    const data = `data:${type};base64,${Buffer.from(await img.arrayBuffer()).toString("base64")}`;
+    return new Response(JSON.stringify({ choices: [{ message: { role: "assistant", content: "Voici ton image 🎨", images: [{ type: "image_url", image_url: { url: data } }] } }] }), { status: 200, headers: { "Content-Type": "application/json" } });
+  } catch { return null; }
+}
 globalThis.fetch = async (url, opts) => {
   const r = await realFetch(url, opts);
   if (r.status !== 402 || !String(url).includes(OR_URL)) return r;
   try {
     const b = JSON.parse(opts.body);
-    if (b.modalities) return r; // création d'images : pas de version gratuite
+    if (b.modalities) return (await freeImage(b, opts)) || r; // images : version gratuite (Pollinations)
     const g = await tryGemini(b, opts); if (g) return g;
     b.model = "openrouter/free"; delete b.reasoning; b.max_tokens = Math.min(b.max_tokens || 16000, 16000); b.messages = boostSystem(b.messages || []);
     let r2 = await realFetch(url, { ...opts, body: JSON.stringify(b) });
