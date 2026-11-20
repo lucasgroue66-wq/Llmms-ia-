@@ -11,12 +11,13 @@ function rank(id) { const v = parseFloat((id.match(/(\d+(?:\.\d+)?)/) || [])[1] 
 async function gemModels(key) {
   if (process.env.GEMINI_MODELS) return process.env.GEMINI_MODELS.split(",").map(x => x.trim()).filter(Boolean);
   if (gemList && Date.now() - gemAt < 6 * 3600e3) return gemList;
+  try { const j = await kv([["GET", "llmms:gemlist"]]); const v = JSON.parse(j?.[0]?.result || "null"); if (Array.isArray(v) && v.length) { gemList = v; gemAt = Date.now(); return v; } } catch {}
   try {
     const r = await realFetch(`${GEM_BASE}/models`, { headers: { Authorization: `Bearer ${key}` } });
     const j = await r.json();
     const ids = (j.data || []).map(m => String(m.id || "").replace(/^models\//, ""))
       .filter(id => /^(gemini|gemma)/i.test(id) && !/(image|tts|live|audio|transcri|embed|robot|computer|vision|banana|native|aqa|learnlm|veo|lyria|imagen|decision|genie|omni|deep-research)/i.test(id));
-    if (ids.length) { gemList = [...new Set(ids)].sort((a, b) => rank(b) - rank(a)).slice(0, 18); gemAt = Date.now(); return gemList; }
+    if (ids.length) { gemList = [...new Set(ids)].sort((a, b) => rank(b) - rank(a)).slice(0, 18); gemAt = Date.now(); kv([["SET", "llmms:gemlist", JSON.stringify(gemList), "EX", 21600]]).catch(() => {}); return gemList; }
   } catch {}
   return ["gemini-flash-latest", "gemini-flash-lite-latest"];
 }
@@ -49,12 +50,14 @@ async function tryGemini(b, opts) {
   for (const model of list) {
     if ((gemDead.get(model) || 0) > Date.now()) continue;
     const g = { model, stream: !!b.stream, messages: boostSystem(b.messages || []), max_tokens: Math.min(Math.max(b.max_tokens || 32000, 32000), 60000) };
-    if (!/gemma/i.test(model)) g.reasoning_effort = effort === "low" ? "low" : effort === "medium" ? "medium" : "high";
+    // réflexion « low » demandée (devoirs, mode Rapide) : pas de réflexion du tout → réponse immédiate
+    if (!/gemma/i.test(model)) g.reasoning_effort = effort === "low" ? "none" : effort === "medium" ? "medium" : "high";
     if (b.tools) { g.tools = b.tools; g.tool_choice = "auto"; }
-    for (let k = 0; k < 3; k++) {
+    for (let k = 0; k < 4; k++) {
       try {
         const r = await realFetch(`${GEM_BASE}/chat/completions`, { method: "POST", headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json" }, body: JSON.stringify(g), signal: opts?.signal });
         if (r.ok) return r;
+        if (r.status === 400 && g.reasoning_effort === "none") { g.reasoning_effort = "low"; continue; }
         if (r.status === 400 && g.reasoning_effort) { delete g.reasoning_effort; continue; }
         if (r.status === 400 && g.max_tokens > 8192) { g.max_tokens = 8192; continue; }
         if (r.status === 400 && g.tools) { delete g.tools; delete g.tool_choice; continue; }
@@ -155,9 +158,11 @@ async function freeChat(url, opts, b) {
     }
     return r2;
 }
+let noMoneyChecked = 0;
 let noMoneyUntil = 0; // quand OpenRouter a dit « pas de crédits », on ne le redemande pas pendant 10 min (gagne du temps)
 globalThis.fetch = async (url, opts) => {
   const isOR = String(url).includes(OR_URL);
+  if (isOR && !noMoneyUntil && Date.now() - noMoneyChecked > 60e3) { noMoneyChecked = Date.now(); try { const j = await kv([["GET", "llmms:nomoney"]]); if (j?.[0]?.result) noMoneyUntil = Date.now() + 5 * 60e3; } catch {} }
   if (isOR && Date.now() < noMoneyUntil) { try { const b0 = JSON.parse(opts.body); if (b0.modalities) { const im = await freeImage(b0, opts); if (im) return im; } else { const g0 = await freeChat(url, opts, b0); if (g0?.ok) return g0; } } catch {} }
   const r = await realFetch(url, opts);
   if (r.ok || !isOR) return r;
@@ -165,7 +170,7 @@ globalThis.fetch = async (url, opts) => {
   let noMoney = r.status === 402;
   if (!noMoney) { try { noMoney = /credit|balance|afford|insufficient|payment/i.test(await r.clone().text()); } catch {} }
   if (!noMoney) return r;
-  noMoneyUntil = Date.now() + 10 * 60e3;
+  noMoneyUntil = Date.now() + 10 * 60e3; kv([["SET", "llmms:nomoney", "1", "EX", 600]]).catch(() => {});
   try {
     const b = JSON.parse(opts.body);
     if (b.modalities) return (await freeImage(b, opts)) || r; // images : version gratuite (Pollinations)
