@@ -1,10 +1,13 @@
 // Vercel : /api/avatar — tête du skin Roblox de LLMMS (Llmms99587), utilisée comme icône du modèle « Propria ».
-const USERNAME = process.env.ROBLOX_AVATAR_USER || "Llmms99587";
-let cache = null, cacheAt = 0;
+const DEFAULT_USER = process.env.ROBLOX_AVATAR_USER || "Llmms99587";
+const caches = new Map(); // pseudo -> { type, body, at }
 
 export default async function handler(req, res) {
+  const q = String(req.query?.u || "").trim();
+  const USERNAME = /^[A-Za-z0-9_]{3,20}$/.test(q) ? q : DEFAULT_USER;
   try {
-    if (!cache || Date.now() - cacheAt > 6 * 3600e3) {
+    let cache = caches.get(USERNAME.toLowerCase());
+    if (!cache || Date.now() - cache.at > 6 * 3600e3) {
       const u = await fetch("https://users.roblox.com/v1/usernames/users", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ usernames: [USERNAME], excludeBannedUsers: false }) });
       const id = (await u.json())?.data?.[0]?.id;
       if (!id) throw new Error("joueur introuvable");
@@ -13,8 +16,9 @@ export default async function handler(req, res) {
       if (!url) throw new Error("image indisponible");
       const img = await fetch(url);
       if (!img.ok) throw new Error("image " + img.status);
-      cache = { type: img.headers.get("content-type") || "image/png", body: Buffer.from(await img.arrayBuffer()) };
-      cacheAt = Date.now();
+      cache = { type: img.headers.get("content-type") || "image/png", body: Buffer.from(await img.arrayBuffer()), at: Date.now() };
+      if (caches.size > 300) caches.clear();
+      caches.set(USERNAME.toLowerCase(), cache);
     }
     res.setHeader("Content-Type", cache.type);
     res.setHeader("Cache-Control", "public, max-age=3600, s-maxage=86400, stale-while-revalidate=604800");

@@ -488,6 +488,7 @@ body.th-vert{--side:#0d1612;--bg:#09110e;--panel:#121e19;--field:#16251f;--hover
 .av .avimg{width:100%;height:100%;border-radius:11px}
 #voiceBtn.rec{color:#fff;background:#e5484d;border-color:#e5484d;animation:vpulse 1.2s infinite}#voiceBtn.rec .lbl{display:inline!important}@keyframes vpulse{50%{box-shadow:0 0 0 6px rgba(229,72,77,.25)}}
 .txt.user audio{display:block;margin:8px 0 4px;max-width:280px;height:36px}
+.av.u.pic,.ava.pic{padding:0;overflow:hidden;background:linear-gradient(135deg,var(--g1),var(--g2));border-color:var(--acc-line)}.av.u.pic img,.ava.pic img{width:100%;height:100%;object-fit:cover;display:block}
 </style>
 </head>
 <body>
@@ -635,6 +636,9 @@ body.th-vert{--side:#0d1612;--bg:#09110e;--panel:#121e19;--field:#16251f;--hover
 <div id="settings" class="modal" role="dialog" aria-modal="true" aria-labelledby="setTitle">
   <div class="dbox">
     <div class="dhead"><div><div class="dtitle" id="setTitle" data-i18n="settings">Paramètres</div><div class="dsub" data-i18n="setSub">Langue et recherche sur internet.</div></div><button class="dx" id="setClose" type="button" aria-label="Fermer">×</button></div>
+    <label class="dlab" for="rbxUser">Ton pseudo Roblox</label>
+    <input id="rbxUser" class="dsel" type="text" autocomplete="off" spellcheck="false" maxlength="20" placeholder="ex. Llmms99587">
+    <div class="dhint">Ta photo de profil devient la tête de ton skin Roblox, avec ton pseudo.</div>
     <div class="dlab">Thème</div>
     <div class="themes" id="themes"></div>
     <label class="dlab" for="langSel" data-i18n="langLabel">Langue</label>
@@ -983,7 +987,7 @@ function note(text,cls=""){ const e=thread.querySelector(".empty"); if(e) e.remo
 function userRow(text,media){
   const e=thread.querySelector(".empty"); if(e) e.remove();
   const d=document.createElement("div"); d.className="row";
-  d.innerHTML=`<div class="av u">L</div><div class="body"><div class="who">${esc(t("you"))}</div><div class="txt user"></div></div>`;
+  { const n=rbxName(); d.innerHTML=`<div class="av u${n?" pic":""}">${n?rbxImg():"L"}</div><div class="body"><div class="who mine">${esc(n||t("you"))}</div><div class="txt user"></div></div>`; }
   const tx=d.querySelector(".txt");
   if(media&&media.length){ const m=document.createElement("div"); m.className="media"; media.forEach(x=>{ if(x.audio){ const au=document.createElement("audio"); au.controls=true; au.src=x.audio; m.appendChild(au); } if(x.thumb){ const i=document.createElement("img"); i.src=x.thumb; i.alt=""; m.appendChild(i);} if(x.info){ const s=document.createElement("span"); s.className="vtag"; s.textContent=x.info; m.appendChild(s);} }); tx.appendChild(m); }
   tx.appendChild(document.createTextNode(text)); thread.appendChild(d); toBottom(true);
@@ -1108,6 +1112,17 @@ addEventListener("drop",e=>{ e.preventDefault(); dragN=0; document.body.classLis
     rec.onend=()=>{ rec=null; b.classList.remove("rec"); }; rec.onerror=()=>{}; b.classList.add("rec"); rec.start(); }; })();
 
 
+
+/* ---------------- Photo de profil = tête du skin Roblox ---------------- */
+const OWNER_MAILS=["lucasgroue5@gmail.com","lucasgroue66@gmail.com"];
+function rbxName(){ const v=store.get("llmms3-rbx",""); if(v) return v; return OWNER_MAILS.includes(String(store.get("llmms3-me","")).toLowerCase())?"Llmms99587":""; }
+function rbxImg(){ const n=rbxName(); return n?`<img src="/api/avatar?u=${encodeURIComponent(n)}" alt="" onerror="this.parentNode.classList.remove('pic');this.replaceWith(document.createTextNode('${n[0].toUpperCase()}'))">`:""; }
+function profileUI(){ const n=rbxName(); const a=$("meAva");
+  if(n){ a.classList.add("pic"); a.innerHTML=rbxImg(); $("meName").removeAttribute("data-i18n"); $("meName").textContent=n; }
+  document.querySelectorAll(".av.u").forEach(el=>{ if(n){ el.classList.add("pic"); if(!el.querySelector("img")) el.innerHTML=rbxImg(); } });
+  document.querySelectorAll(".row .who.mine").forEach(el=>{ if(n) el.textContent=n; }); }
+$("rbxUser").value=store.get("llmms3-rbx","");
+$("rbxUser").onchange=()=>{ const v=$("rbxUser").value.trim().replace(/[^A-Za-z0-9_]/g,"").slice(0,20); $("rbxUser").value=v; store.set("llmms3-rbx",v); profileUI(); };
 /* ---------------- Messages vocaux ---------------- */
 let voiceNote=null;
 (()=>{ const b=$("voiceBtn"); if(!navigator.mediaDevices?.getUserMedia||!window.MediaRecorder){ b.hidden=true; return; }
@@ -1491,7 +1506,7 @@ $("lForm2").onsubmit=async e=>{ e.preventDefault(); if($("lVerify").disabled) re
   catch{ lErr("Pas de connexion au site. Réessaie."); }
   finally{ $("lVerify").disabled=false; }
 };
-function meUI(){ const em=store.get("llmms3-me",""); if($("ownerLogin")) $("ownerLogin").hidden=!!em; if(em){ $("meName").removeAttribute("data-i18n"); $("meName").textContent=em.split("@")[0]; $("meAva").textContent=em[0].toUpperCase(); $("logout").hidden=false; } }
+function meUI(){ const em=store.get("llmms3-me",""); if($("ownerLogin")) $("ownerLogin").hidden=!!em; if(em){ $("meName").removeAttribute("data-i18n"); $("meName").textContent=em.split("@")[0]; $("meAva").textContent=em[0].toUpperCase(); $("logout").hidden=false; } try{ profileUI(); }catch{} }
 async function checkLogin(){
   if(LOCAL_MODE||window.claude) return; // fichier ouvert directement ou page de test : pas de connexion
   try{ const {ok,j}=await authCall({mode:"auth_status"}); if(ok&&j.enabled&&!j.ok){ store.del("llmms3-session"); store.del("llmms3-me"); } else if(ok&&j.email){ store.set("llmms3-me",j.email); meUI(); } }catch{}
