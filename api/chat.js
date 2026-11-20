@@ -142,8 +142,12 @@ globalThis.fetch = async (url, opts) => {
 // Sans base : compteur en mémoire (approximatif, remis à zéro quand le serveur redémarre).
 const memCount = new Map();
 async function bumpCount(key) {
-  const url = process.env.KV_REST_API_URL || process.env.UPSTASH_REDIS_REST_URL;
-  const tok = process.env.KV_REST_API_TOKEN || process.env.UPSTASH_REDIS_REST_TOKEN;
+  // Accepte n'importe quel préfixe donné par Vercel (KV_, STORAGE_, UPSTASH_REDIS_…)
+  const E = process.env, keys = Object.keys(E);
+  const uk = keys.find(k => /REST_API_URL$|REDIS_REST_URL$/.test(k) && !/READ_ONLY/.test(k));
+  const url = uk && E[uk];
+  const tk = uk && (keys.find(k => k === uk.replace(/URL$/, "TOKEN")) || keys.find(k => /REST_API_TOKEN$|REDIS_REST_TOKEN$/.test(k) && !/READ_ONLY/.test(k)));
+  const tok = tk && E[tk];
   if (url && tok) {
     try {
       const r = await realFetch(`${url.replace(/\/$/, "")}/pipeline`, { method: "POST", headers: { Authorization: `Bearer ${tok}`, "Content-Type": "application/json" }, body: JSON.stringify([["INCR", key], ["EXPIRE", key, 172800]]) });
