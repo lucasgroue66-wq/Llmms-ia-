@@ -477,7 +477,7 @@ const PRODS=[["🌌","Lampe galaxie",6,29],["⌚","Montre connectée",18,59],["�
 const AIT=[["💬","Chatbot",40,12],["🎨","Générateur d'images",80,15],["🎙️","Voix IA",60,10],["🎮","IA pour jeux vidéo",120,25],["📈","IA de trading",150,49],["🩺","IA médicale",400,99]];
 const VTH=[["🎮","Gaming",2.5],["💼","Business",6],["😂","Humour",2],["🤖","Tuto IA",5],["🏎️","Vlog luxe",4],["🧱","Bloxy",3]];
 const FTH=[["💸","Devenir rentable en dropshipping"],["🤖","Créer son business avec l'IA"],["📈","Investir en bourse"],["🎥","Percer sur VidTube"],["🧱","Créer un jeu Bloxy qui cartonne"]];
-const BGEN=[["🏃","Obby"],["⚡","Simulateur"],["🏭","Tycoon"],["👻","Horreur"],["⚔️","Combat"],["🧠","Steal a …"]];
+const BGEN=[["🏃","Obby"],["⚡","Simulateur"],["🏭","Tycoon"],["👻","Horreur"],["⚔️","Combat"],["🧠","Steal a …"],["🌆","Monde ouvert"]];
 const COMP=[["🍩","Donut Express",200,150],["☕","UrbanBean Cafés",1500,1000],["📦","ColisExpress",4000,1000],["🎧","SonicWave Audio",10000,1000],["🛒","MarketPlus",20000,1000],["🎮","PixelForge Studios",50000,1000],["💊","VitaLab",120000,1000],["🚀","OrbitX",400000,1000],["🏦","Atlas Capital",1.5e6,1000]].map(([i,n,r,k])=>[i,n,r*400,r]);
 const PEOPLE={gen:["📣","#général","Serveur Empire Business"],marco:["🧔","Marco","Mentor, ex-millionnaire"],kaia:["👩‍💼","Kaïa","Investisseuse"],buy:["🤝","Acheteurs","Offres de rachat"],spon:["📢","Sponsors","Marques & partenariats"],lina:["👧","Lina","Amie dev Bloxy"]};
 function P(){ if(!E.ph) E.ph={shop:null,ai:[],pcs:{},cams:{},vid:{subs:0,vids:[],cd:0,tot:0},form:[],blox:[],chat:{},unread:{},acq:{},share:0,appE:0,taxB:0,uid:1}; return E.ph; }
@@ -513,9 +513,9 @@ function appsDaily(){ const A=P(); let n=0; if(A.shop) n-=A.shop.p.reduce((a,x)=
 setInterval(()=>{ const r=acqRate(); if(r>0){ E.cash+=r; E.ph.acqE=(E.ph.acqE||0)+r; head(); const el=$("acqT"); if(el) el.textContent="+"+fmt(r); } },10000);
 
 /* ---------- écran Apps ---------- */
-const APPS=[["shop","🛍️","ShopNova","Dropshipping & e-commerce","#f97316"],["ai","🤖","Neura Studio","Crée tes IA","#8b5cf6"],["vid","▶️","VidTube","Fais des vidéos","#ef4444"],["form","🎓","Academy","Vends des formations","#0ea5e9"],["blox","🧱","Bloxy Studio","Crée ton jeu","#22c55e"],["chat","💬","Disko","Discute avec des gens","#5865f2"],["s:face","👥","Facely","Réseau social","#1877f2"],["s:snap","👻","Snappo","Stories","#eab308"],["s:pix","📸","Pixgram","Photos","#e1306c"],["s:chirp","🐦","Chirp","Posts","#1d9bf0"],["s:tok","🎵","TokTik","Vidéos courtes","#ff0050"],["pc","🖥️","PC Store","Achète des PC","#64748b"],["acq","🏢","Rachat","Rachète des entreprises","#eab308"]];
+const APPS=[["build","🛠️","Bloxy Créateur","Crée ta map","#14b8a6"],["shop","🛍️","ShopNova","Dropshipping & e-commerce","#f97316"],["ai","🤖","Neura Studio","Crée tes IA","#8b5cf6"],["vid","▶️","VidTube","Fais des vidéos","#ef4444"],["form","🎓","Academy","Vends des formations","#0ea5e9"],["blox","🧱","Bloxy Studio","Crée ton jeu","#22c55e"],["chat","💬","Disko","Discute avec des gens","#5865f2"],["s:face","👥","Facely","Réseau social","#1877f2"],["s:snap","👻","Snappo","Stories","#eab308"],["s:pix","📸","Pixgram","Photos","#e1306c"],["s:chirp","🐦","Chirp","Posts","#1d9bf0"],["s:tok","🎵","TokTik","Vidéos courtes","#ff0050"],["pc","🖥️","PC Store","Achète des PC","#64748b"],["acq","🏢","Rachat","Rachète des entreprises","#eab308"]];
 let app=null;
-function apps(){ const A=P(); if(app&&app.startsWith("s:")){ socApp=app.slice(2); return appSoc(); } if(app) return ({shop:appShop,ai:appAI,vid:appVid,form:appForm,blox:appBlox,chat:appChat,pc:appPC,acq:appAcq})[app]();
+function apps(){ const A=P(); if(app&&app.startsWith("s:")){ socApp=app.slice(2); return appSoc(); } if(app) return ({build:appBuild,shop:appShop,ai:appAI,vid:appVid,form:appForm,blox:appBlox,chat:appChat,pc:appPC,acq:appAcq})[app]();
   const unread=Object.values(A.unread).reduce((a,b)=>a+b,0);
   $("main").innerHTML=`<div class="card"><div class="row"><div class="grow"><div class="hint">Revenus des applis</div><b class="${appsDaily()>=0?"up":"dn"}" style="font-size:20px">${fmt(appsDaily())}/jour</b></div><div style="text-align:right"><div class="hint">Rachats</div><b class="up">+${fmt(acqRate())}/min</b></div></div><p class="hint" style="margin:6px 0 0">🏠 Coût de la vie ${fmt(25+Object.keys(E.items).length*40)}/j · ⚡ électricité ${fmt(elec())}/j · 🧾 impôts 20 % chaque mois${A.share?` · 👩‍💼 Kaïa prend ${Math.round(A.share*100)} %`:""}</p></div>
   <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:14px 8px;padding:8px 4px">${APPS.map(([k,ic,n,,c])=>`<button data-app="${k}" style="display:flex;flex-direction:column;align-items:center;gap:6px;position:relative"><span style="width:62px;height:62px;border-radius:18px;display:grid;place-items:center;font-size:30px;background:linear-gradient(145deg,${c},#0b1020);box-shadow:0 6px 16px -6px ${c}">${ic}</span><span style="font-size:11.5px;font-weight:700">${n}</span>${k==="chat"&&unread?`<span style="position:absolute;top:-4px;right:8px;background:#ef4444;border-radius:999px;padding:1px 7px;font-size:12px;font-weight:900">${unread}</span>`:""}</button>`).join("")}</div>`;
@@ -603,7 +603,7 @@ function appBlox(){ const A=P();
   document.querySelectorAll("[data-ga]").forEach(b=>b.onclick=()=>{ const g=A.blox.find(x=>x.id==b.dataset.ga); if(!pay(g.q*100)) return; g.hype=(g.hype||1)*2.2; save(); toast("📣 Ton jeu est en page d'accueil Bloxy !"); appBlox(); });
   document.querySelectorAll("[data-gm]").forEach(b=>b.onclick=()=>monPop(A.blox.find(x=>x.id==b.dataset.gm)));
   document.querySelectorAll("[data-gj]").forEach(b=>b.onclick=()=>{ const g=A.blox.find(x=>x.id==b.dataset.gj); const v=prompt(`Combien de joueurs en ligne sur « ${g.n} » ? (0 = normal)`,g.fix||g.pl); if(v===null) return; const n=Math.max(0,Math.floor(+v||0)); g.fix=n; g.pl=n||g.pl; g.dev=0; g.live=1; save(); toast(n?`👥 ${n.toLocaleString("fr-FR")} joueurs sur « ${g.n} »`:"Joueurs en mode normal"); appBlox(); });
-  document.querySelectorAll("[data-pl]").forEach(b=>b.onclick=()=>playBlox(A.blox.find(x=>x.id==b.dataset.pl))); }
+  document.querySelectorAll("[data-pl]").forEach(b=>b.onclick=()=>{ const g=A.blox.find(x=>x.id==b.dataset.pl), m=g.map&&(A.maps||[]).find(x=>x.id===g.map); if(m) playMap(g,m); else playBlox(g); }); }
 const GPASS=[["⚡","Vitesse x2",199],["👑","VIP",499],["💰","Argent x2",399],["🗡️","Arme légendaire",799],["🐾","Animal de compagnie",249],["🚀","Pack de départ",99],["🌈","Effets arc-en-ciel",149],["🏠","Base secrète",349]];
 function monPop(g){ g.gp=g.gp||[];
   const has=n=>g.gp.some(p=>p.n===n), estPass=p=>g.pl*p*.0012;
@@ -742,6 +742,85 @@ function startLive(){ const A=P(), V=A.vid; if(V.lcd===E.day) return toast("Tu a
   let done=false; function end(){ if(done) return; done=true; clearInterval(iv); const ads=peak*sec/60*.02; V.subs+=newSub; V.lcd=E.day; E.cash+=don+ads; save(); head(); ov.remove();
     popup(`<h3>🔴 Live terminé</h3><div class="kpi" style="margin:10px 0"><div><span>Pic de spectateurs</span><b>${peak.toLocaleString("fr-FR")}</b></div><div><span>Durée</span><b>${Math.floor(sec/60)} min ${sec%60} s</b></div><div><span>💸 Dons</span><b class="up">${fmt(don)}</b></div><div><span>Pub</span><b class="up">${fmt(ads)}</b></div><div><span>Nouveaux abonnés</span><b>+${newSub.toLocaleString("fr-FR")}</b></div></div><button class="btn g" id="x" style="width:100%">Super !</button>`,()=>{ $("x").onclick=closePop; }); }
   ov.querySelector("#lend").onclick=end; ov.querySelector("#lcut").onclick=end; }
+
+/* ================= 🛠️ BLOXY CRÉATEUR : construis ta map (ville style GTA…) et publie-la ================= */
+const TILES=[["","Herbe","#3f9b4b"],["","Route","#3a3d44"],["","Eau","#2b7bd1"],["","Sable","#e9d18f"],["🏢","Immeuble","#3f9b4b"],["🏠","Maison","#3f9b4b"],["🌴","Palmier","#e9d18f"],["🌳","Arbre","#3f9b4b"],["🚗","Voiture","#3a3d44"],["🚓","Police","#3a3d44"],["🏪","Magasin","#3f9b4b"],["🏦","Banque","#3f9b4b"],["🏥","Hôpital","#3f9b4b"],["✈️","Aéroport","#9ca3af"],["🏡","Villa","#3f9b4b"],["🏟️","Stade","#3f9b4b"],["🚁","Héliport","#9ca3af"],["⛽","Station","#3a3d44"],["🧍","Passant","#3f9b4b"],["🛥️","Bateau","#2b7bd1"],["🏙️","Gratte-ciel","#3f9b4b"],["🎡","Fête foraine","#3f9b4b"],["🏰","Château","#3f9b4b"],["🌋","Volcan","#7c2d12"]];
+const SPECIAL=[9,11,12,13,15,16,21,22,23], SOLID=new Set([4,5,10,11,12,14,15,20,22,23]), MW=24, MH=24;
+function mapTemplate(kind){ const t=new Array(MW*MH).fill(0), set=(x,y,v)=>{ if(x>=0&&y>=0&&x<MW&&y<MH) t[y*MW+x]=v; };
+  if(kind==="gta"){ for(let y=0;y<MH;y++){ for(let x=0;x<4;x++) set(x,y,2); set(4,y,3); set(5,y,3); if(y%3===0) set(5,y,6); if(y%5===2) set(1,y,19); }
+    for(let y=0;y<MH;y++) for(let x=6;x<MW;x++){ const road=(x-6)%5===0||y%5===0; if(road){ set(x,y,1); continue; } const r=Math.random(); set(x,y, y<5&&x>16?13: r<.22?4: r<.34?20: r<.46?5: r<.53?14: r<.6?10: r<.66?7: r<.7?18:0); }
+    [[8,7,11],[13,12,12],[19,8,9],[9,17,15],[18,18,16],[12,3,17],[20,13,21]].forEach(([x,y,v])=>set(x,y,v));
+    for(let i=0;i<14;i++){ const x=6+ri(0,3)*5, y=ri(1,MH-2); set(x,y,pick([8,8,8,9])); }
+  } else if(kind==="ile"){ for(let y=0;y<MH;y++) for(let x=0;x<MW;x++){ const d=Math.hypot(x-MW/2,y-MH/2); set(x,y,d>10?2:d>8.5?3:d<2?23:Math.random()<.2?6:Math.random()<.15?14:0); } }
+  return t.join(","); }
+const mapScore=m=>{ const t=m.t.split(",").map(Number), filled=t.filter(v=>v).length, kinds=new Set(t.filter(v=>v)).size, sp=SPECIAL.filter(k=>t.includes(k)).length, roads=t.filter(v=>v===1).length;
+  return Math.min(100,Math.round(8+kinds*3.2+filled/9+sp*3+Math.min(10,roads/12))); };
+let mapSel=null, brush=1;
+function appBuild(){ const A=P(); A.maps=A.maps||[];
+  if(mapSel==null){ $("main").innerHTML=back("Bloxy Créateur","🛠️")+`<div class="card"><p style="margin:0">Construis ta propre <b>map</b> case par case (ville, plage, aéroport, police, voitures…), <b>publie-la</b> comme jeu Bloxy, <b>joue dedans</b> en voiture, gagne de l'argent avec les joueurs… et des studios peuvent te la <b>racheter</b> 💰</p></div>
+    ${A.maps.map((m,i)=>`<div class="item" data-mp="${i}"><div class="ic">🗺️</div><div class="grow"><div class="t">${esc(m.n)} ${m.pub?'<span class="tag b">Publiée</span>':""}</div><div class="d">Qualité ⭐ ${mapScore(m)}/100</div></div><b>›</b></div>`).join("")}
+    <h2>Nouvelle map</h2><div class="qty"><button data-nm="gta">🌆 Ville style GTA (prête)</button><button data-nm="ile">🏝️ Île tropicale</button><button data-nm="vide">⬜ Map vide</button></div>
+    <p class="hint">Le nom « GTA » appartient à Rockstar : ta map aura ton propre nom (ex. « Vice Beach City »).</p>`; bindBack();
+    document.querySelectorAll("[data-mp]").forEach(b=>b.onclick=()=>{ mapSel=+b.dataset.mp; appBuild(); });
+    document.querySelectorAll("[data-nm]").forEach(b=>b.onclick=()=>{ const k=b.dataset.nm, n=prompt("Nom de ta map :",k==="gta"?"Vice Beach City":k==="ile"?"Paradise Island":"Ma map"); if(!n) return; A.maps.push({id:A.uid++,n:n.slice(0,28),t:mapTemplate(k)}); mapSel=A.maps.length-1; save(); appBuild(); }); return; }
+  const m=A.maps[mapSel], g=m.pub?A.blox.find(x=>x.id===m.pub):null, sc=mapScore(m);
+  $("main").innerHTML=`<div class="row" style="margin-bottom:8px"><button class="btn gh" id="mbk">‹ Mes maps</button><b class="grow" style="font-size:17px">🗺️ ${esc(m.n)}</b><span class="tag b">⭐ ${sc}/100</span></div>
+  <canvas id="mcv" style="width:100%;aspect-ratio:1;border-radius:14px;touch-action:none;display:block;background:#3f9b4b"></canvas>
+  <div class="qty" style="margin-top:8px">${TILES.map((tl,i)=>`<button data-br="${i}" class="${brush===i?"on":""}" title="${tl[1]}" style="min-width:44px">${tl[0]||`<span style="display:inline-block;width:16px;height:16px;border-radius:4px;background:${tl[2]};vertical-align:middle"></span>`} ${tl[0]?"":tl[1]}</button>`).join("")}<button data-br="0" class="${brush===0?"on":""}">🧽 Gomme</button></div>
+  <div class="row" style="gap:6px;flex-wrap:wrap;margin-top:6px"><button class="btn gh" id="mfill">🎲 Remplir les cases vides</button><button class="btn gh" id="mren">✏️ Renommer</button><button class="btn r" id="mdel">🗑️ Supprimer</button></div>
+  <div class="card" style="margin-top:10px">${g?`<b>🟢 Publiée sur Bloxy</b> — ${g.pl.toLocaleString("fr-FR")} joueurs en ligne · ${fmt(g.last||0)}/jour<div class="row" style="gap:6px;margin-top:8px;flex-wrap:wrap"><button class="btn g" id="mplay">▶️ JOUER (en voiture)</button><button class="btn" id="mupd">🔄 Mettre à jour le jeu (⭐ ${sc})</button><button class="btn o" id="mgo">💰 Argent & offres</button></div>`:`<b>Prête à publier ?</b><p class="hint" style="margin:4px 0 8px">Plus ta map est grande, variée et pleine de lieux spéciaux (🏦 🏥 ✈️ 🚓 🏟️…), plus les joueurs viennent.</p><button class="btn g" id="mpub" style="width:100%">🚀 Publier sur Bloxy</button>`}</div>`;
+  const cv=$("mcv"), dpr=Math.min(2,devicePixelRatio||1), W=cv.clientWidth; cv.width=W*dpr; cv.height=W*dpr; const c=cv.getContext("2d"); c.scale(dpr,dpr); const ts=W/MW;
+  let t=m.t.split(",").map(Number);
+  const draw=()=>{ drawMap(c,t,0,0,ts,0); c.strokeStyle="rgba(255,255,255,.06)"; for(let i=0;i<=MW;i++){ c.beginPath(); c.moveTo(i*ts,0); c.lineTo(i*ts,W); c.moveTo(0,i*ts); c.lineTo(W,i*ts); c.stroke(); } };
+  draw();
+  let down=false; const paint=e=>{ const r=cv.getBoundingClientRect(), x=Math.floor((e.clientX-r.left)/r.width*MW), y=Math.floor((e.clientY-r.top)/r.height*MH); if(x<0||y<0||x>=MW||y>=MH) return; if(t[y*MW+x]!==brush){ t[y*MW+x]=brush; draw(); } };
+  cv.onpointerdown=e=>{ down=true; cv.setPointerCapture(e.pointerId); paint(e); }; cv.onpointermove=e=>{ if(down) paint(e); };
+  cv.onpointerup=()=>{ down=false; m.t=t.join(","); save(); const s2=mapScore(m); const tg=document.querySelector(".tag.b"); if(tg) tg.textContent=`⭐ ${s2}/100`; };
+  document.querySelectorAll("[data-br]").forEach(b=>b.onclick=()=>{ brush=+b.dataset.br; document.querySelectorAll("[data-br]").forEach(x=>x.classList.toggle("on",x===b)); });
+  $("mbk").onclick=()=>{ mapSel=null; appBuild(); };
+  $("mfill").onclick=()=>{ t=t.map(v=>v||(Math.random()<.5?pick([4,5,7,10,14,18,20]):0)); m.t=t.join(","); save(); appBuild(); };
+  $("mren").onclick=()=>{ const n=prompt("Nouveau nom :",m.n); if(n){ m.n=n.slice(0,28); if(g) g.n=m.n; save(); appBuild(); } };
+  $("mdel").onclick=()=>{ if(!confirm("Supprimer cette map ?")) return; A.maps.splice(mapSel,1); mapSel=null; save(); appBuild(); };
+  if($("mpub")) $("mpub").onclick=()=>{ const ng={id:A.uid++,n:m.n,g:6,q:Math.max(15,sc*.9),pl:0,vis:0,earn:0,dev:2,live:0,hype:2,map:m.id}; A.blox.push(ng); m.pub=ng.id; save(); logEv(`🚀 Ta map « ${m.n} » sera en ligne sur Bloxy dans 2 jours !`); appBuild(); };
+  if($("mupd")) $("mupd").onclick=()=>{ g.q=Math.max(g.q,sc*.9+Math.log10(compute())*2); g.hype=(g.hype||1)*1.8; save(); toast("🔄 Mise à jour publiée : les joueurs reviennent !"); appBuild(); };
+  if($("mplay")) $("mplay").onclick=()=>playMap(g,m);
+  if($("mgo")) $("mgo").onclick=()=>monPop(g);
+}
+function drawMap(c,t,ox,oy,ts,T){ for(let y=0;y<MH;y++) for(let x=0;x<MW;x++){ const v=t[y*MW+x], X=ox+x*ts, Y=oy+y*ts, tl=TILES[v]||TILES[0];
+    c.fillStyle=tl[2]; c.fillRect(X,Y,ts+.5,ts+.5);
+    if(v===2||v===19){ c.strokeStyle="rgba(255,255,255,.25)"; c.beginPath(); c.arc(X+ts*.5,Y+ts*(.55+.08*Math.sin(T*2+x)),ts*.25,Math.PI*1.1,Math.PI*1.9); c.stroke(); }
+    if(v===1||v===8||v===9||v===17){ const h=x>0&&[1,8,9,17].includes(t[y*MW+x-1])||x<MW-1&&[1,8,9,17].includes(t[y*MW+x+1]); c.fillStyle="#facc15"; if(h) c.fillRect(X+ts*.1,Y+ts*.48,ts*.3,ts*.05); else c.fillRect(X+ts*.48,Y+ts*.1,ts*.05,ts*.3); }
+    if(tl[0]){ c.font=`${Math.floor(ts*.78)}px system-ui`; c.textAlign="center"; c.textBaseline="middle"; c.fillText(tl[0],X+ts/2,Y+ts/2+1); } } }
+// ▶️ Jouer dans ta map : tu conduis une voiture (touche l'écran pour diriger), ramasse les billets
+function playMap(g,m){ const t=m.t.split(",").map(Number); const ov=document.createElement("div"); ov.style.cssText="position:fixed;inset:0;z-index:80;background:#000";
+  ov.innerHTML=`<canvas style="width:100%;height:100%;display:block;touch-action:none"></canvas><div id="pmh" style="position:absolute;top:12px;left:0;right:0;text-align:center;font-weight:900;font-size:18px;text-shadow:0 2px 6px #000;pointer-events:none"></div><button class="btn gh" style="position:absolute;top:10px;right:10px">✖</button>`; document.body.appendChild(ov);
+  const cv=ov.querySelector("canvas"), c=cv.getContext("2d"), dpr=Math.min(2,devicePixelRatio||1), W=innerWidth, H=innerHeight; cv.width=W*dpr; cv.height=H*dpr; c.scale(dpr,dpr);
+  const ts=Math.max(46,Math.min(W,H)/9), roads=[]; t.forEach((v,i)=>{ if(v===1) roads.push(i); });
+  const start=roads.length?pick(roads):MW*MH/2|0, car={x:(start%MW+.5)*ts,y:((start/MW|0)+.5)*ts,a:0,v:0};
+  const coins=Array.from({length:Math.min(30,roads.length)},()=>{ const i=pick(roads); return {x:(i%MW+.5)*ts,y:((i/MW|0)+.5)*ts,got:0}; });
+  let tgt=null, keys={}, sc=0, t0=performance.now(), last=t0, raf, end=false;
+  cv.onpointerdown=e=>{ tgt=[e.clientX,e.clientY]; cv.setPointerCapture(e.pointerId); }; cv.onpointermove=e=>{ if(tgt) tgt=[e.clientX,e.clientY]; }; cv.onpointerup=()=>{ tgt=null; };
+  const kd=e=>{ keys[e.key]=1; }, ku=e=>{ keys[e.key]=0; }; addEventListener("keydown",kd); addEventListener("keyup",ku);
+  const tileAt=(x,y)=>{ const tx=Math.floor(x/ts), ty=Math.floor(y/ts); if(tx<0||ty<0||tx>=MW||ty>=MH) return -1; return t[ty*MW+tx]; };
+  const close=()=>{ if(end) return; end=true; cancelAnimationFrame(raf); removeEventListener("keydown",kd); removeEventListener("keyup",ku); ov.remove(); const gain=sc*250; E.cash+=gain; g.vis+=sc*20; g.hype=(g.hype||1)*(1+sc/60); save(); head(); toast(`🚗 Balade finie : ${sc} 💵 ramassés · +${fmt(gain)}`); if(page==="apps") apps(); };
+  ov.querySelector("button").onclick=close;
+  (function loop(now){ raf=requestAnimationFrame(loop); const dt=Math.min(.033,(now-last)/1000); last=now; const T=(now-t0)/1000, left=Math.max(0,60-T);
+    const camX=car.x-W/2, camY=car.y-H/2;
+    let steer=0, gas=0;
+    if(tgt){ const wa=Math.atan2(tgt[1]-H/2,tgt[0]-W/2); let d=wa-car.a; while(d>Math.PI) d-=2*Math.PI; while(d<-Math.PI) d+=2*Math.PI; steer=Math.max(-1,Math.min(1,d*2)); gas=1; }
+    if(keys.ArrowLeft||keys.q||keys.a) steer=-1; if(keys.ArrowRight||keys.d) steer=1; if(keys.ArrowUp||keys.z||keys.w) gas=1; if(keys.ArrowDown||keys.s) gas=-.5;
+    const under=tileAt(car.x,car.y), onRoad=[1,8,9,17,13,16].includes(under), max=ts*(onRoad?6:3);
+    car.v+=(gas*max-car.v)*Math.min(1,dt*2.5); car.a+=steer*dt*2.6*Math.min(1,Math.abs(car.v)/(ts*2));
+    const nx=car.x+Math.cos(car.a)*car.v*dt, ny=car.y+Math.sin(car.a)*car.v*dt, nt=tileAt(nx,ny);
+    if(nt<0||nt===2||nt===19||SOLID.has(nt)){ car.v*=-.35; } else { car.x=nx; car.y=ny; }
+    coins.forEach(k=>{ if(!k.got&&Math.hypot(k.x-car.x,k.y-car.y)<ts*.6){ k.got=1; sc++; try{ const A=window._ac||(window._ac=new (window.AudioContext||window.webkitAudioContext)()), o=A.createOscillator(), gg=A.createGain(); o.frequency.value=880; gg.gain.value=.05; gg.gain.exponentialRampToValueAtTime(.0001,A.currentTime+.15); o.connect(gg).connect(A.destination); o.start(); o.stop(A.currentTime+.15); }catch{} } });
+    c.fillStyle="#1e3a8a"; c.fillRect(0,0,W,H);
+    c.save(); c.translate(-camX,-camY); drawMap(c,t,0,0,ts,T);
+    c.font=`${ts*.6}px system-ui`; c.textAlign="center"; c.textBaseline="middle"; coins.forEach(k=>{ if(!k.got) c.fillText("💵",k.x,k.y+Math.sin(T*4+k.x)*3); });
+    c.translate(car.x,car.y); c.rotate(car.a); c.fillStyle="rgba(0,0,0,.35)"; c.fillRect(-ts*.42,-ts*.22+4,ts*.84,ts*.44); c.fillStyle="#ef4444"; c.beginPath(); c.roundRect(-ts*.42,-ts*.24,ts*.84,ts*.48,ts*.12); c.fill(); c.fillStyle="#bfdbfe"; c.fillRect(ts*.05,-ts*.18,ts*.18,ts*.36); c.fillStyle="#111"; c.fillRect(-ts*.3,-ts*.3,ts*.18,ts*.08); c.fillRect(-ts*.3,ts*.22,ts*.18,ts*.08); c.fillRect(ts*.18,-ts*.3,ts*.18,ts*.08); c.fillRect(ts*.18,ts*.22,ts*.18,ts*.08); c.fillStyle="#fef08a"; c.fillRect(ts*.38,-ts*.18,ts*.05,ts*.1); c.fillRect(ts*.38,ts*.08,ts*.05,ts*.1);
+    c.restore();
+    $("pmh").innerHTML=`🗺️ ${esc(m.n)} · 💵 ${sc} · ⏱ ${Math.ceil(left)}s<div style="font-size:13px;font-weight:600;opacity:.85">Garde le doigt sur l'écran pour conduire vers lui · les routes vont plus vite</div>`;
+    if(left<=0||sc>=coins.length&&coins.length) close(); })(t0); }
 
 /* ---------- DÉMARRAGE ---------- */
 if(!E.market.length) refreshMarket();
