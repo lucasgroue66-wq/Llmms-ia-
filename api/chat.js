@@ -233,6 +233,15 @@ let noMoneyChecked = 0;
 let noMoneyUntil = 0; // quand OpenRouter a dit « pas de crédits », on ne le redemande pas pendant 10 min (gagne du temps)
 globalThis.fetch = async (url, opts) => {
   const isOR = String(url).includes(OR_URL);
+  // Modèle « Claude Opus 5.5 » choisi exprès : on n'envoie JAMAIS une autre IA à sa place
+  if (isOR && typeof opts?.body === "string" && opts.body.includes('"llmms_strict"')) {
+    try { const b = JSON.parse(opts.body); delete b.llmms_strict; opts = { ...opts, body: JSON.stringify(b) }; } catch {}
+    const r = await realFetch(url, opts);
+    if (r.ok) return r;
+    let t = ""; try { t = await r.clone().text(); } catch {}
+    if (r.status === 402 || /credit|balance|afford|insufficient|payment/i.test(t)) return new Response(JSON.stringify({ error: { message: "Claude Opus 5.5 est un modèle payant : il faut ajouter des crédits sur OpenRouter (openrouter.ai → Credits). En attendant, choisis un autre modèle (5.5, Propria…) qui marche gratuitement." } }), { status: 402, headers: { "Content-Type": "application/json" } });
+    return r;
+  }
   if (isOR && !noMoneyUntil && Date.now() - noMoneyChecked > 60e3) { noMoneyChecked = Date.now(); try { const j = await kv([["GET", "llmms:nomoney"]]); if (j?.[0]?.result) noMoneyUntil = Date.now() + 5 * 60e3; } catch {} }
   if (isOR && Date.now() < noMoneyUntil) { try { const b0 = JSON.parse(opts.body); if (b0.modalities) { const im = await freeImage(b0, opts); if (im) return im; } else { const g0 = await freeChat(url, opts, b0); if (g0?.ok) return g0; } } catch {} }
   const r = await realFetch(url, opts);
