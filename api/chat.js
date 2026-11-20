@@ -41,7 +41,8 @@ function boostSystem(msgs) {
 }
 async function tryGemini(b, opts) {
   const key = process.env.GEMINI_API_KEY; if (!key) return null;
-  const effort = b.reasoning?.effort || "medium";
+  const maxMode = (b.messages || []).some(m => m.role === "system" && typeof m.content === "string" && m.content.includes("EFFORT MAX"));
+  const effort = maxMode ? "high" : b.reasoning?.effort === "low" ? "low" : b.reasoning ? "medium" : "low";
   for (const model of await gemModels(key)) {
     if ((gemDead.get(model) || 0) > Date.now()) continue;
     const g = { model, stream: !!b.stream, messages: boostSystem(b.messages || []), max_tokens: Math.min(Math.max(b.max_tokens || 32000, 32000), 60000) };
@@ -131,19 +132,10 @@ async function orFreeModels() {
     orFree = list; orFreeAt = Date.now(); return list;
   } catch { return []; }
 }
-globalThis.fetch = async (url, opts) => {
-  const r = await realFetch(url, opts);
-  if (r.ok || !String(url).includes(OR_URL)) return r;
-  // Plus de crédits : code 402, ou un autre code avec un message « credits / balance / afford »
-  let noMoney = r.status === 402;
-  if (!noMoney) { try { noMoney = /credit|balance|afford|insufficient|payment/i.test(await r.clone().text()); } catch {} }
-  if (!noMoney) return r;
-  try {
-    const b = JSON.parse(opts.body);
-    if (b.modalities) return (await freeImage(b, opts)) || r; // images : version gratuite (Pollinations)
+async function freeChat(url, opts, b) {
     const g = await tryGemini(b, opts); if (g) return g;
     delete b.reasoning; b.max_tokens = Math.min(b.max_tokens || 16000, 32000); b.messages = boostSystem(b.messages || []);
-    let r2 = r;
+    let r2 = null;
     for (const model of [...(await orFreeModels()).filter(m => (orDead.get(m) || 0) < Date.now()), "openrouter/free"]) {
       const bb = { ...b, model };
       r2 = await realFetch(url, { ...opts, body: JSON.stringify(bb) });
@@ -152,6 +144,22 @@ globalThis.fetch = async (url, opts) => {
       if (model !== "openrouter/free") orDead.set(model, Date.now() + (r2.status === 429 ? 120e3 : 3600e3));
     }
     return r2;
+}
+let noMoneyUntil = 0; // quand OpenRouter a dit « pas de crédits », on ne le redemande pas pendant 10 min (gagne du temps)
+globalThis.fetch = async (url, opts) => {
+  const isOR = String(url).includes(OR_URL);
+  if (isOR && Date.now() < noMoneyUntil) { try { const b0 = JSON.parse(opts.body); if (b0.modalities) { const im = await freeImage(b0, opts); if (im) return im; } else { const g0 = await freeChat(url, opts, b0); if (g0?.ok) return g0; } } catch {} }
+  const r = await realFetch(url, opts);
+  if (r.ok || !isOR) return r;
+  // Plus de crédits : code 402, ou un autre code avec un message « credits / balance / afford »
+  let noMoney = r.status === 402;
+  if (!noMoney) { try { noMoney = /credit|balance|afford|insufficient|payment/i.test(await r.clone().text()); } catch {} }
+  if (!noMoney) return r;
+  noMoneyUntil = Date.now() + 10 * 60e3;
+  try {
+    const b = JSON.parse(opts.body);
+    if (b.modalities) return (await freeImage(b, opts)) || r; // images : version gratuite (Pollinations)
+    return (await freeChat(url, opts, b)) || r;
   } catch { return r; }
 };
 // ---------- Limite de messages par personne et par jour ----------

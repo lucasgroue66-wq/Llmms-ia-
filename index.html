@@ -1673,7 +1673,7 @@ const isAnimReq=c=>{ const u=[...c.messages].reverse().find(m=>m.role==="user"&&
 // Mode abusé : plan + relectures seulement pour du vrai code (pas pour une animation web, pour aller vite)
 
 /* ---------------- Effort de réflexion (Rapide / Normal / Max) ---------------- */
-const EFFORTS=[["fast","⚡","Rapide","Réponse quasi immédiate, réflexion courte."],["normal","⚖️","Normal","Le bon équilibre entre vitesse et qualité."],["max","🔥","Effort max","Réflexion maximale, plan + relecture du code, réponses plus longues. Plus lent."]];
+const EFFORTS=[["fast","⚡","Rapide","Réponse quasi immédiate, réflexion courte."],["normal","⚖️","Normal","Rapide et de bonne qualité (recommandé)."],["max","🔥","Effort max","Réflexion maximale, plan + relecture du code, réponses plus longues. Plus lent."]];
 let effort=store.get("llmms3-effort","normal"); if(!EFFORTS.some(e=>e[0]===effort)) effort="normal";
 function effortUI(){ const e=EFFORTS.find(x=>x[0]===effort); $("effIc").textContent=e[1]; $("effLbl").textContent=e[2]; $("effBtn").classList.toggle("max",effort==="max");
   $("effMenu").innerHTML=`<div class="eh">Effort de réflexion</div>`+EFFORTS.map(x=>`<button type="button" class="eo${x[0]===effort?" on":""}" data-eff="${x[0]}"><span class="ei">${x[1]}</span><span><b>${x[2]}</b><small>${x[3]}</small></span></button>`).join("");
@@ -1681,7 +1681,7 @@ function effortUI(){ const e=EFFORTS.find(x=>x[0]===effort); $("effIc").textCont
 $("effBtn").onclick=e=>{ e.stopPropagation(); $("mmenu").classList.remove("open"); const o=$("effMenu").classList.toggle("open"); $("effBtn").setAttribute("aria-expanded",String(o)); };
 document.addEventListener("click",e=>{ if(!e.target.closest("#effPicker")) $("effMenu").classList.remove("open"); });
 effortUI();
-const boosted=c=>effort!=="fast"&&(effort==="max"||tier==="5"||tier==="5.5"||tier==="studio")&&(c.mode==="roblox"||(c.mode==="dev"&&!isAnimReq(c)));
+const boosted=c=>effort==="max"&&(c.mode==="roblox"||(c.mode==="dev"&&!isAnimReq(c)));
 
 async function reviewCode(c,answer,signal){
   try{
