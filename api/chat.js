@@ -73,13 +73,13 @@ async function imagePrompt(msgs, opts) {
       if ((gemDead.get(model) || 0) > Date.now()) continue;
       try {
         const r = await realFetch(`${GEM_BASE}/chat/completions`, { method: "POST", headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json" }, signal: opts?.signal,
-          body: JSON.stringify({ model, max_tokens: 400, messages: [{ role: "system", content: "You write prompts for an AI image generator (FLUX). From the conversation, describe in ONE detailed English paragraph (max 90 words) the image the user wants NOW, applying their latest edits to the previous image description. Include subject, style (keep the requested style: pencil drawing, manga, realistic, Roblox, logo…), composition, colors, lighting, quality words. If text must appear in the image, put it in quotes. Output only the prompt." }, { role: "user", content: conv }] }) });
+          body: JSON.stringify({ model, max_tokens: 3000, reasoning_effort: "low", messages: [{ role: "system", content: "You write prompts for an AI image generator (FLUX) that does NOT know nicknames and often gets people wrong. From the conversation, describe in ONE detailed English paragraph (max 110 words) the image the user wants NOW, applying their latest edits to the previous image. VERY IMPORTANT: when the user names a real person, athlete, celebrity, character, team, game or brand (even by a nickname like CR7, Messi, Mbappé, Neymar, Spider-Man, Roblox), START the prompt with the full real name and gender, then describe precisely what they look like at the requested time (age, face, hair, skin tone, body, typical outfit/jersey with colors and number, team, era, accessories) so the image is clearly recognizable; e.g. CR7 prime 2008 = Cristiano Ronaldo, 23-year-old Portuguese male footballer, short dark gelled hair, athletic, Manchester United red #7 jersey. Keep the requested style (pencil drawing, colored pencils, manga, realistic, watercolor, Roblox…). Include composition, background, lighting, quality words. Text in the image goes in quotes. Output only the prompt." }, { role: "user", content: conv }] }) });
         if (r.ok) { const j = await r.json(); const t = j?.choices?.[0]?.message?.content?.trim(); if (t) return t.slice(0, 900); }
         else if (r.status === 429) gemDead.set(model, Date.now() + 60e3);
       } catch {}
     }
   }
-  return last.slice(0, 600) || "a beautiful illustration";
+  return last.replace(/\[Style demandé[^\]]*\]/, "").trim().slice(0, 600) || "a beautiful illustration";
 }
 async function freeImage(b, opts) {
   try {
