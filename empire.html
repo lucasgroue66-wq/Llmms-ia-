@@ -214,21 +214,21 @@ function home(){ const nw=netWorth(), list=RICH.concat([["⭐ TOI",nw]]).sort((a
   $("main").innerHTML=`<div class="card"><button class="work" id="work"><span id="wv">+${fmt(clickVal(),1)}</span><small>Touche ici pour gagner de l'argent</small></button>
   <div id="tapz" style="margin-top:12px"></div></div>
   <div class="card"><div class="row"><b class="grow">📊 Ta fortune</b>${(()=>{ const h=E.hist.slice(-60), v=h[0]>0?h.at(-1)/h[0]-1:0; return `<span class="${v>=0?"up":"dn"}">${pct(v)} <small class="hint">60 j</small></span>`; })()}</div>${bigChart(E.hist.slice(-60))}
-  <div class="kpi" style="margin-top:8px"><div><span>Revenus / jour</span><b class="up">${fmt(dailyIncome())}</b></div><div><span>Classement mondial</span><b>#${rank} / ${list.length}</b></div></div></div>
+  <div class="kpi" style="margin-top:8px"><div><span>Revenus / jour</span><b class="${dailyIncome()>=0?"up":"dn"}">${fmt(dailyIncome())}</b></div><div><span>Classement mondial</span><b>#${rank} / ${list.length}</b></div></div></div>
   <h2>🏦 Banque</h2><div class="card"><div class="kpi"><div><span>Épargne (+0,04 %/j)</span><b>${fmt(E.sav)}</b></div><div><span>Prêt (0,08 %/j)</span><b class="${E.loan?"dn":""}">${fmt(E.loan)}</b></div></div>
   <div class="row" style="margin-top:10px;flex-wrap:wrap;gap:6px"><button class="btn gh" id="dep">Déposer</button><button class="btn gh" id="wd">Retirer</button><button class="btn gh" id="ln">Emprunter</button><button class="btn gh" id="rp" ${E.loan?"":"disabled"}>Rembourser</button></div></div>
   <h2>📰 Actualités</h2><div class="card ev">${E.log.slice(0,6).map(l=>`<div class="hint" style="padding:4px 0">${l}</div>`).join("")||'<div class="hint">1 jour = 4 secondes. Le temps continue même jeu fermé.</div>'}</div>`;
   homeTap();
-  $("work").onclick=e=>{ const g=clickVal(); E.cash+=g; E.taps++; E.tapE+=g; head(); $("wv").textContent="+"+fmt(g,1); const f=document.createElement("div"); f.className="float"; f.textContent="+"+fmt(g,1); f.style.left=(e.clientX-20)+"px"; f.style.top=(e.clientY-20)+"px"; document.body.appendChild(f); setTimeout(()=>f.remove(),900); if(E.taps%10===0){ homeTap(); save(); } };
+  $("work").onclick=e=>{ const g=clickVal(); E.cash+=g; E.taps++; E.tapE+=g; head(); $("wv").textContent="+"+fmt(g,1); const f=document.createElement("div"); f.className="float"; f.textContent="+"+fmt(g,1); f.style.left=(e.clientX-20)+"px"; f.style.top=(e.clientY-20)+"px"; document.body.appendChild(f); setTimeout(()=>f.remove(),900); homeTap(); if(E.taps%10===0) save(); };
   const amt=(title,max,fn)=>popup(`<h3>${title}</h3><p class="hint">Maximum : ${fmt(max)}</p><div class="qty">${[.1,.25,.5,1].map(f=>`<button data-f="${f}">${f===1?"Max":f*100+" %"}</button>`).join("")}</div><button class="btn gh" id="x" style="width:100%">Annuler</button>`,()=>{ document.querySelectorAll("[data-f]").forEach(b=>b.onclick=()=>{ const v=Math.floor(max*+b.dataset.f); if(v>0) fn(v); save(); closePop(); }); $("x").onclick=closePop; });
   $("dep").onclick=()=>amt("Déposer sur l'épargne",Math.max(0,E.cash),v=>{ E.cash-=v; E.sav+=v; });
   $("wd").onclick=()=>amt("Retirer de l'épargne",E.sav,v=>{ E.sav-=v; E.cash+=v; });
   $("ln").onclick=()=>amt("Emprunter",Math.max(0,netWorth()*.5-E.loan),v=>{ E.loan+=v; E.cash+=v; toast("Prêt accordé 🏦"); });
   $("rp").onclick=()=>amt("Rembourser le prêt",Math.min(E.loan,Math.max(0,E.cash)),v=>{ E.loan-=v; E.cash-=v; });
 }
-function homeTap(){ const z=$("tapz"); if(!z) return; const L=E.cl, need=50*(L+1), prog=Math.min(1,(E.taps-(E.tapBase||0))/need), goal=CLICKGOAL(L), max=L>=CLICK.length-1;
+function homeTap(){ const z=$("tapz"); if(!z) return; const L=E.cl, goal=CLICKGOAL(L), max=L>=CLICK.length-1;
   z.innerHTML=`<div class="row"><b class="grow">💰 Revenu du clic · niveau ${L+1}/10</b>${E.boost>0?`<span class="tag b">⚡ x6,49 · ${E.boost}s</span>`:""}</div>
-  ${max?'<p class="hint">Niveau maximum atteint 🔥</p>':`<div class="bar" style="margin:8px 0"><i style="width:${prog*100}%"></i></div><div class="row"><span class="hint grow">${Math.min(need,E.taps-(E.tapBase||0))}/${need} clics · puis paie l'objectif</span><button class="btn o" id="lvl" ${prog<1||E.cash<goal?"disabled":""}>Niveau ${L+2} · ${fmt(goal)}</button></div>`}
+  ${max?'<p class="hint">Niveau maximum atteint 🔥</p>':`<div class="row" style="margin-top:8px"><span class="hint grow">Niveau suivant : <b style="color:#fff">+${fmt(CLICK[L+1])} par clic</b></span><button class="btn o" id="lvl" ${E.cash<goal?"disabled":""}>Améliorer · ${fmt(goal)}</button></div>`}
   <button class="btn ${E.bcd>0?"gh":"g"}" id="bst" style="width:100%;margin-top:10px" ${E.bcd>0||E.boost>0?"disabled":""}>${E.boost>0?"⚡ Boost actif !":E.bcd>0?`⏳ Boost dispo dans ${E.bcd}s`:"⚡ BOOST : clics x6,49 pendant 30 s"}</button>`;
   if(!max) $("lvl").onclick=()=>{ if(!pay(goal)) return; E.cl++; E.tapBase=E.taps; save(); toast(`💰 Clic niveau ${E.cl+1} : +${fmt(CLICK[E.cl])} par clic`); home(); };
   $("bst").onclick=()=>{ E.boost=30; E.bcd=180; toast("⚡ Boost activé !"); homeTap(); $("wv").textContent="+"+fmt(clickVal(),1); };
