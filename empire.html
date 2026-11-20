@@ -61,7 +61,8 @@ h2{font-size:13px;letter-spacing:.08em;text-transform:uppercase;color:var(--dim)
 .tag.b{background:#14532d;color:#86efac}.tag.h{background:#7c2d12;color:#fdba74}
 svg.sp{display:block}
 .hint{color:var(--dim);font-size:12.5px}
-input.in{background:var(--card2);color:#fff;border:1px solid var(--line);border-radius:10px;padding:9px 10px;font-size:15px;width:120px}
+.in{background:var(--card2);color:#fff;border:1px solid var(--line);border-radius:10px;padding:9px 10px;font-size:15px;font-family:inherit}
+input.in{width:120px;height:42px}select.in{height:42px;max-width:100%}textarea.in{width:100%}
 .lux{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px}
 .lux .x{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:12px;text-align:center}
 .lux .x .e{font-size:40px}.lux .x.own{border-color:#fbbf24;box-shadow:0 0 0 1px #fbbf24 inset}
@@ -364,11 +365,14 @@ function admin(){ const S=(t,h)=>`<h2 style="margin-top:18px">${t}</h2><div clas
   popup(`<h3>🛠️ Panel admin</h3><p class="hint">Fais défiler vers le bas pour tout voir ↓</p>
   ${S("💶 Argent",[1e3,1e5,1e6,1e9,1e12].map(v=>`<button data-am="${v}">+${fmt(v)}</button>`).join("")+`<button id="inf">${E.inf?"✅":"⬜"} Argent infini</button>`)}
   <div class="row" style="gap:6px;flex-wrap:wrap"><input class="in" id="amv" type="number" placeholder="Montant"><button class="btn" id="amg">Donner</button><button class="btn gh" id="ams">Mettre exactement</button></div>
-  ${S("🏪 Business",`<button id="gb">🎁 Me donner TOUS les business</button><button id="mb">⬆️ Tout au maximum</button><button id="fb">⏩ Finir travaux & projets</button><button id="mg">🤝 Débloquer toutes les fusions</button>`)}
+  ${S("🏪 Business",`<select class="in" id="gbs" style="width:auto">${Object.entries(BT).map(([k,t])=>`<option value="${k}">${t.ic} ${t.n}</option>`).join("")}</select><button id="gb1">🎁 Me donner ce business</button><button id="gb">Tous les business</button><button id="mb">⬆️ Tout au maximum</button><button id="fb">⏩ Finir travaux & projets</button><button id="mg">🤝 Débloquer toutes les fusions</button>`)}
   ${S("📈 Investissements",`<button id="gs">+1 000 de chaque action</button><button id="gc">+10 de chaque crypto</button><button id="bm">📈 BOOM</button><button id="kr">📉 KRACH</button><button id="ol">🛢️ Pétrole x2</button>`)}
   ${S("🏢 Immobilier & objets",`<button id="gr">🔑 Tous les biens immobiliers</button><button id="ur">⭐ Améliorer tous mes biens</button><button id="gi">💎 Tous les objets de luxe</button>`)}
-  ${S("📱 Applis",`<button id="ap1">🖥️ +10 Méga data centers</button><button id="ap2">▶️ +1 M abonnés</button><button id="ap3">🧱 Mes jeux : +500 joueurs</button><button id="ap4">🤝 Recevoir une offre de rachat</button><button id="ap5">🏢 Racheter toutes les entreprises</button><button id="ap6">🧾 Pas d'impôts ce mois</button>`)}
-  ${S("💰 Clic",`<button id="cm">Clic niveau max</button><button id="cb">⚡ Boost x6,49 (5 min)</button>`)}
+  ${S("📱 Applis",`<button id="ap1">🖥️ +10 Méga data centers</button><button id="ap4">🤝 Recevoir une offre de rachat</button><button id="ap6">🧾 Pas d'impôts ce mois</button>`)}
+  <h2 style="margin-top:14px">👥 Abonnés (tu choisis le nombre)</h2><div class="row" style="gap:6px;flex-wrap:wrap"><select class="in" id="fpl" style="width:auto"><option value="vid">▶️ VidTube</option><option value="pix">📸 Pixgram</option><option value="chirp">🐦 Chirp</option><option value="tok">🎵 TokTik</option></select><input class="in" id="fnb" type="number" placeholder="Nombre"><button class="btn" id="fad">Ajouter</button><button class="btn gh" id="fst">Mettre exactement</button></div>
+  <h2 style="margin-top:14px">🧱 Joueurs de mes jeux Bloxy</h2><div class="row" style="gap:6px;flex-wrap:wrap"><select class="in" id="bgs" style="width:auto">${(P().blox.length?P().blox:[{id:"",n:"(aucun jeu)"}]).map(g=>`<option value="${g.id}">${esc(g.n)}</option>`).join("")}</select><input class="in" id="bnb" type="number" placeholder="Joueurs"><button class="btn" id="bad">Mettre</button></div>
+  <h2 style="margin-top:14px">🏢 Racheter une entreprise</h2><div class="row" style="gap:6px;flex-wrap:wrap"><select class="in" id="cps" style="width:auto">${COMP.map((c,i)=>`<option value="${i}">${c[0]} ${c[1]} (+${fmt(c[3])}/min)</option>`).join("")}</select><button class="btn" id="cpb">Me la donner</button><button class="btn gh" id="ap5">Toutes</button></div>
+  ${S("💰 Clic",`<button id="c1">+1 niveau de clic</button><button id="c0">-1 niveau</button><button id="cm">Clic niveau max</button><button id="cb">⚡ Boost x6,49 (5 min)</button>`)}
   ${S("⏱ Temps",`<button data-sk="1">+1 jour</button><button data-sk="30">+30 jours</button><button data-sk="365">+1 an</button><button id="ag">🎂 -5 ans (plus jeune)</button>`)}
   <div class="row" style="margin-top:16px"><button class="btn r" id="rs">Tout réinitialiser</button><span class="grow"></span><button class="btn gh" id="x">Fermer</button></div>`,()=>{
   const ok=t=>{ save(); head(); toast(t); };
@@ -389,11 +393,16 @@ function admin(){ const S=(t,h)=>`<h2 style="margin-top:18px">${t}</h2><div clas
   $("ur").onclick=()=>{ for(const id in E.re) if(E.re[id].own) E.re[id].u=5; ok("⭐ Biens améliorés au max"); };
   $("gi").onclick=()=>{ ITEMS.forEach(([,l],g)=>l.forEach((x,i)=>E.items[g+"-"+i]=1)); ok("💎 Tous les objets"); };
   $("ap1").onclick=()=>{ P().pcs[5]=(P().pcs[5]||0)+10; ok("🖥️ +10 data centers"); };
-  $("ap2").onclick=()=>{ P().vid.subs+=1e6; ok("▶️ +1 M abonnés"); };
-  $("ap3").onclick=()=>{ P().blox.forEach(g=>{ g.pl+=500; g.q=Math.max(g.q,90); g.dev=0; g.live=1; }); ok(P().blox.length?"🧱 +500 joueurs":"Crée d'abord un jeu dans Bloxy Studio"); };
   $("ap4").onclick=()=>{ const g=P().blox[0]; if(g) msg("buy",`Offre exceptionnelle pour « ${g.n} » : ${fmt(5e6)} !`,{k:"game",id:g.id,price:5e6}); else msg("buy","On aimerait racheter un de tes projets… crée d'abord un jeu ou une IA !"); ok("💬 Message reçu sur Disko"); };
   $("ap5").onclick=()=>{ COMP.forEach((c,i)=>P().acq[i]=1); ok("🏢 Toutes les entreprises rachetées"); };
   $("ap6").onclick=()=>{ P().taxB=0; ok("🧾 Impôts annulés ce mois"); };
+  $("c1").onclick=()=>{ if(E.cl>=CLICK.length-1) return toast("Déjà au max"); E.cl++; ok(`💰 Clic niveau ${E.cl+1} : +${fmt(CLICK[E.cl])}/clic`); };
+  $("c0").onclick=()=>{ if(E.cl<=0) return; E.cl--; ok(`Clic niveau ${E.cl+1}`); };
+  $("gb1").onclick=()=>{ const k=$("gbs").value, b=newBiz(k); b.name=BT[k].n+" "+(E.biz.filter(x=>x.t===k).length+1); if(b.offers) b.offers=genJobs(b); E.biz.push(b); if(BT[k].mode==="car"&&!E.market.length) refreshMarket(); ok(`🎁 ${BT[k].ic} ${BT[k].n} ajouté`); };
+  const fset=add=>{ const v=Math.floor(+$("fnb").value||0), w=$("fpl").value; if(!$("fnb").value) return toast("Écris un nombre"); if(w==="vid") P().vid.subs=Math.max(0,add?P().vid.subs+v:v); else { const so=S0()[w]; so.f=Math.max(0,add?so.f+v:v); } ok(`👥 Abonnés mis à jour`); };
+  $("fad").onclick=()=>fset(1); $("fst").onclick=()=>fset(0);
+  $("bad").onclick=()=>{ const g=P().blox.find(x=>x.id==$("bgs").value), v=Math.floor(+$("bnb").value||0); if(!g) return toast("Crée d'abord un jeu"); g.pl=v; g.dev=0; g.live=1; g.q=Math.max(g.q,Math.min(100,Math.pow(v*30,1/2.2))); ok(`🧱 ${g.n} : ${v.toLocaleString("fr-FR")} joueurs`); };
+  $("cpb").onclick=()=>{ const i=+$("cps").value; P().acq[i]=1; ok(`🏢 ${COMP[i][1]} est à toi`); };
   $("cm").onclick=()=>{ E.cl=CLICK.length-1; ok("💰 Clic au max"); };
   $("cb").onclick=()=>{ E.boost=300; ok("⚡ Boost 5 min"); };
   document.querySelectorAll("[data-sk]").forEach(b=>b.onclick=()=>{ const n=+b.dataset.sk; for(let i=0;i<n;i++) tick(n>1); ok(`+${n} jour(s)`); });
@@ -447,9 +456,9 @@ function appsDaily(){ const A=P(); let n=0; if(A.shop) n+=A.shop.last||0; A.ai.f
 setInterval(()=>{ const r=acqRate(); if(r>0){ E.cash+=r; E.ph.acqE=(E.ph.acqE||0)+r; head(); const el=$("acqT"); if(el) el.textContent="+"+fmt(r); } },10000);
 
 /* ---------- écran Apps ---------- */
-const APPS=[["shop","🛍️","ShopNova","Dropshipping & e-commerce","#f97316"],["ai","🤖","Neura Studio","Crée tes IA","#8b5cf6"],["vid","▶️","VidTube","Fais des vidéos","#ef4444"],["form","🎓","Academy","Vends des formations","#0ea5e9"],["blox","🧱","Bloxy Studio","Crée ton jeu","#22c55e"],["chat","💬","Disko","Discute avec des gens","#5865f2"],["pc","🖥️","PC Store","Achète des PC","#64748b"],["acq","🏢","Rachat","Rachète des entreprises","#eab308"]];
+const APPS=[["shop","🛍️","ShopNova","Dropshipping & e-commerce","#f97316"],["ai","🤖","Neura Studio","Crée tes IA","#8b5cf6"],["vid","▶️","VidTube","Fais des vidéos","#ef4444"],["form","🎓","Academy","Vends des formations","#0ea5e9"],["blox","🧱","Bloxy Studio","Crée ton jeu","#22c55e"],["chat","💬","Disko","Discute avec des gens","#5865f2"],["s:pix","📸","Pixgram","Photos","#e1306c"],["s:chirp","🐦","Chirp","Posts","#1d9bf0"],["s:tok","🎵","TokTik","Vidéos courtes","#ff0050"],["pc","🖥️","PC Store","Achète des PC","#64748b"],["acq","🏢","Rachat","Rachète des entreprises","#eab308"]];
 let app=null;
-function apps(){ const A=P(); if(app) return ({shop:appShop,ai:appAI,vid:appVid,form:appForm,blox:appBlox,chat:appChat,pc:appPC,acq:appAcq})[app]();
+function apps(){ const A=P(); if(app&&app.startsWith("s:")){ socApp=app.slice(2); return appSoc(); } if(app) return ({shop:appShop,ai:appAI,vid:appVid,form:appForm,blox:appBlox,chat:appChat,pc:appPC,acq:appAcq})[app]();
   const unread=Object.values(A.unread).reduce((a,b)=>a+b,0);
   $("main").innerHTML=`<div class="card"><div class="row"><div class="grow"><div class="hint">Revenus des applis</div><b class="${appsDaily()>=0?"up":"dn"}" style="font-size:20px">${fmt(appsDaily())}/jour</b></div><div style="text-align:right"><div class="hint">Rachats</div><b class="up">+${fmt(acqRate())}/min</b></div></div><p class="hint" style="margin:6px 0 0">🏠 Coût de la vie ${fmt(25+Object.keys(E.items).length*40)}/j · ⚡ électricité ${fmt(elec())}/j · 🧾 impôts 20 % chaque mois${A.share?` · 👩‍💼 Kaïa prend ${Math.round(A.share*100)} %`:""}</p></div>
   <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:14px 8px;padding:8px 4px">${APPS.map(([k,ic,n,,c])=>`<button data-app="${k}" style="display:flex;flex-direction:column;align-items:center;gap:6px;position:relative"><span style="width:62px;height:62px;border-radius:18px;display:grid;place-items:center;font-size:30px;background:linear-gradient(145deg,${c},#0b1020);box-shadow:0 6px 16px -6px ${c}">${ic}</span><span style="font-size:11.5px;font-weight:700">${n}</span>${k==="chat"&&unread?`<span style="position:absolute;top:-4px;right:8px;background:#ef4444;border-radius:999px;padding:1px 7px;font-size:12px;font-weight:900">${unread}</span>`:""}</button>`).join("")}</div>`;
@@ -483,10 +492,11 @@ function appAI(){ const A=P(), cp=compute();
 /* VidTube */
 function appVid(){ const A=P(), V=A.vid, q=vq(), can=E.day>V.cd;
   $("main").innerHTML=back("VidTube","▶️")+`<div class="card kpi"><div><span>Abonnés</span><b>${V.subs.toLocaleString("fr-FR")}</b></div><div><span>Vues totales</span><b>${V.tot.toLocaleString("fr-FR")}</b></div><div><span>Revenus pub hier</span><b class="up">${fmt(V.last||0)}</b></div><div><span>Qualité vidéo</span><b>🎬 ${q.toFixed(1).replace(".",",")}</b></div></div>
-  <h2>${can?"Faire une vidéo aujourd'hui":"⏳ Prochaine vidéo demain"}</h2><div class="qty">${VTH.map((t,i)=>`<button data-vt="${i}" ${can?"":"disabled"}>${t[0]} ${t[1]}</button>`).join("")}</div>
+  <button class="btn r" id="golive" style="width:100%;margin:6px 0 4px;font-size:17px" ${V.lcd===E.day?"disabled":""}>🔴 ${V.lcd===E.day?"Live déjà fait aujourd'hui":"LANCER UN LIVE"}</button><p class="hint" style="margin:0 0 6px">Pendant le live : spectateurs, chat en direct et dons 💸 (3 min max).</p><h2>${can?"Faire une vidéo aujourd'hui":"⏳ Prochaine vidéo demain"}</h2><div class="qty">${VTH.map((t,i)=>`<button data-vt="${i}" ${can?"":"disabled"}>${t[0]} ${t[1]}</button>`).join("")}</div>
   ${V.vids.length?`<h2>Tes vidéos</h2>`+V.vids.slice().reverse().slice(0,10).map(v=>`<div class="item"><div class="ic">${VTH[v.th][0]}</div><div class="grow"><div class="t">${esc(v.t)} ${v.viral?'<span class="tag b">🔥 VIRALE</span>':""}</div><div class="d">👁️ ${v.views.toLocaleString("fr-FR")} vues</div></div></div>`).join(""):""}
   <h2>Matériel</h2>${CAMS.map((c,i)=>`<div class="item"><div class="ic">${c[0]}</div><div class="grow"><div class="t">${c[1]}</div><div class="d">+${c[3]} qualité</div></div>${A.cams[i]?'<span class="tag b">✔</span>':`<button class="btn" data-cm="${i}">${fmt(c[2])}</button>`}</div>`).join("")}
   <p class="hint">Les vidéos Business et Tuto IA rapportent plus par vue. Un bon PC (PC Store) améliore aussi le montage.</p>`; bindBack();
+  $("golive").onclick=startLive;
   document.querySelectorAll("[data-vt]").forEach(b=>b.onclick=()=>{ const th=+b.dataset.vt, viral=Math.random()<.06+q*.006; const titles={0:["J'ai fini le jeu en 1 heure","Le pire bug de l'année"],1:["Comment j'ai gagné mon premier million","Mes 5 business à lancer"],2:["Je piège mon pote 😂","Les pires situations au collège"],3:["Je crée une IA en 24h","L'IA va remplacer ton job ?"],4:["Ma nouvelle supercar 🏎️","Une journée de millionnaire"],5:["Je crée un jeu Bloxy viral","Mon jeu a 1000 joueurs !"]};
     const v0=Math.round((V.subs*rnd(.08,.3)+rnd(40,250)*q)*(viral?rnd(8,30):1)); V.vids.push({t:pick(titles[th]),th,v0,views:0,age:0,viral}); V.cd=E.day; save(); toast(viral?"🔥 Ta vidéo part en VIRAL !":"🎬 Vidéo publiée"); appVid(); });
   document.querySelectorAll("[data-cm]").forEach(b=>b.onclick=()=>{ const i=+b.dataset.cm; if(!pay(CAMS[i][2])) return; A.cams[i]=1; save(); appVid(); }); }
@@ -572,6 +582,63 @@ function appAcq(){ const A=P();
   ${COMP.map((c,i)=>`<div class="item"><div class="ic">${c[0]}</div><div class="grow"><div class="t">${c[1]} ${A.acq[i]?'<span class="tag b">À toi</span>':""}</div><div class="d"><b class="up">+${fmt(c[3])}/min</b> · rentabilisée en ${Math.round(c[2]/c[3]/6)} min réelles</div></div>${A.acq[i]?`<button class="btn r" data-cs="${i}">Revendre ${fmt(c[2]*.85)}</button>`:`<button class="btn o" data-cb="${i}" ${E.cash<c[2]?"disabled":""}>${fmt(c[2])}</button>`}</div>`).join("")}`; bindBack();
   document.querySelectorAll("[data-cb]").forEach(b=>b.onclick=()=>{ const i=+b.dataset.cb; if(!pay(COMP[i][2])) return; A.acq[i]=1; save(); logEv(`🏢 Tu as racheté ${COMP[i][1]} ! +${fmt(COMP[i][3])}/min`); appAcq(); });
   document.querySelectorAll("[data-cs]").forEach(b=>b.onclick=()=>{ const i=+b.dataset.cs; if(!b.dataset.k){ b.dataset.k=1; b.textContent="Confirmer ?"; return; } A.acq[i]=0; E.cash+=COMP[i][2]*.85; save(); appAcq(); }); }
+
+/* ================= RÉSEAUX SOCIAUX (Pixgram, Chirp, TokTik) + LIVES ================= */
+const SOC={pix:["📸","Pixgram","Photos & stories","#e1306c",1],chirp:["🐦","Chirp","Messages courts","#1d9bf0",.8],tok:["🎵","TokTik","Vidéos courtes","#ff0050",2.2]};
+const SNAMES=["kevin_92","lea.pxl","noahgamer","sarah_bzz","mehdi.ytb","jade_lol","enzo_off","ines.mp4","tom_brk","lina_dev","yanis.47","clara🌸","rayan_fr","emma.jpg","bilal_zz"];
+const SCOM=["🔥🔥🔥","trop fort","je teste direct !","c'est quoi le lien ?","GOAT 🐐","j'ai joué 3h mdr","incroyable 😳","first !","t'es trop chaud","on veut une suite","abonné ✅","ça mérite plus de vues","le boss 👑"];
+function S0(){ const A=P(); if(!A.soc) A.soc={pix:{f:0,posts:[],n:0},chirp:{f:0,posts:[],n:0},tok:{f:0,posts:[],n:0}}; return A.soc; }
+function promoList(){ const A=P(), L=[["none","Rien, juste un post"]]; A.blox.forEach(g=>{ if(g.live) L.push(["g:"+g.id,`🧱 Jouer à mon jeu « ${g.n} »`]); }); if(A.shop) L.push(["shop",`🛍️ Ma boutique ${A.shop.n}`]); A.ai.forEach(m=>{ if(m.st==="live") L.push(["ai:"+m.id,`🤖 Mon IA « ${m.n} »`]); }); if(A.form.length) L.push(["form","🎓 Mes formations"]); L.push(["vid","▶️ Ma chaîne VidTube"]); return L; }
+const TEMPL={none:["Nouvelle journée, nouveaux objectifs 💼","Le travail paie toujours 🔥","Merci pour votre soutien ❤️"],g:["🧱 Venez jouer à mon jeu « %s » sur Bloxy !! Nouvelle mise à jour 🔥","Mon jeu « %s » est en ligne, qui me bat ? 😏"],shop:["🛍️ Promo sur ma boutique %s ! Livraison offerte 🚚"],ai:["🤖 Testez mon IA « %s », elle est incroyable !"],form:["🎓 Ma formation pour devenir riche est dispo 💸"],vid:["▶️ Nouvelle vidéo sur ma chaîne, foncez !"]};
+let socApp=null;
+function appSoc(){ const k=socApp, [ic,name,,col,mul]=SOC[k], so=S0()[k], A=P(), L=promoList();
+  $("main").innerHTML=back(name,ic)+`<div class="card" style="background:linear-gradient(135deg,${col}33,var(--card))"><div class="row"><div class="ic" style="border-radius:50%;background:${col}">${ic}</div><div class="grow"><b>@toi_le_boss</b><div class="hint">${so.posts.length} posts</div></div><div style="text-align:right"><b style="font-size:20px">${so.f.toLocaleString("fr-FR")}</b><div class="hint">abonnés</div></div></div></div>
+  <div class="card"><b>✍️ Nouvelle publication</b><select id="sp" class="in" style="width:100%;margin:8px 0">${L.map(([v,l])=>`<option value="${v}">${esc(l)}</option>`).join("")}</select>
+  <textarea id="st" class="in" rows="3" style="width:100%;resize:none" maxlength="200"></textarea>
+  <button class="btn" id="spo" style="width:100%;margin-top:8px;background:${col}">${k==="tok"?"🎬 Publier la vidéo":k==="pix"?"📸 Publier":"🐦 Poster"}</button><p class="hint">Les gens qui voient ton post peuvent aller jouer à ton jeu, acheter dans ta boutique, tester ton IA… ${k==="tok"?"TokTik fait le plus de vues.":""}</p></div>
+  <h2>Tes publications</h2><div id="sposts">${so.posts.slice().reverse().map(postHTML).join("")||'<p class="hint">Aucune publication pour l’instant.</p>'}</div>`; bindBack();
+  const fill=()=>{ const v=$("sp").value, t=v.split(":")[0], g=v.startsWith("g:")?A.blox.find(x=>x.id==v.slice(2)):null, m=v.startsWith("ai:")?A.ai.find(x=>x.id==v.slice(3)):null; $("st").value=pick(TEMPL[t]).replace("%s",g?g.n:m?m.n:A.shop?A.shop.n:""); };
+  $("sp").onchange=fill; fill();
+  $("spo").onclick=()=>{ const txt=$("st").value.trim(); if(!txt) return toast("Écris quelque chose"); const v=$("sp").value, viral=Math.random()<.07;
+    const views=Math.round((so.f*rnd(.15,.55)+rnd(80,600))*mul*(viral?rnd(10,40):1)), likes=Math.round(views*rnd(.04,.13)), nf=Math.round(views*rnd(.006,.02));
+    const post={id:++so.n,txt,views,likes,com:Array.from({length:Math.min(4,1+Math.floor(likes/200))},()=>[pick(SNAMES),pick(SCOM)]),viral,d:E.day,tgt:v,res:""};
+    so.f+=nf;
+    if(v.startsWith("g:")){ const g=A.blox.find(x=>x.id==v.slice(2)); if(g){ const pl=Math.round(views*rnd(.01,.03)), vis=Math.round(views*rnd(.08,.18)); g.pl+=pl; g.vis+=vis; g.hype=(g.hype||1)*(1+Math.min(3,views/20000)); post.res=`🧱 ${vis.toLocaleString("fr-FR")} personnes sont allées jouer à « ${g.n} » (+${pl} joueurs en ligne)`; } }
+    else if(v==="shop"&&A.shop){ const o=Math.round(views*rnd(.002,.006)), g=o*15; E.cash+=g; A.shop.orders+=o; post.res=`🛍️ ${o} commandes grâce au post (+${fmt(g)})`; }
+    else if(v.startsWith("ai:")){ const m=A.ai.find(x=>x.id==v.slice(3)); if(m){ const u=Math.round(views*rnd(.005,.015)); m.users+=u; post.res=`🤖 +${u.toLocaleString("fr-FR")} nouveaux abonnés à ton IA`; } }
+    else if(v==="form"){ const f=A.form[0], s=Math.round(views*rnd(.0005,.0015)), g=s*f.price*.92; f.sales+=s; E.cash+=g; post.res=`🎓 ${s} formations vendues (+${fmt(g)})`; }
+    else if(v==="vid"){ const s=Math.round(views*rnd(.01,.03)); A.vid.subs+=s; post.res=`▶️ +${s.toLocaleString("fr-FR")} abonnés VidTube`; }
+    so.posts.push(post); if(so.posts.length>30) so.posts.shift(); save(); head(); toast(viral?"🔥 Ta publication devient VIRALE !":"✅ Publié !"); appSoc(); animPost(post); };
+}
+function postHTML(p){ return `<div class="card" data-post="${p.id}" style="margin-bottom:10px"><div style="white-space:pre-wrap">${esc(p.txt)}</div>${p.viral?'<span class="tag b" style="display:inline-block;margin-top:6px">🔥 VIRAL</span>':""}
+  <div class="row" style="margin-top:8px;gap:14px;color:var(--dim);font-weight:700"><span>👁️ <b class="pv" style="color:#fff">${p.views.toLocaleString("fr-FR")}</b></span><span>❤️ <b class="pl" style="color:#fff">${p.likes.toLocaleString("fr-FR")}</b></span><span>💬 ${p.com.length}</span></div>
+  ${p.res?`<div class="hint" style="margin-top:6px;color:#86efac">${p.res}</div>`:""}${p.com.map(c=>`<div class="hint" style="margin-top:4px"><b style="color:#fff">${c[0]}</b> ${c[1]}</div>`).join("")}</div>`; }
+function animPost(p){ const el=document.querySelector(`[data-post="${p.id}"]`); if(!el) return; const pv=el.querySelector(".pv"), pl=el.querySelector(".pl"), t0=performance.now();
+  (function f(now){ const k=Math.min(1,(now-t0)/2500), e=1-Math.pow(1-k,3); pv.textContent=Math.round(p.views*e).toLocaleString("fr-FR"); pl.textContent=Math.round(p.likes*e).toLocaleString("fr-FR"); if(k<1&&document.body.contains(pv)) requestAnimationFrame(f); })(t0); }
+
+/* 🔴 LIVE VidTube */
+function startLive(){ const A=P(), V=A.vid; if(V.lcd===E.day) return toast("Tu as déjà fait un live aujourd'hui");
+  const ov=document.createElement("div"); ov.style.cssText="position:fixed;inset:0;z-index:80;background:#05060a;display:flex;flex-direction:column";
+  ov.innerHTML=`<div style="flex:1;position:relative;overflow:hidden;background:radial-gradient(circle at 50% 35%,#3b0764,#05060a 70%)"><div style="position:absolute;top:14px;left:14px;display:flex;gap:8px;align-items:center"><span style="background:#ef4444;padding:4px 10px;border-radius:8px;font-weight:900">🔴 EN DIRECT</span><span class="chip">👁️ <b id="lv">0</b></span><span class="chip">⏱ <b id="lt">0:00</b></span></div>
+  <div style="position:absolute;top:34%;left:0;right:0;text-align:center;font-size:90px" id="lav">🧑‍💻</div><div style="position:absolute;top:56%;left:0;right:0;text-align:center;font-weight:900;font-size:20px" id="ltt"></div>
+  <div id="ldon" style="position:absolute;top:22%;left:0;right:0;text-align:center"></div>
+  <div id="lchat" style="position:absolute;left:10px;right:10px;bottom:10px;height:34%;overflow:hidden;display:flex;flex-direction:column;justify-content:flex-end;gap:4px;font-size:14px"></div></div>
+  <div style="padding:10px;display:flex;gap:8px;background:#0a0d14"><button class="btn gh" id="lhi">👋 Dire bonjour</button><button class="btn gh" id="lpr">📣 Parler de mes projets</button><button class="btn r" id="lend" style="margin-left:auto">Terminer</button></div>`;
+  document.body.appendChild(ov);
+  const title=pick(["Je joue à mon jeu Bloxy en live 🔥","On parle business et argent 💸","Ouverture de packs en direct 🎁","Je code une IA en live 🤖","Q&R : comment je suis devenu riche"]); ov.querySelector("#ltt").textContent=title;
+  let viewers=0, peak=0, don=0, newSub=0, sec=0, hype=1; const base=Math.max(15,V.subs*rnd(.02,.06)+rnd(10,60)*vq());
+  const chat=(u,t,c)=>{ const d=document.createElement("div"); d.innerHTML=`<b style="color:${c||pick(["#f472b6","#60a5fa","#4ade80","#facc15","#c084fc"])}">${esc(u)}</b> ${esc(t)}`; const L=ov.querySelector("#lchat"); L.appendChild(d); while(L.children.length>12) L.firstChild.remove(); };
+  const LINES=["salut 👋","premier !","t'es trop fort","c'est quoi ton jeu ?","GG","combien t'as gagné ce mois ?","je viens de m'abonner ✅","fais un giveaway 🙏","le boss","mdrrr","❤️❤️❤️","tu peux dire bonjour à moi ?","t'as quel PC ?"];
+  const iv=setInterval(()=>{ sec++; const target=base*hype*(1+Math.min(1.5,sec/40)); viewers=Math.max(0,Math.round(viewers+(target-viewers)*.25+gauss()*Math.sqrt(viewers+1))); peak=Math.max(peak,viewers); hype=Math.max(1,hype*.97);
+    ov.querySelector("#lv").textContent=viewers.toLocaleString("fr-FR"); ov.querySelector("#lt").textContent=`${Math.floor(sec/60)}:${String(sec%60).padStart(2,"0")}`;
+    for(let i=0;i<Math.min(3,1+viewers/400);i++) if(Math.random()<.8) chat(pick(SNAMES),pick(LINES));
+    if(Math.random()<.18+viewers/5000){ const amt=pick([2,5,5,10,20,50,100,500])*(viewers>2000?3:1); don+=amt; const u=pick(SNAMES); chat("💸 "+u,`a donné ${amt} € !`,"#facc15"); const dn=ov.querySelector("#ldon"); dn.innerHTML=`<span style="background:#facc15;color:#1a1100;padding:8px 14px;border-radius:12px;font-weight:900;font-size:18px">💸 ${esc(u)} : ${amt} €</span>`; setTimeout(()=>{ if(dn) dn.innerHTML=""; },1800); try{ beep && 0; }catch{} }
+    newSub+=Math.round(viewers*rnd(.002,.008)); if(sec>=180) end(); },1000);
+  ov.querySelector("#lhi").onclick=()=>{ chat("⭐ TOI","Salut tout le monde ! 👋","#fbbf24"); hype*=1.15; };
+  ov.querySelector("#lpr").onclick=()=>{ const g=A.blox.find(x=>x.live); chat("⭐ TOI",g?`Allez jouer à mon jeu « ${g.n} » sur Bloxy !`:"Abonnez-vous et activez la cloche 🔔","#fbbf24"); if(g){ g.pl+=Math.round(viewers*.03); g.vis+=Math.round(viewers*.3); } hype*=1.1; };
+  let done=false; function end(){ if(done) return; done=true; clearInterval(iv); const ads=peak*sec/60*.02; V.subs+=newSub; V.lcd=E.day; E.cash+=don+ads; save(); head(); ov.remove();
+    popup(`<h3>🔴 Live terminé</h3><div class="kpi" style="margin:10px 0"><div><span>Pic de spectateurs</span><b>${peak.toLocaleString("fr-FR")}</b></div><div><span>Durée</span><b>${Math.floor(sec/60)} min ${sec%60} s</b></div><div><span>💸 Dons</span><b class="up">${fmt(don)}</b></div><div><span>Pub</span><b class="up">${fmt(ads)}</b></div><div><span>Nouveaux abonnés</span><b>+${newSub.toLocaleString("fr-FR")}</b></div></div><button class="btn g" id="x" style="width:100%">Super !</button>`,()=>{ $("x").onclick=closePop; }); }
+  ov.querySelector("#lend").onclick=end; }
 
 /* ---------- DÉMARRAGE ---------- */
 if(!E.market.length) refreshMarket();
