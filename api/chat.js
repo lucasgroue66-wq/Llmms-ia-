@@ -99,7 +99,11 @@ async function freeImage(b, opts) {
 }
 globalThis.fetch = async (url, opts) => {
   const r = await realFetch(url, opts);
-  if (r.status !== 402 || !String(url).includes(OR_URL)) return r;
+  if (r.ok || !String(url).includes(OR_URL)) return r;
+  // Plus de crédits : code 402, ou un autre code avec un message « credits / balance / afford »
+  let noMoney = r.status === 402;
+  if (!noMoney) { try { noMoney = /credit|balance|afford|insufficient|payment/i.test(await r.clone().text()); } catch {} }
+  if (!noMoney) return r;
   try {
     const b = JSON.parse(opts.body);
     if (b.modalities) return (await freeImage(b, opts)) || r; // images : version gratuite (Pollinations)
