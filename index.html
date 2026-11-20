@@ -484,6 +484,10 @@ body.th-vert{--side:#0d1612;--bg:#09110e;--panel:#121e19;--field:#16251f;--hover
 #news h2{margin:0 0 4px;font-size:21px}#news p{color:var(--muted);margin:0 0 12px}
 #news ul{margin:0 0 16px;padding-left:20px;color:var(--soft);line-height:1.55}
 #news .go{width:100%;border-radius:12px;padding:12px;font-weight:700;background:var(--accent);color:var(--accent-ink)}
+.avimg{width:34px;height:34px;border-radius:10px;object-fit:cover;background:linear-gradient(135deg,var(--g1),var(--g2));display:block}
+.av .avimg{width:100%;height:100%;border-radius:11px}
+#voiceBtn.rec{color:#fff;background:#e5484d;border-color:#e5484d;animation:vpulse 1.2s infinite}#voiceBtn.rec .lbl{display:inline!important}@keyframes vpulse{50%{box-shadow:0 0 0 6px rgba(229,72,77,.25)}}
+.txt.user audio{display:block;margin:8px 0 4px;max-width:280px;height:36px}
 </style>
 </head>
 <body>
@@ -557,6 +561,7 @@ body.th-vert{--side:#0d1612;--bg:#09110e;--panel:#121e19;--field:#16251f;--hover
             <button class="pill" id="modelBtn" type="button" aria-haspopup="listbox" aria-expanded="false" title="Choisir le modèle"><svg class="spark" width="18" height="18"><use href="#i-spark"/></svg><span id="modelLbl">llmms ia 5.5</span><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg></button>
             <div class="mmenu" id="mmenu" role="listbox" aria-label="Modèles"></div>
           </div>
+          <button class="pill mic" id="voiceBtn" type="button" title="Message vocal" aria-label="Message vocal"><span id="voiceIc">🎙️</span><span class="lbl" id="voiceLbl"></span></button>
           <button class="pill mic" id="micBtn" type="button" title="Dicter" aria-label="Dicter" hidden><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3"/></svg></button>
           <button class="send" id="send" type="submit" aria-label="Envoyer"></button>
         </div>
@@ -689,6 +694,7 @@ const MODELS=[
   ["5","Le plus puissant pour Roblox Studio : scripts, GUI, builds"],
   ["5.5","Le plus puissant pour tout le reste"],
   ["studio","Spécialiste Roblox Studio uniquement"],
+  ["propria","Le modèle signature de LLMMS : au max partout"],
   ["devoirs","Prof particulier : réponses + méthode expliquée"],
   ["maths","Résout les problèmes de maths étape par étape"],
   ["cinema","Animations, cinématiques, intros et trailers"],
@@ -700,10 +706,11 @@ const MODELS=[
   ["dessin","Images et beaux dessins (crayon, manga…)"]
 ];
 const SPECIALISTS=["devoirs","maths","cinema","web","recherche","ecriture","idees","traduction","dessin"];
-const TIER_LABEL={studio:"Studio",devoirs:"Devoirs",maths:"Maths",cinema:"Cinéma",web:"Web",recherche:"Recherche",ecriture:"Écriture",idees:"Idées",traduction:"Traduction",dessin:"Dessin"};
+const TIER_LABEL={propria:"Propria",studio:"Studio",devoirs:"Devoirs",maths:"Maths",cinema:"Cinéma",web:"Web",recherche:"Recherche",ecriture:"Écriture",idees:"Idées",traduction:"Traduction",dessin:"Dessin"};
 const FORCE_MODE={studio:"roblox",dessin:"image",web:"dev",devoirs:"chat",maths:"chat",cinema:"chat",recherche:"chat",ecriture:"chat",idees:"chat",traduction:"chat"};
 /* Icônes des IA : dégradé, reflet brillant et symbole propre à chacune */
 const ICON={
+  "propria":["#8fd0ff","#3b82f6",""],
   "1":["#6ee7b7","#047857","M13 2 4 14h7l-1 8 9-12h-7z"],
   "2":["#7dd3fc","#1d4ed8","M20 4c-7 0-13 5-15 13l-1 3M6 16c4 0 9-2 11-7"],
   "3":["#c4b5fd","#6d28d9","M12 3v18M5 7h14M5 7l-3 6h6zM19 7l-3 6h6z"],
@@ -722,7 +729,7 @@ const ICON={
   "dessin":["#fbcfe8","#be185d","M15 4l5 5L9 20H4v-5zM13 6l5 5"]
 };
 let icoN=0;
-function modelIcon(key){ return '<svg class="mico" viewBox="0 0 100 100" aria-hidden="true"><use href="#i-spark"/></svg>'; }
+function modelIcon(key){ if(key==="propria") return '<img class="mico avimg" src="/api/avatar" alt="" onerror="this.src=\'/favicon.svg\'">'; return '<svg class="mico" viewBox="0 0 100 100" aria-hidden="true"><use href="#i-spark"/></svg>'; }
 const IMG_STYLES=[
   ["auto","✨ Auto",""],
   ["crayon","✏️ Crayon à papier","Dessin au crayon à papier (graphite) sur papier blanc légèrement texturé, comme fait à la main par un artiste : traits fins et précis, croquis de construction légers, ombres en hachures et à l'estompe, dégradés de gris riches, contrastes doux, noir et blanc, très détaillé et beau."],
@@ -978,7 +985,7 @@ function userRow(text,media){
   const d=document.createElement("div"); d.className="row";
   d.innerHTML=`<div class="av u">L</div><div class="body"><div class="who">${esc(t("you"))}</div><div class="txt user"></div></div>`;
   const tx=d.querySelector(".txt");
-  if(media&&media.length){ const m=document.createElement("div"); m.className="media"; media.forEach(x=>{ if(x.thumb){ const i=document.createElement("img"); i.src=x.thumb; i.alt=""; m.appendChild(i);} if(x.info){ const s=document.createElement("span"); s.className="vtag"; s.textContent=x.info; m.appendChild(s);} }); tx.appendChild(m); }
+  if(media&&media.length){ const m=document.createElement("div"); m.className="media"; media.forEach(x=>{ if(x.audio){ const au=document.createElement("audio"); au.controls=true; au.src=x.audio; m.appendChild(au); } if(x.thumb){ const i=document.createElement("img"); i.src=x.thumb; i.alt=""; m.appendChild(i);} if(x.info){ const s=document.createElement("span"); s.className="vtag"; s.textContent=x.info; m.appendChild(s);} }); tx.appendChild(m); }
   tx.appendChild(document.createTextNode(text)); thread.appendChild(d); toBottom(true);
 }
 function botRow(tag){
@@ -1009,7 +1016,7 @@ function render(){
   let bot=null, chips=null;
   for(const m of c.messages){
     if(m.role==="user"&&m._auto){ if(!bot) bot=botRow(m._tag||tier); const ch=document.createElement("div"); ch.className="chips"; ch.innerHTML=`<span class="chip">${esc(m._autoLabel||"🔍 Vérification dans Studio")}</span>`; bot.txt.appendChild(ch); continue; }
-    if(m.role==="user"){ bot=null; userRow(textOf(m.content).replace(/\n\n\[Vidéo[\s\S]*$/,"").replace(/\n\n\(Image précédente[\s\S]*$/,""),m._media); }
+    if(m.role==="user"){ bot=null; userRow(textOf(m.content).replace(/\n\n\[Vidéo[\s\S]*$/,"").replace(/\n\n\(Image précédente[\s\S]*$/,"").replace(/\n\n\[Message vocal joint[\s\S]*$/,""),m._media); }
     else if(m.role==="assistant"){
       if(!bot){ bot=botRow(m._tag); const prev=c.messages[c.messages.indexOf(m)-1]; if(prev?._spec){ const d=document.createElement("details"); d.className="plan"; d.innerHTML=`<summary>${SPARK.replace('class="spark"','class="spark" width="16" height="16"')}Analyse de la vidéo <span class="boost">🎬 reproduction fidèle</span></summary><div class="pb">${md(prev._spec)}</div>`; bot.txt.appendChild(d); } if(prev?._plan){ const d=document.createElement("details"); d.className="plan"; d.innerHTML=`<summary>${SPARK.replace('class="spark"','class="spark" width="16" height="16"')}Plan de l'architecte <span class="boost">⚡ mode abusé</span></summary><div class="pb">${md(prev._plan)}</div>`; bot.txt.appendChild(d); } }
       if(m._secs){ bot.txt.insertBefore(thinkLine(m._secs,false),bot.txt.firstChild); }
@@ -1100,10 +1107,36 @@ addEventListener("drop",e=>{ e.preventDefault(); dragN=0; document.body.classLis
     rec.onresult=e=>{ input.value=base+[...e.results].map(r=>r[0].transcript).join(""); grow(); };
     rec.onend=()=>{ rec=null; b.classList.remove("rec"); }; rec.onerror=()=>{}; b.classList.add("rec"); rec.start(); }; })();
 
+
+/* ---------------- Messages vocaux ---------------- */
+let voiceNote=null;
+(()=>{ const b=$("voiceBtn"); if(!navigator.mediaDevices?.getUserMedia||!window.MediaRecorder){ b.hidden=true; return; }
+  let rec=null, chunks=[], t0=0, tick=null, stream=null;
+  const stopAll=()=>{ clearInterval(tick); b.classList.remove("rec"); $("voiceIc").textContent="🎙️"; $("voiceLbl").textContent=""; try{ stream?.getTracks().forEach(t=>t.stop()); }catch{} };
+  async function toWav(blob){
+    const AC=window.AudioContext||window.webkitAudioContext; const ac=new AC(); const buf=await ac.decodeAudioData(await blob.arrayBuffer()); try{ ac.close(); }catch{}
+    const rate=16000, len=Math.max(1,Math.ceil(buf.duration*rate)); const off=new OfflineAudioContext(1,len,rate); const src=off.createBufferSource(); src.buffer=buf; src.connect(off.destination); src.start(); const out=await off.startRendering();
+    const pcm=out.getChannelData(0), dv=new DataView(new ArrayBuffer(44+pcm.length*2)); const W=(o,str)=>{ for(let i=0;i<str.length;i++) dv.setUint8(o+i,str.charCodeAt(i)); };
+    W(0,"RIFF"); dv.setUint32(4,36+pcm.length*2,true); W(8,"WAVE"); W(12,"fmt "); dv.setUint32(16,16,true); dv.setUint16(20,1,true); dv.setUint16(22,1,true); dv.setUint32(24,rate,true); dv.setUint32(28,rate*2,true); dv.setUint16(32,2,true); dv.setUint16(34,16,true); W(36,"data"); dv.setUint32(40,pcm.length*2,true);
+    for(let i=0;i<pcm.length;i++){ const v=Math.max(-1,Math.min(1,pcm[i])); dv.setInt16(44+i*2,v<0?v*0x8000:v*0x7fff,true); }
+    const bytes=new Uint8Array(dv.buffer); let bin=""; for(let i=0;i<bytes.length;i+=0x8000) bin+=String.fromCharCode.apply(null,bytes.subarray(i,i+0x8000));
+    return {b64:btoa(bin),dur:buf.duration};
+  }
+  b.onclick=async()=>{
+    if(busy) return;
+    if(rec){ rec.stop(); return; }
+    try{ stream=await navigator.mediaDevices.getUserMedia({audio:true}); }catch{ note("Autorise le micro pour envoyer un message vocal."); return; }
+    chunks=[]; rec=new MediaRecorder(stream); rec.ondataavailable=e=>{ if(e.data.size) chunks.push(e.data); };
+    rec.onstop=async()=>{ const r0=rec; rec=null; stopAll(); const blob=new Blob(chunks,{type:r0.mimeType||"audio/webm"}); if(Date.now()-t0<700) return;
+      try{ const w=await toWav(blob); voiceNote={b64:w.b64,dur:w.dur,url:URL.createObjectURL(blob)}; send(); }catch{ note("Impossible de lire l'enregistrement, réessaie."); } };
+    rec.start(); t0=Date.now(); b.classList.add("rec"); $("voiceIc").textContent="⏹"; $("voiceLbl").textContent=" 0:00";
+    tick=setInterval(()=>{ const sec=Math.floor((Date.now()-t0)/1000); $("voiceLbl").textContent=" "+fmt(sec); if(sec>=60) rec?.stop(); },250);
+  };
+})();
 /* ---------------- historique envoyé à l'API ---------------- */
 function forApi(c){
   const msgs=c.messages; let lastImg=-1;
-  msgs.forEach((m,i)=>{ if(m.role==="user"&&Array.isArray(m.content)&&m.content.some(p=>p.type==="image_url")) lastImg=i; });
+  msgs.forEach((m,i)=>{ if(m.role==="user"&&Array.isArray(m.content)&&m.content.some(p=>p.type==="image_url"||p.type==="input_audio")) lastImg=i; });
   let start=Math.max(0,msgs.length-(c.mode==="image"?12:80)); while(start>0&&msgs[start].role!=="user") start--;
   return msgs.slice(start).map((m,k)=>{ const i=start+k, o={role:m.role};
     if(m.role==="user") o.content=Array.isArray(m.content)?(i===lastImg?m.content:textOf(m.content)+"\n\n[images déjà vues plus haut]"):m.content;
@@ -1123,7 +1156,7 @@ function niceError(e,status,ct){
 /* ---------------- envoi ---------------- */
 async function send(){
   if(busy) return;
-  let text=input.value.trim(); if(!text&&!attachments.length) return;
+  let text=input.value.trim(); if(!text&&!attachments.length&&!voiceNote) return;
 
   // lien MCP collé → connexion à Studio
   const mcpUrl=(text.match(/https?:\/\/[^\s<>"']+/gi)||[]).find(isMcpUrl);
@@ -1139,7 +1172,7 @@ async function send(){
   if(atts.length){ sendBtn.disabled=true; await Promise.all(atts.map(a=>a.ready)); sendBtn.disabled=false; }
   const ok=atts.filter(a=>!a.failed&&a.frames.length);
   if(!text&&ok.some(a=>a.kind==="video")){ text="Refais ce jeu identique dans ma place Roblox Studio, avec un meilleur design et de meilleurs textes."; if(mode!=="image"&&mode!=="roblox") setMode("roblox"); if(mode==="roblox"&&tier!=="5"&&tier!=="studio"){ tier="5"; modelUI(); save(); } }
-  if(!text) text="Regarde ça.";
+  if(!text) text=voiceNote?"🎤 Message vocal":"Regarde ça.";
 
   { const fm=FORCE_MODE[tier]; if(fm&&mode!==fm&&!(tier==="studio"&&mode==="image")) setMode(fm); }
   let c=conv(); if(!c||(c.messages.length&&c.mode!==mode)) c=newConv();
@@ -1152,8 +1185,10 @@ async function send(){
   const vids=ok.filter(a=>a.kind==="video").map(a=>`[Vidéo « ${a.name} » (${fmt(a.dur||0)}) : ${a.frames.length} images clés dans l'ordre, aux instants ${(a.times||[]).map(fmt).join(", ")}]`).join("\n");
   const st=mode==="image"&&IMG_STYLES.find(x=>x[0]===imgStyle&&x[2]);
   if(st) extra+=`\n\n[Style demandé : ${st[2]}]`;
-  const content=(frames.length||extra)?[{type:"text",text:text+(vids?"\n\n"+vids:"")+extra},...frames.map(u=>({type:"image_url",image_url:{url:u}}))]:text;
-  const media=ok.map(a=>({thumb:a.thumb,info:a.kind==="video"?a.info:""}));
+  const vn=voiceNote; voiceNote=null;
+  if(vn) extra+="\n\n[Message vocal joint : écoute l'audio, comprends ce que l'utilisateur dit (il parle sans doute en français) et réponds-y directement, sans le retranscrire sauf si on te le demande.]";
+  const content=(frames.length||extra||vn)?[{type:"text",text:text+(vids?"\n\n"+vids:"")+extra},...frames.map(u=>({type:"image_url",image_url:{url:u}})),...(vn?[{type:"input_audio",input_audio:{data:vn.b64,format:"wav"}}]:[])]:text;
+  const media=ok.map(a=>({thumb:a.thumb,info:a.kind==="video"?a.info:""})); if(vn) media.push({audio:vn.url,info:"🎤 Message vocal · "+fmt(vn.dur)});
   c.messages.push({role:"user",content,_media:media,_video:ok.some(a=>a.kind==="video")||undefined});
   if(c.messages.length===1) render(); else userRow(text,media);
   input.value=""; grow(); save(); drawRecents();
@@ -2607,6 +2642,8 @@ const TIERS = {
   "idees":      { models: ["anthropic/claude-opus-5.5", "openai/gpt-5", "google/gemini-2.5-pro"], effort: "medium", max: 32000, persona: "idees", label: "Idées" },
   "traduction": { models: ["google/gemini-2.5-pro", "openai/gpt-5", "anthropic/claude-opus-5.5"], effort: "low", max: 16000, persona: "traduction", label: "Traduction" },
   "dessin":     { models: ["anthropic/claude-opus-5.5", "openai/gpt-5"], effort: "medium", max: 16000, persona: "dessin", label: "Dessin" },
+  // Propria = le modèle signature de LLMMS : tout-terrain au maximum (réflexion max, recherche web, sortie max)
+  "propria": { models: ["anthropic/claude-opus-5.5", "openai/gpt-5", "google/gemini-2.5-pro"], effort: "high", max: 64000, persona: "propria", search: true, label: "Propria" },
   // Studio = spécialiste Roblox Studio uniquement : modèle le plus fort, réflexion max, sortie max, règles + Kit Roblox toujours actifs
   "studio": { models: ["anthropic/claude-opus-5.5", "anthropic/claude-opus-4.5", "openai/gpt-5", "google/gemini-2.5-pro"], effort: "high", max: 64000, roblox: true, only: "roblox", label: "Studio" },
 };
@@ -2741,6 +2778,7 @@ Vérifie tout en profondeur : erreurs de syntaxe, variables ou services inexista
 
 // ---------- Consignes des 9 spécialistes ----------
 const PERSONAS = {
+  propria: "Tu es LLMMS Propria, le modèle signature créé par LLMMS (Llmms99587 sur Roblox), le fondateur de llmms ia. Tu es le modèle le plus complet du site : excellent partout (code et Roblox Studio, devoirs, idées, écriture, recherche). Ton style : direct, motivé, un peu de style dans le ton (sans en faire trop), et toujours ultra précis. Tu réfléchis à fond, tu vérifies ce que tu avances, et tu livres des réponses complètes et prêtes à l'emploi. Pour Roblox, applique les meilleures pratiques Luau modernes et sécurisées (serveur qui valide tout, code complet, emplacement exact de chaque script).",
   devoirs: "Tu es llmms ia Devoirs, le prof particulier : tu aides pour les devoirs de toutes les matières (français, maths, histoire-géo, SVT, physique, anglais…). Donne la réponse ET explique la méthode étape par étape, simplement, avec un exemple, pour que l'élève comprenne et sache le refaire au contrôle. Adapte-toi au NIVEAU de l'élève (classe : 6e, 5e, 4e, 3e, seconde…) : s'il le donne, utilise le vocabulaire et les méthodes du programme officiel de cette classe en France ; s'il ne le donne pas et que c'est utile, demande-le en une courte question. RÉVISION D'UNE ÉVALUATION / D'UN CONTRÔLE : quand l'élève dit qu'il a une évaluation (matière, classe, chapitre, éventuellement collège), utilise recherche_web pour trouver le programme officiel de ce chapitre pour sa classe et le type d'exercices habituellement donnés en évaluation à ce niveau (sites de cours et d'exercices, Éduscol, Lumni…), puis fais-lui : 1) une fiche de révision courte (l'essentiel à savoir), 2) une évaluation d'entraînement réaliste dans le même format qu'un vrai contrôle, 3) le corrigé détaillé à la fin. Tu ne cherches pas à obtenir les sujets ou corrigés d'une évaluation précise qu'un prof va donner : tu prépares l'élève à la réussir. Termine toujours par une astuce pour retenir.",
   maths: "Tu es llmms ia Maths : tu résous les problèmes de maths avec rigueur. Écris chaque étape du calcul, vérifie le résultat à la fin, donne la réponse finale en gras, et explique la méthode simplement.",
   cinema: "Tu es llmms ia Cinéma : spécialiste des animations, cinématiques, intros et trailers. Commence par un découpage plan par plan très court, puis livre l'animation complète (page HTML animée à voir avec ▶ Aperçu, ou cinématique Roblox si c'est pour Roblox), avec mouvements de caméra, transitions, titres et une vraie ambiance de film.",
