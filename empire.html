@@ -396,8 +396,10 @@ function prof(){ const nw=netWorth(); let st=0,cr=0,re=0,nre=0; STOCKS.forEach(s
   <h2>🏆 Classement des plus riches</h2><div class="card">${list.map((r,i)=>`<div class="row" style="padding:6px 0;border-bottom:1px solid var(--line);${r[0]==="⭐ TOI"?"color:#fbbf24;font-weight:900":""}"><b style="width:34px">#${i+1}</b><span class="grow">${r[0]}</span><b>${fmt(r[1])}</b></div>`).join("")}</div>
   ${achHTML()}
   <h2>☁️ Sauvegarde</h2><div class="card"><p style="margin:0">Ta partie est sauvegardée <b>sur ton appareil et en ligne</b>${cloudOK===false?' <span class="tag h">hors ligne</span>':""}. Ton code : <b style="font-family:monospace;font-size:18px;letter-spacing:.1em;user-select:all">${CID}</b></p><p class="hint">Garde ce code : il te permet de retrouver ta partie sur un autre téléphone ou navigateur.</p><div class="row" style="gap:6px;flex-wrap:wrap"><input class="in" id="rcode" placeholder="Code d'une partie" style="width:170px;text-transform:uppercase"><button class="btn" id="rload">Charger cette partie</button><button class="btn gh" id="rnow">☁️ Sauvegarder maintenant</button></div></div>
+  <h2>🗑️ Recommencer</h2><div class="card"><p style="margin:0 0 8px">Efface <b>toute</b> ta partie (argent, business, applis, abonnés…) sur cet appareil <b>et en ligne</b>, et repars de 300 €.</p><button class="btn r" id="rdata" style="width:100%">🗑️ Réinitialiser ma partie</button></div>
   <h2>📰 Historique</h2><div class="card ev">${E.log.map(l=>`<div class="hint" style="padding:3px 0">${l}</div>`).join("")||'<div class="hint">Rien pour l’instant.</div>'}</div>`;
   bindAch(prof);
+  $("rdata").onclick=askReset;
   $("rnow").onclick=async()=>{ save(); cloudDirty=true; await cloudSave(); toast(cloudOK?"☁️ Partie sauvegardée en ligne":"⚠️ Sauvegarde en ligne impossible (gardée sur l'appareil)"); prof(); };
   $("rload").onclick=async()=>{ const c=$("rcode").value.trim().toUpperCase(); if(!c) return; try{ const d=await cloudLoad(c); if(!d) return toast("Aucune partie avec ce code"); localStorage.setItem("empire_cloud",c); localStorage.setItem(KEY,JSON.stringify(d)); toast("✅ Partie chargée !"); setTimeout(()=>location.reload(),600); }catch(e){ toast("Erreur : "+e.message); } }; }
 
@@ -472,7 +474,7 @@ function admin(){ const S=(t,h)=>`<h2 style="margin-top:18px">${t}</h2><div clas
   $("cb").onclick=()=>{ E.boost=300; ok("⚡ Boost 5 min"); };
   document.querySelectorAll("[data-sk]").forEach(b=>b.onclick=()=>{ const n=+b.dataset.sk; for(let i=0;i<n;i++) tick(n>1); ok(`+${n} jour(s)`); });
   $("ag").onclick=()=>{ E.age=Math.max(18,E.age-5); ok("🎂 Plus jeune de 5 ans"); };
-  $("rs").onclick=()=>{ if(!$("rs").dataset.k){ $("rs").dataset.k=1; $("rs").textContent="Appuie encore pour confirmer"; return; } try{ localStorage.removeItem(KEY); }catch{} location.reload(); };
+  $("rs").onclick=askReset;
   $("x").onclick=closePop; }); }
 $("adm").onclick=admin;
 
@@ -1115,6 +1117,15 @@ function xAdminBind(ok){ const x=X();
   $("xql").onclick=()=>{ QS.forEach(q=>x.ql[q[0]]=q[4].length); ok("🏆 Toutes les quêtes finies"); };
   $("xall").onclick=()=>{ if(!x.gog) x.gog={s:5000,q:1,ads:0,mk:0,last:0,top:null,tot:0}; if(!x.coin) x.coin={n:"LLMMS Coin",p:.001,q:4e8,hype:1,hold:50,h:[.001],sold:0}; if(!x.mus) x.mus={n:"LLMMS Records",a:[],pool:[],last:0}; ok("🎁 Gogole, crypto et label débloqués"); }; }
 
+
+/* ---------- 🗑️ Réinitialiser la partie ---------- */
+function askReset(){ popup(`<h3>🗑️ Réinitialiser ta partie ?</h3><p>Tout sera effacé : <b>argent, business, investissements, applis, abonnés, jeux Bloxy, prestige…</b> sur cet appareil et dans la sauvegarde en ligne.</p><p class="dn"><b>⚠️ Impossible de revenir en arrière.</b></p><p class="hint">Pour confirmer, écris <b>RESET</b> :</p><input class="in" id="rsv" placeholder="RESET" autocapitalize="characters"><div class="row" style="margin-top:12px;gap:8px"><button class="btn gh" id="rsn" style="flex:1">Annuler</button><button class="btn r" id="rsy" style="flex:1" disabled>🗑️ Tout effacer</button></div>`,()=>{
+  $("rsv").oninput=()=>{ $("rsy").disabled=$("rsv").value.trim().toUpperCase()!=="RESET"; };
+  $("rsn").onclick=closePop;
+  $("rsy").onclick=async()=>{ $("rsy").disabled=true; $("rsy").textContent="Effacement…"; const n=fresh(); for(let i=0;i<45;i++){ step(n.st,STOCKS); step(n.cr,CRYPTO); } n.ts=Date.now(); E=n;
+    try{ localStorage.setItem(KEY,JSON.stringify(n)); localStorage.removeItem(KEY+"_bak"); }catch{}
+    try{ await fetch("/api/save",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({id:CID,data:n})}); }catch{}
+    location.reload(); }; }); }
 draw(); startClock();
 // partie plus récente en ligne (autre appareil / navigateur) → on la reprend
 (async()=>{ try{ const d=await cloudLoad(CID); if(d&&d.ts&&d.ts>LOCAL_TS+10000&&typeof d.cash==="number"){ localStorage.setItem(KEY,JSON.stringify(d)); location.reload(); } else { cloudDirty=true; cloudSave(); } }catch{} })();
