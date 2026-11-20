@@ -59,12 +59,15 @@ tr.me td{color:#4ade80;font-weight:800}
 #toast{position:fixed;left:50%;top:70px;transform:translateX(-50%);background:#16a34a;padding:10px 16px;border-radius:12px;font-weight:800;opacity:0;transition:.25s;z-index:30;pointer-events:none}
 #toast.on{opacity:1}
 .hint{color:var(--dim);font-size:13px}
+.adm{text-align:left}.adm h3{margin:14px 0 6px;font-size:14px;color:var(--b)}
+.adm input,.adm select{background:#0a1711;color:#fff;border:1px solid var(--line);border-radius:10px;padding:9px 10px;font-size:15px}
+.adm .row2 button{padding:9px 12px}
 .row2{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
 </style>
 </head>
 <body>
 <div id="app">
-  <header><span class="logo">ULTRA CLUB</span><span class="grow"></span><span class="pill">🪙 <span id="coins">0</span></span><span class="pill">⭐ <span id="ovr">0</span></span></header>
+  <header><span class="logo">ULTRA CLUB</span><span class="grow"></span><span class="pill">🪙 <span id="coins">0</span></span><span class="pill">⭐ <span id="ovr">0</span></span><button class="pill" id="adm" title="Panel admin">🛠️</button></header>
   <main id="main"></main>
   <nav><button data-p="club" class="on">🏟️ Club</button><button data-p="match">⚽ Match</button><button data-p="packs">🎁 Packs</button><button data-p="ligue">🏆 Ligue</button></nav>
 </div>
@@ -140,7 +143,8 @@ function match(){ if(S.day>=14) return endSeason();
   <div class="bar"><i style="width:${Math.round(100*me/(me+o.ovr))}%"></i></div><p class="hint">Chances de victoire selon les notes</p><button class="btn" id="kick" style="width:100%;font-size:18px">⚽ Jouer le match</button></div>`;
   $("kick").onclick=()=>playMatch(o);
 }
-function playMatch(o){ matchRunning=true; const me=teamOvr(); let a=0,b=0,min=0;
+let liveGoal=null;
+function playMatch(o){ matchRunning=true; const me=teamOvr(); let a=0,b=0,min=0; liveGoal=(n=1)=>{ a+=n; $("sc").textContent=`${a} - ${b}`; add(`${min}' ⚽ BUT ! (panel admin) +${n} pour ${S.club}`,1); beep(880,.2); };
   const myAtt=S.line.map(byId).filter(p=>p.p==="ATT"||p.p==="MIL");
   $("main").innerHTML=`<div class="box"><div class="score"><div class="tn">${esc(S.club)}</div><div id="sc">0 - 0</div><div class="tn">${esc(o.n)}</div></div><div style="text-align:center" class="hint" id="mn">0'</div><div class="feed" id="feed"></div></div>`;
   const feed=$("feed"), add=(t,g)=>{ const d=document.createElement("div"); if(g) d.className="g"; d.textContent=t; feed.prepend(d); };
@@ -151,7 +155,7 @@ function playMatch(o){ matchRunning=true; const me=teamOvr(); let a=0,b=0,min=0;
     else if(Math.random()<pOp){ b++; add(`${min}' ⚽ But de ${o.n}…`,1); beep(220,.3,"sawtooth",.05); }
     else if(Math.random()<.25) add(`${min}' ${pick(["Belle action","Frappe à côté","Arrêt du gardien","Corner","Carton jaune","Contre-attaque","Tir sur la barre !"])}`);
     $("sc").textContent=`${a} - ${b}`;
-    if(min>=90){ clearInterval(tick); finish(o,a,b); }
+    if(min>=90){ clearInterval(tick); liveGoal=null; finish(o,a,b); }
   },420);
 }
 function finish(o,a,b){ matchRunning=false; const me=S.table.find(t=>t.me);
@@ -166,6 +170,30 @@ function endSeason(){ const t=S.table.slice().sort((a,b)=>b.pts-a.pts||(b.bp-b.b
   popup(`<h2>Fin de la saison ${S.season}</h2><p style="font-size:20px">Tu finis <b>${rank}${rank===1?"er 🏆":"e"}</b></p><p>${rank===1?"+10 000 🪙 et un trophée !":"Récompense versée. Renforce ton équipe !"}</p><button class="btn" id="ok">Saison suivante</button>`,()=>{ $("ok").onclick=()=>{ newSeason(true); closePop(); go("club"); }; });
   save();
 }
+
+// ---------- PANEL ADMIN
+function admin(){
+  popup(`<div class="adm"><h2>🛠️ Panel admin</h2>
+  <h3>🪙 Pièces</h3><div class="row2"><button class="btn ghost" data-c="1000">+1 000</button><button class="btn ghost" data-c="10000">+10 000</button><button class="btn ghost" data-c="1000000">+1 000 000</button><input id="cIn" type="number" placeholder="montant" style="width:110px"><button class="btn" id="cGo">Give</button></div>
+  <h3>👤 Donner un joueur</h3><div class="row2"><input id="pN" placeholder="Nom (facultatif)" style="flex:1;min-width:120px"><select id="pP"><option>ATT</option><option>MIL</option><option>DEF</option><option>GB</option></select><select id="pK"><option value="3">Légende</option><option value="2">Or</option><option value="1">Rare</option><option value="0">Common</option></select><input id="pR" type="number" min="1" max="99" value="99" style="width:70px"><button class="btn" id="pGo">Give</button></div>
+  <h3>⚽ Buts (pendant un match)</h3><div class="row2"><button class="btn ghost" id="g1">+1 but</button><button class="btn ghost" id="g5">+5 buts</button></div><p class="hint">Lance un match, puis ouvre ce panel pour marquer.</p>
+  <h3>⭐ Équipe et ligue</h3><div class="row2"><button class="btn ghost" id="t99">Toute l'équipe à 99</button><button class="btn ghost" id="pts">+3 points en ligue</button><button class="btn ghost" id="tro">+1 trophée</button><button class="btn ghost" id="fin">Finir la saison</button></div>
+  <div class="row2" style="margin-top:16px"><button class="btn ghost" id="rst" style="color:#fca5a5">Tout réinitialiser</button><span class="grow"></span><button class="btn" id="ok">Fermer</button></div></div>`,()=>{
+    const done=t=>{ save(); head(); toast(t); beep(988); };
+    document.querySelectorAll("[data-c]").forEach(b=>b.onclick=()=>{ S.coins+=+b.dataset.c; done(`+${(+b.dataset.c).toLocaleString("fr-FR")} 🪙`); });
+    $("cGo").onclick=()=>{ const v=Math.floor(+$("cIn").value||0); if(!v) return; S.coins=Math.max(0,S.coins+v); done(`${v>0?"+":""}${v.toLocaleString("fr-FR")} 🪙`); };
+    $("pGo").onclick=()=>{ const p=mkPlayer(+$("pK").value,$("pP").value); p.r=Math.max(1,Math.min(99,Math.floor(+$("pR").value||99))); const nm=$("pN").value.trim().slice(0,24); if(nm) p.n=nm.includes(" ")?nm:nm+" "+nm; S.squad.push(p); done(`${p.n} (${p.r}) ajouté !`); };
+    $("g1").onclick=()=>{ if(!liveGoal) return toast("Lance d'abord un match"); liveGoal(1); };
+    $("g5").onclick=()=>{ if(!liveGoal) return toast("Lance d'abord un match"); liveGoal(5); };
+    $("t99").onclick=()=>{ S.line.map(byId).forEach(p=>p.r=99); done("Tous les titulaires à 99 !"); };
+    $("pts").onclick=()=>{ S.table.find(t=>t.me).pts+=3; done("+3 points"); };
+    $("tro").onclick=()=>{ S.trophies++; done("+1 trophée 🏆"); };
+    $("fin").onclick=()=>{ if(matchRunning) return toast("Attends la fin du match"); S.day=14; save(); closePop(); endSeason(); };
+    $("rst").onclick=()=>{ if($("rst").dataset.k){ try{ localStorage.removeItem("ultraclub"); }catch{} location.reload(); } else { $("rst").dataset.k=1; $("rst").textContent="Appuie encore pour confirmer"; } };
+    $("ok").onclick=()=>{ closePop(); if(!matchRunning) draw(); };
+  });
+}
+$("adm").onclick=admin;
 function popup(html,after){ $("popIn").innerHTML=html; $("pop").classList.add("on"); after&&after(); }
 function closePop(){ $("pop").classList.remove("on"); }
 function esc(s){ return String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c])); }
