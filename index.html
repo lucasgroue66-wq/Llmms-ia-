@@ -1271,6 +1271,14 @@ function niceError(e,status,ct){
 }
 
 /* ---------------- envoi ---------------- */
+// « t'es co ? », « tu es connectée à Roblox Studio ? », « est ce que t es co a studio »… (toutes les façons de l'écrire)
+function isCoQuestion(t){ const x=" "+String(t).toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g,"").replace(/[’']/g," ").replace(/[^a-z0-9? ]/g," ").replace(/\s+/g," ")+" ";
+  if(x.length>110||/compte|mail|abonn|mot de passe|wifi|internet/.test(x)) return false;
+  const co=/ (co|connecte?e?s?|connecter|connection|connexion|relie?e?|branche?e?|link|connected) /.test(x);
+  const who=/ (t|tu|toi|es|elle|est|studio|roblox|rbx|ia|llmms) /.test(x);
+  const build=/ (cree|creer|fais|fait|construis|construire|code|script|ajoute|mets|genere) /.test(x);
+  if(/^ (co|connecte?e?|connecter|relie?e?) \?* ?$/.test(x)) return true;
+  return co&&who&&!build; }
 async function send(){
   if(busy) return;
   let text=input.value.trim(); if(!text&&!attachments.length&&!voiceNote) return;
@@ -1278,7 +1286,7 @@ async function send(){
   // JSON MCP collé (comme dans Claude) → paramètres développeur
   if(/"mcpServers"\s*:/.test(text)){ input.value=""; grow(); openDev(); $("devAdv").open=true; $("devJson").value=text; useMcpJson(text); return; }
   // « t'es connectée ? » → réponse directe avec le VRAI statut (pas besoin de l'IA)
-  if(text.length<70&&/\b(co|connect\w*|reli\w*|branch\w*)\b/i.test(text)&&/(t'?es|tu es|es[- ]tu|est[- ]ce que tu|elle est|studio|roblox)/i.test(text)&&!/compte|mail|abonn|connexion à mon compte/i.test(text)&&!attachments.length){
+  if(isCoQuestion(text)&&!attachments.length){
     input.value=""; grow(); const n=note("Je vérifie la connexion à Roblox Studio…");
     let ok=mcp.connected, place="";
     if(mcp.plugin){ try{ const j=await fetch(`/api/studio?op=status&code=${mcp.plugin}`).then(r=>r.json()); ok=!!j.online; place=j.place||""; }catch{ ok=false; } }
@@ -2864,6 +2872,8 @@ Quand des outils Roblox Studio (MCP) sont disponibles :
 - Le code va dans de vrais Script / LocalScript / ModuleScript visibles dans Studio, rangés dans des dossiers clairs.
 - Le rendu doit avoir l'air fait main par un vrai dev : formes variées, couleurs réfléchies, UI soignée, pas de blocs gris génériques.
 - Va jusqu'au bout sans demander la permission.
+- Si on te demande juste si tu es connectée / « t'es co ? » : réponds « Oui, je suis connectée à Roblox Studio ✅ » en une phrase, SANS appeler d'outil (le fait d'avoir ces outils prouve la connexion).
+- N'appelle des outils que pour construire, lire ou modifier la place, jamais pour une simple question ou une discussion.
 
 Quand l'utilisateur envoie une vidéo (images extraites dans l'ordre) et demande de refaire le jeu :
 1. Analyse précisément : map, couleurs, matériaux, éclairage, chaque élément d'UI (position, texte, couleur, police), mécaniques, économie, PNJ, effets.
@@ -2871,7 +2881,7 @@ Quand l'utilisateur envoie une vidéo (images extraites dans l'ordre) et demande
 3. Reconstruis le jeu le plus fidèlement possible dans Studio en fabriquant toi-même pièces, UI et scripts (les modèles, sons et scripts d'origine ne sont pas récupérables), avec un design et des textes encore plus soignés.
 4. Teste, corrige, puis liste ce qui est fait et ce qui diffère encore.
 
-Si Studio n'est pas connecté : donne le code complet prêt à coller, et rappelle en une phrase que coller le lien du pont MCP dans le chat connecte Studio.`,
+Si Studio n'est pas connecté : donne le code complet prêt à coller, et rappelle en une phrase qu'on connecte Studio avec ⚙ → Paramètres développeur → 🎮 Connecter mon Roblox Studio. Si on te demande si tu es connectée, réponds simplement non et explique ça.`,
 };
 
 const VISION = `Tu es l'analyste vidéo de llmms ia : ton travail est de décrire une vidéo avec une précision totale pour qu'on puisse la reproduire À L'IDENTIQUE.
