@@ -1132,24 +1132,30 @@ async function agent(c){
       let r, ct="";
       const lastIsAuto=c.messages.at(-1)?._auto;
       curStep=Steps.add(lastIsAuto?"Vérification dans Studio : console et explorateur":step===0?(c.mode==="image"?"Création de l'image":"Réflexion"):"Suite du travail"); Steps.trackReset(curStep);
-      try{ r=await apiFetch({method:"POST",headers:headers(),signal:ctl.signal,body:JSON.stringify({messages:forApi(c),mode:c.mode,tier,effort,search:web,lang:replyLang(),plan,spec,light:(isAnimReq(c)||isGameReq(c))&&c.mode!=="roblox",tools:c.mode==="image"||!autoStudio?[]:mcp.tools()})}); }
-      catch(e){ throw e; }
+      const rid=newRid();
+      try{ r=await apiFetch({method:"POST",headers:headers(),signal:ctl.signal,body:JSON.stringify({rid,messages:forApi(c),mode:c.mode,tier,effort,search:web,lang:replyLang(),plan,spec,light:(isAnimReq(c)||isGameReq(c))&&c.mode!=="roblox",tools:c.mode==="image"||!autoStudio?[]:mcp.tools()})}); }
+      catch(e){ if(e.name==="AbortError"||LOCAL_MODE) throw e; r=await recoverRes(rid,setStatus,ctl.signal); if(!r) throw e; }
       ct=r.headers.get("content-type")||"";
       if(r.status===401){ let er=""; try{ er=(await r.clone().json()).error; }catch{} status?.remove(); status=null; bot.txt.closest(".row").remove(); if(er==="login"){ showLogin(); } else { $("gate").style.display="grid"; $("gateCode").focus(); } return; }
       if(!r.ok||!r.body||ct.includes("text/html")){ let m=""; if(ct.includes("json")){ try{ m=(await r.json()).error; }catch{} } const msg=niceError(m?new Error(m):null,r.status,ct); throw Object.assign(new Error(msg),{nice:true}); }
 
       const seg=document.createElement("div"); bot.txt.insertBefore(seg,status);
       let txt="", done=null, err=null; const imgs=[];
-      try{
-        done=await readLlmms(r,ev=>{
+      const onEv=ev=>{
           if(ev.t==="think") setStatus(c.mode==="image"?"Création de l'image…":"Réfléchit en profondeur…");
           else if(ev.t==="text"){ txt+=ev.v; seg.innerHTML=md(txt); setStatus("Écrit…"); Steps.track(txt); toBottom(); }
           else if(ev.t==="image"){ imgs.push(ev.v); imageBlock(seg,ev.v,imgs.length); toBottom(true); }
           else if(ev.t==="tool") setStatus("Prépare une action dans Studio…");
           else if(ev.t==="error") err=ev.v;
-        });
+        };
+      try{
+        done=await readLlmms(r,onEv);
       }catch(e){
         if(e.name==="AbortError") throw e;
+        // Le téléphone a coupé la connexion (site en arrière-plan) : le serveur a continué, on récupère la réponse complète
+        const rr=LOCAL_MODE?null:await recoverRes(rid,setStatus,ctl.signal).catch(()=>null);
+        if(rr){ txt=""; imgs.length=0; seg.innerHTML=""; err=null; try{ done=await readLlmms(rr,onEv); }catch{} }
+        if(done){} else
         // Connexion coupée en plein milieu : on garde ce qui est déjà écrit
         if(txt) done={t:"done",message:{role:"assistant",content:txt+"\n\n*(réponse coupée par la connexion — écris « continue » pour la suite)*"},cut:true};
         else throw e;
@@ -1223,6 +1229,25 @@ async function agent(c){
 
 // Lit une réponse de /api/chat : soit le flux brut de l'IA (SSE OpenRouter), soit nos événements NDJSON
 function mergeReasoning(store,items){ for(const it of items||[]){ const key=`${it.index??0}:${it.type||""}`; const cur=store.get(key); if(!cur){ store.set(key,{...it}); continue; } for(const [k,v] of Object.entries(it)){ if((k==="text"||k==="summary")&&typeof v==="string") cur[k]=(cur[k]||"")+v; else if(v!==undefined&&v!==null) cur[k]=v; } } }
+
+/* ---------------- Reprise après coupure (site en arrière-plan sur téléphone) ---------------- */
+function newRid(){ try{ return crypto.randomUUID(); }catch{ return "r"+Date.now().toString(36)+Math.random().toString(36).slice(2,12); } }
+const waitVisible=()=>document.visibilityState==="visible"?Promise.resolve():new Promise(res=>{ const f=()=>{ if(document.visibilityState==="visible"){ document.removeEventListener("visibilitychange",f); res(); } }; document.addEventListener("visibilitychange",f); });
+async function recoverRes(rid,setStatus,signal){
+  const t0=Date.now();
+  while(Date.now()-t0<8*60e3){
+    if(signal?.aborted) return null;
+    await waitVisible();
+    setStatus?.("Je récupère la réponse… (le site était en arrière-plan)");
+    try{
+      const r=await fetch(`/api/chat?rid=${encodeURIComponent(rid)}`,{cache:"no-store",signal});
+      if(r.status===200&&r.body) return r;
+      if(r.status===404&&Date.now()-t0>20e3) return null;
+    }catch(e){ if(e.name==="AbortError") return null; }
+    await new Promise(res=>setTimeout(res,2500));
+  }
+  return null;
+}
 async function readLlmms(r,on){
   const ct=r.headers.get("content-type")||"", rd=r.body.getReader(), dec=new TextDecoder(); let buf="", doneEv=null;
   if(ct.includes("event-stream")){

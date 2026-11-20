@@ -141,22 +141,40 @@ globalThis.fetch = async (url, opts) => {
 // Compteur fiable : base Upstash/Vercel KV (KV_REST_API_URL + KV_REST_API_TOKEN, ou UPSTASH_REDIS_REST_URL + UPSTASH_REDIS_REST_TOKEN).
 // Sans base : compteur en mémoire (approximatif, remis à zéro quand le serveur redémarre).
 const memCount = new Map();
-async function bumpCount(key) {
+function kvConf() {
   // Accepte n'importe quel préfixe donné par Vercel (KV_, STORAGE_, UPSTASH_REDIS_…)
   const E = process.env, keys = Object.keys(E);
   const uk = keys.find(k => /REST_API_URL$|REDIS_REST_URL$/.test(k) && !/READ_ONLY/.test(k));
-  const url = uk && E[uk];
   const tk = uk && (keys.find(k => k === uk.replace(/URL$/, "TOKEN")) || keys.find(k => /REST_API_TOKEN$|REDIS_REST_TOKEN$/.test(k) && !/READ_ONLY/.test(k)));
-  const tok = tk && E[tk];
-  if (url && tok) {
-    try {
-      const r = await realFetch(`${url.replace(/\/$/, "")}/pipeline`, { method: "POST", headers: { Authorization: `Bearer ${tok}`, "Content-Type": "application/json" }, body: JSON.stringify([["INCR", key], ["EXPIRE", key, 172800]]) });
-      const j = await r.json(); const n = Number(j?.[0]?.result); if (Number.isFinite(n)) return n;
-    } catch {}
-  }
+  return uk && tk && E[uk] && E[tk] ? { url: E[uk].replace(/\/$/, ""), tok: E[tk] } : null;
+}
+async function kv(cmds) {
+  const c = kvConf(); if (!c) return null;
+  try {
+    const r = await realFetch(`${c.url}/pipeline`, { method: "POST", headers: { Authorization: `Bearer ${c.tok}`, "Content-Type": "application/json" }, body: JSON.stringify(cmds) });
+    return await r.json();
+  } catch { return null; }
+}
+async function bumpCount(key) {
+  const j = await kv([["INCR", key], ["EXPIRE", key, 172800]]);
+  const n0 = Number(j?.[0]?.result); if (Number.isFinite(n0)) return n0;
   const n = (memCount.get(key) || 0) + 1; memCount.set(key, n);
   if (memCount.size > 5000) memCount.clear();
   return n;
+}
+// ---------- Réponses gardées : si le téléphone coupe la connexion (site en arrière-plan), la réponse continue et est récupérable ----------
+const memRes = new Map();
+const cleanRid = r => /^[a-zA-Z0-9-]{8,64}$/.test(String(r || "")) ? String(r) : null;
+async function saveRes(rid, obj) {
+  const v = JSON.stringify(obj);
+  if (v.length > 900000) return; // trop gros (images) : pas gardé
+  memRes.set(rid, v); if (memRes.size > 200) memRes.delete(memRes.keys().next().value);
+  await kv([["SET", "llmms:res:" + rid, v, "EX", 3600]]);
+}
+async function loadRes(rid) {
+  const j = await kv([["GET", "llmms:res:" + rid]]);
+  const v = j?.[0]?.result ?? memRes.get(rid);
+  try { return v ? JSON.parse(v) : null; } catch { return null; }
 }
 async function dailyLimit(req, body, email) {
   const max = Number(process.env.DAILY_LIMIT ?? 15);
@@ -188,6 +206,14 @@ export default async function handler(req, res) {
   await load();
   if (loadErr) { res.status(500).json({ error: "Chargement du serveur impossible : " + loadErr }); return; }
   const { precheck, startChat, authEnabled, checkSession, handleAuth } = mods;
+  if (req.method === "GET" && cleanRid(req.query?.rid)) {
+    const o = await loadRes(cleanRid(req.query.rid));
+    res.setHeader("Cache-Control", "no-store");
+    if (!o) { res.status(404).json({ state: "none" }); return; }
+    if (!o.done) { res.status(202).json({ state: "pending" }); return; }
+    res.setHeader("Content-Type", o.ct); if (o.model) res.setHeader("X-Llmms-Model", o.model);
+    res.status(200).send(o.body); return;
+  }
   if (req.method !== "POST") { res.status(405).json({ error: "POST seulement", ok: true }); return; }
 
   try {
@@ -212,18 +238,26 @@ export default async function handler(req, res) {
 
     res.setHeader("Cache-Control", "no-cache, no-transform");
     res.setHeader("X-Accel-Buffering", "no");
+    const rid = cleanRid(body?.rid);
+    res.on?.("error", () => {});
+    const send = chunk => { try { if (!res.writableEnded && !res.destroyed) res.write(chunk); } catch {} };
+    if (rid) await saveRes(rid, { done: false });
     if (out.stream) {
       res.setHeader("Content-Type", "text/event-stream; charset=utf-8");
       res.setHeader("X-Llmms-Model", out.name);
-      const reader = out.stream.getReader();
-      try { for (;;) { const { value, done } = await reader.read(); if (done) break; res.write(Buffer.from(value)); } } catch {}
-      res.end();
+      const reader = out.stream.getReader(), dec = new TextDecoder(); let all = "";
+      // On lit TOUT, même si le téléphone a coupé la connexion : la réponse est gardée pour être récupérée
+      try { for (;;) { const { value, done } = await reader.read(); if (done) break; if (rid) all += dec.decode(value, { stream: true }); send(Buffer.from(value)); } } catch {}
+      if (rid) await saveRes(rid, { done: true, ct: "text/event-stream; charset=utf-8", model: out.name, body: all });
+      try { res.end(); } catch {}
       return;
     }
     res.setHeader("Content-Type", "application/x-ndjson; charset=utf-8");
-    try { for await (const ev of out.events) res.write(JSON.stringify(ev) + "\n"); }
-    catch (e) { res.write(JSON.stringify({ t: "error", v: String(e?.message || e) }) + "\n"); }
-    res.end();
+    let all = "";
+    try { for await (const ev of out.events) { const l = JSON.stringify(ev) + "\n"; if (rid) all += l; send(l); } }
+    catch (e) { const l = JSON.stringify({ t: "error", v: String(e?.message || e) }) + "\n"; all += l; send(l); }
+    if (rid) await saveRes(rid, { done: true, ct: "application/x-ndjson; charset=utf-8", body: all });
+    try { res.end(); } catch {}
   } catch (e) {
     if (!res.headersSent) res.status(500).json({ error: "Erreur serveur : " + String(e?.message || e) });
     else res.end();
