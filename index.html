@@ -372,6 +372,7 @@ body.dragging .drop{display:grid}
 .djson:focus{border-color:var(--accent)}
 .dlaunch{margin-top:12px;border:1px solid var(--line2);border-radius:12px;padding:12px 14px;background:var(--field);font-size:14px;line-height:1.5}
 .dlaunch code{font-family:var(--mono);font-size:12px;word-break:break-all;display:block;background:rgba(0,0,0,.25);padding:8px;border-radius:8px;margin:6px 0;user-select:all}
+.dbig{width:100%;font-size:17px;padding:15px;margin-top:4px}
 .dmore{margin-top:12px;font-size:14px;color:var(--muted)}.dmore summary{cursor:pointer}
 .dbtn{border:1px solid var(--line2);background:var(--field);border-radius:11px;padding:10px 14px;font-size:14.5px;font-weight:500;white-space:nowrap}
 .dbtn:hover{background:var(--hover)}
@@ -654,8 +655,12 @@ body.th-vert{--side:#0d1612;--bg:#09110e;--panel:#121e19;--field:#16251f;--hover
 </div>
 <div id="dev" class="modal" role="dialog" aria-modal="true" aria-labelledby="devTitle">
   <div class="dbox">
-    <div class="dhead"><div><div class="dtitle" id="devTitle">Paramètres développeur</div><div class="dsub">Connecte llmms ia à ton Roblox Studio ou à n'importe quel serveur MCP : colle ton JSON, comme dans Claude.</div></div><button class="dx" id="devClose" type="button" aria-label="Fermer">×</button></div>
+    <div class="dhead"><div><div class="dtitle" id="devTitle">Paramètres développeur</div><div class="dsub">Connecte llmms ia à ton Roblox Studio en 1 clic : elle construit directement dans ta place.</div></div><button class="dx" id="devClose" type="button" aria-label="Fermer">×</button></div>
     <div class="dstat"><span class="sdot" id="devDot"></span><div><div class="s1" id="devS1">Roblox Studio non connecté</div><div class="s2" id="devS2">Aucun serveur MCP</div></div></div>
+    <button class="dbtn main dbig" id="devOneClick" type="button">🎮 Connecter mon Roblox Studio</button>
+    <div class="dhint" style="text-align:center">Le site te donne directement son serveur MCP Roblox Studio : rien à copier, rien à coller.</div>
+    <div id="devLaunch" class="dlaunch" hidden></div>
+    <details class="dmore" id="devAdv"><summary>Avancé : coller un autre JSON MCP</summary>
     <label class="dlab" for="devJson">Config MCP (JSON)</label>
     <textarea id="devJson" class="djson" spellcheck="false" autocomplete="off" placeholder='{
   "mcpServers": {
@@ -666,18 +671,17 @@ body.th-vert{--side:#0d1612;--bg:#09110e;--panel:#121e19;--field:#16251f;--hover
   }
 }'></textarea>
     <div class="drow2"><button class="dbtn main" id="devJsonGo" type="button">Utiliser ce JSON</button><button class="dbtn" id="devJsonRbx" type="button">JSON Roblox Studio par défaut</button></div>
-    <div id="devLaunch" class="dlaunch" hidden></div>
-    <details class="dmore"><summary>Ou une adresse de serveur MCP (http)</summary>
-    <div class="drow" style="margin-top:8px"><input id="devUrl" type="url" inputmode="url" autocomplete="off" spellcheck="false" placeholder="http://localhost:3333/mcp"><button class="dbtn" id="devConnect" type="button">Connecter</button></div></details>
+    <label class="dlab" for="devUrl">Ou une adresse de serveur MCP</label>
+    <div class="drow"><input id="devUrl" type="url" inputmode="url" autocomplete="off" spellcheck="false" placeholder="https://… ou http://localhost:3333/mcp"><button class="dbtn" id="devConnect" type="button">Connecter</button></div></details>
     <div class="drow2"><button class="dbtn" id="devTest" type="button">Tester la connexion</button><button class="dbtn" id="devOff" type="button">Déconnecter</button></div>
     <label class="dtog"><input type="checkbox" id="devAuto" checked><span><b>Modifier directement Studio</b><br>Quand c'est connecté, l'IA construit et code elle-même dans ta place au lieu de donner du code à copier.</span></label>
     <div class="dtools" id="devTools"></div>
-    <div class="dlab">Comment faire (sur ton PC, comme dans Claude)</div>
+    <div class="dlab">Comment ça marche (sur ton PC)</div>
     <ol class="dsteps">
-      <li>Dans <b>Roblox Studio</b> : ouvre l'<b>Assistant</b> → <b>⋯</b> → <b>Paramètres</b> → <b>Serveurs MCP</b>, active Studio comme serveur MCP et <b>copie le JSON</b>.</li>
-      <li><b>Colle-le ici</b> (ou directement dans le chat) et appuie sur <b>Utiliser ce JSON</b>.</li>
-      <li>Télécharge ton <b>lanceur</b> et double-clique dessus : il fait la même chose que Claude Desktop (il lance le serveur MCP de Studio). Laisse sa fenêtre ouverte.</li>
-      <li>Le site se connecte tout seul à ton Studio. Si Chrome demande l'accès au réseau local, clique <b>Autoriser</b>.</li>
+      <li>Ouvre ta place dans <b>Roblox Studio</b> (sur le même PC que ce site).</li>
+      <li>Appuie sur <b>🎮 Connecter mon Roblox Studio</b>, puis sur <b>Télécharger</b>.</li>
+      <li>Double-clique sur le fichier téléchargé et laisse sa fenêtre ouverte.</li>
+      <li>C'est tout : le site se connecte tout seul. Si Chrome demande l'accès au réseau local, clique <b>Autoriser</b>.</li>
     </ol>
   </div>
 </div>
@@ -925,7 +929,7 @@ function studioUI(){
   if($("dev")?.classList.contains("open")) devUI();
 }
 const isMcpUrl=u=>/^https?:\/\/(localhost|127\.0\.0\.1|\[::1\])(:\d+)?/i.test(u)||/\/(mcp|sse)\/?(\?|$)/i.test(u);
-$("studioBtn").onclick=()=>{ closeSide(); openDev(); };
+$("studioBtn").onclick=()=>{ closeSide(); openDev(); if(!mcp.connected) setTimeout(oneClick,60); };
 
 /* ---------------- config MCP en JSON (comme Claude Desktop) ---------------- */
 const RBX_JSON={win:{mcpServers:{Roblox_Studio:{command:"cmd.exe",args:["/c","%LOCALAPPDATA%\\Roblox\\mcp.bat"]}}},mac:{mcpServers:{Roblox_Studio:{command:"/Applications/RobloxStudio.app/Contents/MacOS/StudioMCP"}}}};
@@ -962,6 +966,8 @@ function useMcpJson(txt){
   devUI("busy","En attente du lanceur sur ce PC…"); pollBridge();
 }
 $("devJsonGo").onclick=()=>useMcpJson($("devJson").value);
+function oneClick(){ const cfg=isMac()?RBX_JSON.mac:RBX_JSON.win; useMcpJson(JSON.stringify(cfg)); const L=$("devLaunch"); if(L&&!mcp.connected) L.querySelector("b")&&(L.querySelector("b").textContent="Serveur MCP Roblox Studio prêt ✓"); }
+$("devOneClick").onclick=oneClick;
 $("devJsonRbx").onclick=()=>{ $("devJson").value=JSON.stringify(isMac()?RBX_JSON.mac:RBX_JSON.win,null,2); useMcpJson($("devJson").value); };
 
 /* ---------------- paramètres développeur ---------------- */
@@ -974,7 +980,7 @@ function devUI(state,msg){
   $("devTools").innerHTML=mcp.connected?mcp.list.slice(0,40).map(t=>`<span class="chip" title="${esc(t.description||"")}">${esc(t.name)}</span>`).join(""):"";
   $("devAuto").checked=autoStudio;
 }
-function openDev(){ $("devUrl").value=mcp.url||store.get("llmms3-mcp",null)||"http://localhost:3333/mcp"; const sj=store.get("llmms3-mcpjson",null); if(sj&&!$("devJson").value) $("devJson").value=JSON.stringify(sj,null,2); devUI(); $("dev").classList.add("open"); $("menu").classList.remove("open"); setTimeout(()=>$("devJson").focus(),50); }
+function openDev(){ $("devOneClick").hidden=false; $("devUrl").value=mcp.url||store.get("llmms3-mcp",null)||"http://localhost:3333/mcp"; const sj=store.get("llmms3-mcpjson",null); if(sj&&!$("devJson").value) $("devJson").value=JSON.stringify(sj,null,2); devUI(); $("dev").classList.add("open"); $("menu").classList.remove("open"); setTimeout(()=>$("devOneClick").focus(),50); }
 function closeDev(){ $("dev").classList.remove("open"); }
 async function devConnect(url,headers){
   url=(url||"").trim(); if(!/^https?:\/\//i.test(url)){ devUI("bad","Mets une adresse qui commence par http:// ou https://"); return false; }
@@ -1237,7 +1243,7 @@ async function send(){
   let text=input.value.trim(); if(!text&&!attachments.length&&!voiceNote) return;
 
   // JSON MCP collé (comme dans Claude) → paramètres développeur
-  if(/"mcpServers"\s*:/.test(text)){ input.value=""; grow(); openDev(); $("devJson").value=text; useMcpJson(text); return; }
+  if(/"mcpServers"\s*:/.test(text)){ input.value=""; grow(); openDev(); $("devAdv").open=true; $("devJson").value=text; useMcpJson(text); return; }
   // lien MCP collé → connexion à Studio
   const mcpUrl=(text.match(/https?:\/\/[^\s<>"']+/gi)||[]).find(isMcpUrl);
   if(mcpUrl){
