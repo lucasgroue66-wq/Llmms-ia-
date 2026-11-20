@@ -145,7 +145,30 @@ async function orFreeModels() {
     orFree = list; orFreeAt = Date.now(); return list;
   } catch { return []; }
 }
+// Recherche web gratuite : Gemini avec « Google Search » (quand OpenRouter n'a plus de crédits)
+async function geminiSearch(b, opts) {
+  const key = process.env.GEMINI_API_KEY; if (!key) return null;
+  const sys = (b.messages || []).filter(m => m.role === "system").map(m => textOfMsg(m.content)).join("\n");
+  const contents = (b.messages || []).filter(m => m.role !== "system").map(m => ({ role: m.role === "assistant" ? "model" : "user", parts: [{ text: textOfMsg(m.content) || " " }] }));
+  const list = (await gemModels(key)).filter(m => /flash/.test(m) && !/lite/.test(m)).concat((await gemModels(key)).filter(m => !/gemma/.test(m)));
+  for (const model of [...new Set(list)].slice(0, 5)) {
+    if ((gemDead.get(model) || 0) > Date.now()) continue;
+    try {
+      const r = await realFetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${encodeURIComponent(key)}`, { method: "POST", headers: { "Content-Type": "application/json" }, signal: opts?.signal,
+        body: JSON.stringify({ contents, systemInstruction: sys ? { parts: [{ text: sys }] } : undefined, tools: [{ google_search: {} }] }) });
+      if (!r.ok) { if (r.status === 429) gemDead.set(model, Date.now() + 60e3); continue; }
+      const j = await r.json();
+      const c = j?.candidates?.[0];
+      const text = (c?.content?.parts || []).map(p => p.text || "").join("");
+      if (!text) continue;
+      const annotations = (c?.groundingMetadata?.groundingChunks || []).filter(g => g.web?.uri).map(g => ({ type: "url_citation", url_citation: { url: g.web.uri, title: g.web.title || g.web.uri } }));
+      return new Response(JSON.stringify({ choices: [{ message: { role: "assistant", content: text, annotations } }] }), { status: 200, headers: { "Content-Type": "application/json" } });
+    } catch {}
+  }
+  return null;
+}
 async function freeChat(url, opts, b) {
+    if (!b.stream && Array.isArray(b.plugins) && b.plugins.some(p => p?.id === "web")) { const sr = await geminiSearch(b, opts); if (sr) return sr; }
     const g = await tryGemini(b, opts); if (g) return g;
     delete b.reasoning; b.max_tokens = Math.min(b.max_tokens || 16000, 32000); b.messages = boostSystem(b.messages || []);
     let r2 = null;
