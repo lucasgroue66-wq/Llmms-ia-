@@ -249,6 +249,26 @@ textarea::placeholder{color:var(--muted)}
 body.dragging .drop{display:grid}
 #preview{position:fixed;inset:0;z-index:58;display:none;flex-direction:column;background:#000}
 #preview.open{display:flex}
+
+/* Idées, améliorations de jeux, partage */
+.ideas{margin-top:22px}
+.ideas .ih{font-size:13px;letter-spacing:.06em;text-transform:uppercase;color:var(--dim);margin:0 0 10px}
+.ideas .ig{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:8px}
+.ideas button{display:flex;align-items:center;gap:10px;text-align:left;border:1px solid var(--line2);background:var(--panel);border-radius:12px;padding:11px 13px;font-size:14.5px;color:var(--soft)}
+.ideas button:hover{background:var(--hover);border-color:#55584d}
+.ideas button .em{font-size:20px;line-height:1}
+.improve{display:flex;flex-wrap:wrap;gap:7px;margin:12px 0 4px;align-items:center}
+.improve .lab{font-size:13px;color:var(--dim);margin-right:2px}
+.improve button{border:1px solid var(--line2);background:var(--panel);border-radius:999px;padding:7px 12px;font-size:13.5px;color:var(--soft)}
+.improve button:hover{background:var(--hover)}
+.improve button.share{border-color:var(--accent);color:var(--accent)}
+#shareBox{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);z-index:70;background:var(--panel);border:1px solid var(--line2);border-radius:14px;padding:12px;display:flex;gap:8px;align-items:center;width:min(560px,calc(100vw - 24px));box-shadow:0 20px 50px -20px #000}
+#shareBox input{flex:1;min-width:0;background:var(--bg,#141513);border:1px solid var(--line2);border-radius:8px;color:var(--soft);padding:8px 10px;font-size:13px}
+#shareBox button{border:1px solid var(--line2);background:var(--hover);border-radius:8px;padding:8px 12px;color:var(--soft)}
+#playShared{position:fixed;inset:0;z-index:2147483000;background:#000;display:flex;flex-direction:column}
+#playShared .bar{display:flex;align-items:center;gap:10px;padding:8px 12px;background:#141513;color:#e8e6df;font:600 14px system-ui,sans-serif;border-bottom:1px solid #2a2b27}
+#playShared .bar a{margin-left:auto;color:#2a160a;background:#eca474;border-radius:999px;padding:7px 14px;text-decoration:none;font-weight:600}
+#playShared iframe{flex:1;width:100%;border:0;background:#000}
 .pre .pv.play{background:var(--accent);color:var(--accent-ink);font-weight:600}
 .pverr{color:#ff9b8a;font-size:12.5px;max-width:45vw;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .pvbar{display:flex;align-items:center;gap:8px;padding:10px 12px;background:var(--side);border-bottom:1px solid var(--line)}
@@ -440,7 +460,7 @@ body.dragging .drop{display:grid}
 
 <div class="drop">Lâchez votre vidéo ou votre image</div>
 <div id="preview" role="dialog" aria-modal="true" aria-label="Aperçu">
-  <div class="pvbar"><span class="pvt">▶ Aperçu</span><span class="grow"></span><span id="pvErr" class="pverr" hidden></span><button class="dbtn" id="pvFix" type="button">🔧 Réparer</button><button class="dbtn" id="pvReplay" type="button">↻ Rejouer</button><button class="dbtn" id="pvClose" type="button">Fermer</button></div>
+  <div class="pvbar"><span class="pvt">▶ Aperçu</span><span class="grow"></span><span id="pvErr" class="pverr" hidden></span><button class="dbtn" id="pvShare" type="button">🔗 Partager</button><button class="dbtn" id="pvFix" type="button">🔧 Réparer</button><button class="dbtn" id="pvReplay" type="button">↻ Rejouer</button><button class="dbtn" id="pvClose" type="button">Fermer</button></div>
   <iframe id="pvFrame" title="Aperçu" sandbox="allow-scripts allow-pointer-lock" allow="fullscreen; autoplay; gamepad" referrerpolicy="no-referrer"></iframe>
 </div>
 <div id="login" role="dialog" aria-modal="true" aria-labelledby="loginTitle" hidden>
@@ -515,6 +535,14 @@ const store={
 };
 /* Remise à zéro générale : quand DATA_VERSION augmente, chaque appareil repart de zéro
    (discussions, réglages, connexion) à sa prochaine visite. */
+/* Jeu partagé : ia-llmms-1.vercel.app/#jeu=… s'ouvre direct en plein écran, sans connexion */
+(function(){ const h=location.hash; if(!h.startsWith("#jeu=")) return;
+  const box=document.createElement("div"); box.id="playShared"; box.innerHTML=`<div class="bar">🎮 Jeu créé avec llmms ia<a href="/">Créer mon jeu</a></div><iframe title="Jeu" sandbox="allow-scripts allow-pointer-lock" allow="fullscreen; autoplay; gamepad"></iframe>`;
+  document.body.appendChild(box);
+  box.querySelector("a").onclick=e=>{ e.preventDefault(); history.replaceState(null,"",location.pathname); box.remove(); };
+  (async()=>{ try{ const st=new Blob([Uint8Array.from(atob(h.slice(5).replace(/-/g,"+").replace(/_/g,"/")),c=>c.charCodeAt(0))]).stream().pipeThrough(new DecompressionStream("deflate-raw")); const code=await new Response(st).text(); const f=box.querySelector("iframe"); f.srcdoc=code; f.onload=()=>{ try{ f.focus(); f.contentWindow.focus(); }catch{} }; }
+    catch{ box.querySelector(".bar").firstChild.textContent="Ce lien de jeu est abîmé ou incomplet. "; } })();
+})();
 const DATA_VERSION=2;
 try{ if(Number(localStorage.getItem("llmms-dataver")||0)<DATA_VERSION){ Object.keys(localStorage).filter(k=>k.startsWith("llmms")).forEach(k=>localStorage.removeItem(k)); localStorage.setItem("llmms-dataver",String(DATA_VERSION)); } }catch{}
 const MODELS=[
@@ -836,6 +864,12 @@ function render(){
     const M=modeTxt(mode);
     thread.innerHTML=`<div class="empty"><div class="big">${SPARK}<span>${esc(M.title)}</span></div><p>${esc(M.sub)}</p><div class="sugg">${M.s.map(t=>`<button type="button" data-s="${esc(t)}">${esc(t)}</button>`).join("")}</div></div>`;
     thread.querySelectorAll("[data-s]").forEach(b=>b.onclick=()=>{ input.value=b.dataset.s; grow(); input.focus(); });
+    if(mode==="chat"||mode==="dev"){ const box=document.createElement("div"); box.className="ideas";
+      box.innerHTML=`<p class="ih">Pas d'idée ? Crée en un clic</p><div class="ig">${IDEAS.map((x,i)=>`<button type="button" data-idea="${i}"><span class="em">${x[0]}</span><span>${esc(x[1])}</span></button>`).join("")}</div>`;
+      thread.querySelector(".empty").appendChild(box);
+      box.querySelectorAll("[data-idea]").forEach(b=>b.onclick=()=>{ let it=IDEAS[+b.dataset.idea]; if(it[2]==="?") it=IDEAS[Math.floor(Math.random()*(IDEAS.length-1))];
+        if(it[3]==="roblox"){ tier="studio"; modelUI(); save(); } else if(tier==="studio"){ tier="5.5"; modelUI(); save(); }
+        sendText(it[2]); }); }
     return;
   }
   let bot=null, chips=null;
@@ -854,7 +888,7 @@ function render(){
       if(m._err){ const s=document.createElement("p"); s.className="err"; s.innerHTML="<b>Erreur</b> — "+esc(m._err); bot.txt.appendChild(s); }
     } else if(m.role==="tool"&&m._err&&chips){ const s=chips.querySelector(`[data-id="${CSS.escape(m.tool_call_id)}"]`); if(s){ s.className="chip err"; s.textContent="✗ "+s.textContent.slice(2); } }
   }
-  embedVideos(thread); filesUI();
+  embedVideos(thread); filesUI(); improveUI(c);
   toBottom(true);
 }
 thread.addEventListener("click",async e=>{
@@ -1377,6 +1411,7 @@ function openPreview(code){ pvSrc=code; pvLastErr=""; $("pvErr").hidden=true; co
   requestAnimationFrame(()=>requestAnimationFrame(()=>{ $("pvFrame").srcdoc=pvCode; })); }
 $("pvFrame").addEventListener("load",()=>{ try{ $("pvFrame").focus(); $("pvFrame").contentWindow.focus(); }catch{} });
 addEventListener("message",e=>{ if(e.source!==$("pvFrame").contentWindow||!e.data||typeof e.data.llmmsPv!=="string") return; if(!pvLastErr){ pvLastErr=e.data.llmmsPv; $("pvErr").textContent="⚠ "+pvLastErr; $("pvErr").hidden=false; } });
+$("pvShare").onclick=()=>shareGame(pvSrc);
 $("pvFix").onclick=()=>{ if(busy) return; $("pvClose").click();
   const g=isGameCode(pvSrc), what=g?"Le jeu":"L'aperçu de l'animation";
   input.value=(pvLastErr?`${what} plante avec cette erreur : « ${pvLastErr} ».`:g?`Le jeu ne marche pas bien (écran noir, commandes ou bugs).`:`L'aperçu de l'animation reste noir ou ne marche pas.`)+` Trouve la cause, corrige-la et renvoie la page HTML COMPLÈTE dans un seul bloc \`\`\`html (code qui marche du premier coup, boucle protégée par try/catch, pas d'écran noir${g?", commandes tactiles et clavier qui marchent":""}).`;
@@ -1384,6 +1419,51 @@ $("pvFix").onclick=()=>{ if(busy) return; $("pvClose").click();
 $("pvReplay").onclick=()=>{ $("pvFrame").srcdoc=""; setTimeout(()=>$("pvFrame").srcdoc=pvCode,30); };
 $("pvClose").onclick=()=>{ $("preview").classList.remove("open"); $("pvFrame").srcdoc=""; };
 addEventListener("keydown",e=>{ if(e.key==="Escape"&&$("preview").classList.contains("open")) $("pvClose").click(); });
+
+/* ---------------- Idées, amélioration des jeux, partage ---------------- */
+const IDEAS=[
+  ["⚽","Foot simulateur","Fais-moi un jeu de foot simulateur jouable : je contrôle un joueur de mon équipe (changement automatique vers le plus proche du ballon), 4 coéquipiers et 5 adversaires avec une vraie IA, des gardiens, passes, tirs puissants, dribbles, match de 3 minutes avec tableau de score, buts avec ralenti et célébration, commandes tactiles (joystick + boutons Passe / Tir) et clavier."],
+  ["🏎️","Course de voitures","Fais-moi un jeu de course de voitures vu du dessus : circuit avec virages, 5 adversaires IA, 3 tours, nitro, dérapages avec traces de pneus, chrono et classement, commandes tactiles et clavier."],
+  ["🧟","Survie zombies","Fais-moi un jeu de survie contre des vagues de zombies : je tire dans toutes les directions, les vagues deviennent plus dures, bonus d'armes, boss toutes les 5 vagues, effets de sang stylisés et explosions, commandes tactiles (2 joysticks) et clavier/souris."],
+  ["🦖","Plateforme","Fais-moi un jeu de plateforme style Mario : 3 niveaux, sauts, ennemis à écraser, pièces, power-up, drapeau de fin, caméra qui suit, commandes tactiles et clavier."],
+  ["🚀","Shooter spatial","Fais-moi un shooter spatial vertical : vaisseau qui tire, vagues d'ennemis, boss, power-ups (tir triple, bouclier), étoiles en parallaxe, explosions, commandes tactiles et clavier."],
+  ["🐍","Snake néon","Fais-moi un Snake au style néon avec obstacles, bonus de vitesse, niveaux qui changent de couleur, meilleur score, commandes par glissement du doigt et clavier."],
+  ["🎬","Intro style GTA","Fais-moi une cinématique d'intro style GTA 6 : ville au coucher du soleil, palmiers, néons, plans de caméra, titres stylés et musique d'ambiance générée."],
+  ["🧱","Obby Roblox","Crée-moi un obby complet pour Roblox Studio : 20 étapes de difficulté croissante, checkpoints sauvegardés, plateformes qui bougent, lave, sauts, classement des étapes et GUI moderne.","roblox"],
+  ["🏭","Tycoon Roblox","Crée-moi un tycoon complet pour Roblox Studio : boutons d'achat, droppers, convoyeur, argent sauvegardé, rebirth, GUI moderne et effets.","roblox"],
+  ["🎲","Surprends-moi","?"]
+];
+function sendText(t){ if(busy) return; input.value=t; grow(); send(); }
+const IMPROVE=[
+  ["✨ Plus beau","Rends ce jeu beaucoup plus beau : meilleurs graphismes, couleurs, particules, animations, effets d'écran et menus plus stylés. Renvoie le jeu COMPLET."],
+  ["🔥 Plus dur","Rends ce jeu plus difficile et plus addictif : difficulté qui monte, nouveaux ennemis ou obstacles, combo et meilleur score. Renvoie le jeu COMPLET."],
+  ["🗺️ Plus de niveaux","Ajoute plusieurs niveaux différents à ce jeu, avec un écran de sélection des niveaux. Renvoie le jeu COMPLET."],
+  ["👥 2 joueurs","Ajoute un mode 2 joueurs sur le même écran (chaque joueur a ses commandes tactiles d'un côté de l'écran et ses touches au clavier). Renvoie le jeu COMPLET."],
+  ["🔊 Plus de sons","Ajoute une musique de fond et beaucoup plus d'effets sonores (générés avec WebAudio), avec un bouton pour couper le son. Renvoie le jeu COMPLET."]
+];
+function lastGameCode(c){ for(let i=c.messages.length-1;i>=0;i--){ const m=c.messages[i]; if(m.role!=="assistant"||!m.content) continue; const blocks=[...m.content.matchAll(/```html\s*\n([\s\S]*?)```/gi)].map(x=>x[1]); const g=blocks.reverse().find(isGameCode); if(g) return {code:g,i}; if(m.role==="assistant"&&!m._auto) return null; } return null; }
+function improveUI(c){
+  if(!c||busy) return; const g=lastGameCode(c); if(!g) return;
+  const rows=thread.querySelectorAll(".row"); const last=rows[rows.length-1]; const where=last?.querySelector(".txt")||thread;
+  const d=document.createElement("div"); d.className="improve";
+  d.innerHTML=`<span class="lab">Améliorer :</span>${IMPROVE.map((x,i)=>`<button type="button" data-imp="${i}">${x[0]}</button>`).join("")}<button type="button" class="share" data-imp="share">🔗 Partager le jeu</button>`;
+  where.appendChild(d);
+  d.querySelectorAll("[data-imp]").forEach(b=>b.onclick=()=>{ if(b.dataset.imp==="share") return shareGame(g.code); sendText(IMPROVE[+b.dataset.imp][1]); });
+}
+const b64u=buf=>{ let s=""; const a=new Uint8Array(buf); for(let i=0;i<a.length;i+=0x8000) s+=String.fromCharCode.apply(null,a.subarray(i,i+0x8000)); return btoa(s).replace(/\+/g,"-").replace(/\//g,"_").replace(/=+$/,""); };
+const unb64u=s=>{ const b=atob(s.replace(/-/g,"+").replace(/_/g,"/")); const a=new Uint8Array(b.length); for(let i=0;i<b.length;i++) a[i]=b.charCodeAt(i); return a; };
+async function packCode(code){ const st=new Blob([code]).stream().pipeThrough(new CompressionStream("deflate-raw")); return b64u(await new Response(st).arrayBuffer()); }
+async function unpackCode(s){ const st=new Blob([unb64u(s)]).stream().pipeThrough(new DecompressionStream("deflate-raw")); return await new Response(st).text(); }
+async function shareGame(code){
+  let url; try{ url=location.origin+"/#jeu="+await packCode(code); }catch{ note("Ton navigateur ne permet pas de créer le lien de partage."); return; }
+  const title=(code.match(/<title>([^<]{1,60})<\/title>/i)||[])[1]||"Mon jeu";
+  if(navigator.share){ try{ await navigator.share({title:title+" — llmms ia",text:"Joue à mon jeu créé avec llmms ia 🎮",url}); return; }catch(e){ if(e?.name==="AbortError") return; } }
+  let ok=false; try{ await navigator.clipboard.writeText(url); ok=true; }catch{}
+  $("shareBox")?.remove(); const box=document.createElement("div"); box.id="shareBox";
+  box.innerHTML=`<span>${ok?"✓ Lien copié !":"Ton lien :"}</span><input readonly><button type="button">Fermer</button>`;
+  box.querySelector("input").value=url; box.querySelector("button").onclick=()=>box.remove(); document.body.appendChild(box);
+  box.querySelector("input").onclick=e=>e.target.select(); setTimeout(()=>box.remove(),20000);
+}
 /* ---------------- étapes (Résumé + « Étape 3/7 ») ---------------- */
 const Steps={
   list:[], planned:0, live:false, shown:null, hideT:null,
