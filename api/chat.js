@@ -136,7 +136,7 @@ globalThis.fetch = async (url, opts) => {
   } catch { return r; }
 };
 // ---------- Limite de messages par personne et par jour ----------
-// DAILY_LIMIT : messages par jour et par personne (30 par défaut, 0 = pas de limite)
+// DAILY_LIMIT : messages par jour et par personne (15 par défaut, 0 = pas de limite)
 // OWNER_EMAILS : e-mails illimités (le propriétaire), séparés par des virgules
 // Compteur fiable : base Upstash/Vercel KV (KV_REST_API_URL + KV_REST_API_TOKEN, ou UPSTASH_REDIS_REST_URL + UPSTASH_REDIS_REST_TOKEN).
 // Sans base : compteur en mémoire (approximatif, remis à zéro quand le serveur redémarre).
@@ -159,7 +159,7 @@ async function bumpCount(key) {
   return n;
 }
 async function dailyLimit(req, body, email) {
-  const max = Number(process.env.DAILY_LIMIT ?? 30);
+  const max = Number(process.env.DAILY_LIMIT ?? 15);
   if (!max) return null;
   const owners = String(process.env.OWNER_EMAILS || "").split(",").map(x => x.trim().toLowerCase()).filter(Boolean);
   if (email && owners.includes(String(email).toLowerCase())) return null;
