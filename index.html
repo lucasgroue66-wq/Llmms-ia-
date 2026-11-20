@@ -429,6 +429,16 @@ aside{background:linear-gradient(180deg,#1b1d18 0%,#151612 100%);box-shadow:inse
 *{scrollbar-width:thin;scrollbar-color:#3a3d35 transparent}
 ::-webkit-scrollbar{width:9px;height:9px}::-webkit-scrollbar-thumb{background:#33362f;border-radius:9px;border:2px solid transparent;background-clip:padding-box}
 @media (prefers-reduced-motion:reduce){.chatcol::before,.empty .big span,#thread>.row{animation:none}}
+
+.effmenu{width:270px}
+.effmenu .eo{display:flex;gap:12px;align-items:flex-start;width:100%;text-align:left;padding:10px 12px;border-radius:10px}
+.effmenu .eo:hover{background:var(--hover)}
+.effmenu .eo .ei{font-size:20px;line-height:1.2}
+.effmenu .eo b{display:block;font-weight:600;color:var(--fg)}
+.effmenu .eo small{display:block;color:var(--muted);font-size:12.5px;line-height:1.35}
+.effmenu .eo.on{background:var(--active)}
+.effmenu .eh{font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--dim);padding:6px 12px 4px}
+#effBtn.max{color:#ffb27a;border-color:rgba(236,164,116,.5);box-shadow:0 0 14px -4px rgba(236,164,116,.6)}
 </style>
 </head>
 <body>
@@ -489,6 +499,10 @@ aside{background:linear-gradient(180deg,#1b1d18 0%,#151612 100%);box-shadow:inse
           <button class="pill" id="imgBtn" type="button" title="Image"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2.5"/><circle cx="9" cy="9" r="1.8"/><path d="m21 15-5-5L5 21"/></svg><span class="lbl" data-i18n="img">Image</span></button>
           <button class="pill" id="filesBtn" type="button" title="Fichiers de la discussion" aria-label="Fichiers de la discussion"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"><path d="M3 6.5A1.5 1.5 0 0 1 4.5 5H9l2 2h8.5A1.5 1.5 0 0 1 21 8.5v9a1.5 1.5 0 0 1-1.5 1.5h-15A1.5 1.5 0 0 1 3 17.5z"/></svg><span class="fcount" id="filesCount" hidden>0</span></button>
           <span class="grow"></span>
+          <div class="picker" id="effPicker">
+            <button class="pill" id="effBtn" type="button" aria-haspopup="listbox" aria-expanded="false" title="Effort de réflexion"><span id="effIc">⚖️</span><span class="lbl" id="effLbl">Normal</span></button>
+            <div class="mmenu effmenu" id="effMenu" role="listbox" aria-label="Effort"></div>
+          </div>
           <div class="picker" id="picker">
             <button class="pill" id="modelBtn" type="button" aria-haspopup="listbox" aria-expanded="false" title="Choisir le modèle"><svg class="spark" width="18" height="18"><use href="#i-spark"/></svg><span id="modelLbl">llmms ia 5.5</span><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m6 9 6 6 6-6"/></svg></button>
             <div class="mmenu" id="mmenu" role="listbox" aria-label="Modèles"></div>
@@ -1118,7 +1132,7 @@ async function agent(c){
       let r, ct="";
       const lastIsAuto=c.messages.at(-1)?._auto;
       curStep=Steps.add(lastIsAuto?"Vérification dans Studio : console et explorateur":step===0?(c.mode==="image"?"Création de l'image":"Réflexion"):"Suite du travail"); Steps.trackReset(curStep);
-      try{ r=await apiFetch({method:"POST",headers:headers(),signal:ctl.signal,body:JSON.stringify({messages:forApi(c),mode:c.mode,tier,search:web,lang:replyLang(),plan,spec,light:(isAnimReq(c)||isGameReq(c))&&c.mode!=="roblox",tools:c.mode==="image"||!autoStudio?[]:mcp.tools()})}); }
+      try{ r=await apiFetch({method:"POST",headers:headers(),signal:ctl.signal,body:JSON.stringify({messages:forApi(c),mode:c.mode,tier,effort,search:web,lang:replyLang(),plan,spec,light:(isAnimReq(c)||isGameReq(c))&&c.mode!=="roblox",tools:c.mode==="image"||!autoStudio?[]:mcp.tools()})}); }
       catch(e){ throw e; }
       ct=r.headers.get("content-type")||"";
       if(r.status===401){ let er=""; try{ er=(await r.clone().json()).error; }catch{} status?.remove(); status=null; bot.txt.closest(".row").remove(); if(er==="login"){ showLogin(); } else { $("gate").style.display="grid"; $("gateCode").focus(); } return; }
@@ -1351,7 +1365,7 @@ async function bridgeJobs(){ try{ const base=new URL(mcp.url).origin; const r=aw
 async function runViaBridge(c,bot,status,setStatus,extra,base,existing){
   let id=existing?.id;
   if(!id){
-    const body={messages:forApi(c),mode:c.mode,tier,search:web,lang:replyLang(),plan:extra.plan||"",spec:extra.spec||"",light:isAnimReq(c)&&c.mode!=="roblox"};
+    const body={messages:forApi(c),mode:c.mode,tier,effort,search:web,lang:replyLang(),plan:extra.plan||"",spec:extra.spec||"",light:isAnimReq(c)&&c.mode!=="roblox"};
     const hd=headers(); delete hd["Content-Type"];
     const r=await fetch(base+"/jobs",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({api:location.origin+"/api/chat",headers:hd,body})});
     const j=await r.json().catch(()=>({}));
@@ -1632,7 +1646,17 @@ const BUILTIN=new Set(["recherche_web","meteo","analyse_jeu_roblox"]);
 function toolLabel(name,a){ a=a||{}; return name==="meteo"?"🌦 Météo : "+(a.ville||""):name==="recherche_web"?"🔎 "+(a.requete||"recherche"):name==="analyse_jeu_roblox"?"🎮 Analyse du jeu : "+(a.nom||""):null; }
 const isAnimReq=c=>{ const u=[...c.messages].reverse().find(m=>m.role==="user"&&!m._auto); return /cin[ée]matique|animation|anim[ée]|trailer|bande[- ]annonce|intro\b|cutscene|clip|vid[ée]o/i.test(textOf(u?.content||"")); };
 // Mode abusé : plan + relectures seulement pour du vrai code (pas pour une animation web, pour aller vite)
-const boosted=c=>(tier==="5"||tier==="5.5"||tier==="studio")&&(c.mode==="roblox"||(c.mode==="dev"&&!isAnimReq(c)));
+
+/* ---------------- Effort de réflexion (Rapide / Normal / Max) ---------------- */
+const EFFORTS=[["fast","⚡","Rapide","Réponse quasi immédiate, réflexion courte."],["normal","⚖️","Normal","Le bon équilibre entre vitesse et qualité."],["max","🔥","Effort max","Réflexion maximale, plan + relecture du code, réponses plus longues. Plus lent."]];
+let effort=store.get("llmms3-effort","normal"); if(!EFFORTS.some(e=>e[0]===effort)) effort="normal";
+function effortUI(){ const e=EFFORTS.find(x=>x[0]===effort); $("effIc").textContent=e[1]; $("effLbl").textContent=e[2]; $("effBtn").classList.toggle("max",effort==="max");
+  $("effMenu").innerHTML=`<div class="eh">Effort de réflexion</div>`+EFFORTS.map(x=>`<button type="button" class="eo${x[0]===effort?" on":""}" data-eff="${x[0]}"><span class="ei">${x[1]}</span><span><b>${x[2]}</b><small>${x[3]}</small></span></button>`).join("");
+  $("effMenu").querySelectorAll("[data-eff]").forEach(b=>b.onclick=()=>{ effort=b.dataset.eff; store.set("llmms3-effort",effort); $("effMenu").classList.remove("open"); effortUI(); }); }
+$("effBtn").onclick=e=>{ e.stopPropagation(); $("mmenu").classList.remove("open"); const o=$("effMenu").classList.toggle("open"); $("effBtn").setAttribute("aria-expanded",String(o)); };
+document.addEventListener("click",e=>{ if(!e.target.closest("#effPicker")) $("effMenu").classList.remove("open"); });
+effortUI();
+const boosted=c=>effort!=="fast"&&(effort==="max"||tier==="5"||tier==="5.5"||tier==="studio")&&(c.mode==="roblox"||(c.mode==="dev"&&!isAnimReq(c)));
 
 async function reviewCode(c,answer,signal){
   try{
@@ -2654,6 +2678,17 @@ async function* runImage(body, env) {
 
 // Version « passe-plat » : le serveur ne lit pas la réponse, il la transmet telle quelle au navigateur.
 // Beaucoup moins de calcul côté serveur (indispensable sur Netlify Edge, limité en temps de calcul).
+// Niveau d'effort choisi par l'utilisateur : "fast" (rapide), "normal", "max" (réflexion maximale)
+function effortOf(body, tier, mode) {
+  if (body?.effort === "max") return "high";
+  if (body?.effort === "fast") return tier.effort ? "low" : null;
+  if (!tier.effort) return null;
+  return (body?.light || (!tier.only && !["roblox", "dev", "review", "plan", "vision", "solve"].includes(mode))) && tier.effort === "high" ? "medium" : tier.effort;
+}
+const EFFORT_MAX = `
+
+=== Mode EFFORT MAX activé par l'utilisateur ===
+Prends tout le temps de réflexion nécessaire. Analyse la demande sous tous les angles, envisage plusieurs approches et choisis la meilleure, vérifie chaque fait, chaque calcul et chaque ligne de code, anticipe les cas limites. Livre la réponse la plus complète, juste et soignée possible (mais sans blabla inutile).`;
 async function startChat(body, env) {
   const mode = ["chat", "dev", "roblox", "image", "review", "plan", "vision", "tool", "solve"].includes(body?.mode) ? body.mode : "chat";
   if (mode === "image") return { events: runImage(body, env) };
@@ -2681,9 +2716,9 @@ async function startChat(body, env) {
 
   const { r, error } = await callOpenRouter(env, list(env, "LLMMS_MODEL_" + tierKey.replace(".", "_"), tier.models), {
     stream: true,
-    max_tokens: body?.light ? 64000 : tier.max,
-    ...(tier.effort ? { reasoning: { effort: (body?.light || (!tier.only && !["roblox", "dev", "review", "plan", "vision", "solve"].includes(mode))) && tier.effort === "high" ? "medium" : tier.effort } } : {}),
-    messages: [{ role: "system", content: system }, ...messages],
+    max_tokens: body?.effort === "max" ? 64000 : body?.effort === "fast" ? Math.min(tier.max, 16000) : body?.light ? 64000 : tier.max,
+    ...(effortOf(body, tier, mode) ? { reasoning: { effort: effortOf(body, tier, mode) } } : {}),
+    messages: [{ role: "system", content: system + (body?.effort === "max" ? EFFORT_MAX : "") }, ...messages],
     ...(tools ? { tools, tool_choice: "auto", parallel_tool_calls: false } : {}),
   });
   if (error) return { events: (async function* () { yield { t: "error", v: error }; })() };
@@ -2717,9 +2752,9 @@ async function* runChat(body, env) {
 
   const { r, error } = await callOpenRouter(env, list(env, "LLMMS_MODEL_" + tierKey.replace(".", "_"), tier.models), {
     stream: true,
-    max_tokens: tier.max,
-    ...(tier.effort ? { reasoning: { effort: (body?.light || (!tier.only && !["roblox", "dev", "review", "plan", "vision", "solve"].includes(mode))) && tier.effort === "high" ? "medium" : tier.effort } } : {}),
-    messages: [{ role: "system", content: system }, ...messages],
+    max_tokens: body?.effort === "max" ? 64000 : body?.effort === "fast" ? Math.min(tier.max, 16000) : tier.max,
+    ...(effortOf(body, tier, mode) ? { reasoning: { effort: effortOf(body, tier, mode) } } : {}),
+    messages: [{ role: "system", content: system + (body?.effort === "max" ? EFFORT_MAX : "") }, ...messages],
     ...(tools ? { tools, tool_choice: "auto", parallel_tool_calls: false } : {}),
   });
   if (error) { yield { t: "error", v: error }; return; }
