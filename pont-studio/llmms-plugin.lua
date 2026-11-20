@@ -167,7 +167,56 @@ local function getProps(path)
 	table.insert(out, "Enfants : " .. #o:GetChildren())
 	return table.concat(out, "\n"), false
 end
+-- 🧪 MODE TESTEUR : lance une vraie partie de test (Play), récupère les erreurs serveur + client, vérifie le joueur, puis arrête
+local STS = game:GetService("StudioTestService")
+local function playtest(seconds, checks)
+	seconds = math.clamp(tonumber(seconds) or 8, 3, 30)
+	local RS, SSS, SPS = game:GetService("ReplicatedStorage"), game:GetService("ServerScriptService"), game:GetService("StarterPlayer"):FindFirstChildOfClass("StarterPlayerScripts")
+	local remote = Instance.new("RemoteEvent"); remote.Name = "__llmms_log"; remote.Parent = RS
+	local server = Instance.new("Script"); server.Name = "__llmms_testeur"
+	server.Source = [[
+local STS = game:GetService("StudioTestService")
+local LogService, Players = game:GetService("LogService"), game:GetService("Players")
+local remote = game:GetService("ReplicatedStorage"):WaitForChild("__llmms_log")
+local logs, seen = {}, {}
+local function add(tag, m) if m:find("__llmms") then return end local k = tag .. m if not seen[k] then seen[k] = true; table.insert(logs, tag .. " " .. m) end end
+LogService.MessageOut:Connect(function(m, t) if t == Enum.MessageType.MessageError then add("❌ [serveur]", m) elseif t == Enum.MessageType.MessageWarning then add("⚠ [serveur]", m) end end)
+remote.OnServerEvent:Connect(function(_, tag, m) add(tag, tostring(m)) end)
+task.wait(]] .. seconds .. [[)
+local r = { "🧪 Test de " .. ]] .. seconds .. [[ .. " s terminé" }
+local p = Players:GetPlayers()[1]
+if p then
+	local ch = p.Character
+	table.insert(r, ch and ch:FindFirstChildOfClass("Humanoid") and ("✓ Personnage OK (vie " .. math.floor(ch.Humanoid.Health) .. ")") or "❌ Le joueur n'a pas de personnage")
+	local ls = p:FindFirstChild("leaderstats"); if ls then local t = {} for _, v in ipairs(ls:GetChildren()) do table.insert(t, v.Name .. "=" .. tostring(v.Value)) end table.insert(r, "✓ leaderstats : " .. table.concat(t, ", ")) end
+	local gui = {} for _, g in ipairs(p.PlayerGui:GetChildren()) do if g:IsA("ScreenGui") then table.insert(gui, g.Name) end end
+	table.insert(r, "Interfaces affichées : " .. (#gui > 0 and table.concat(gui, ", ") or "aucune"))
+else table.insert(r, "⚠ Aucun joueur dans le test") end
+local extraOk, extra = pcall(function()
+]] .. (checks or "") .. [[
+
+end)
+if not extraOk then table.insert(r, "❌ Vérification personnalisée : " .. tostring(extra)) elseif extra ~= nil then table.insert(r, "Vérification : " .. tostring(extra)) end
+table.insert(r, #logs == 0 and "✅ Aucune erreur dans la console" or ("Erreurs / avertissements (" .. #logs .. ") :\n" .. table.concat(logs, "\n")))
+STS:EndTest(table.concat(r, "\n"))
+]]
+	server.Parent = SSS
+	local client = Instance.new("LocalScript"); client.Name = "__llmms_testeur_client"
+	client.Source = [[
+local remote = game:GetService("ReplicatedStorage"):WaitForChild("__llmms_log")
+game:GetService("LogService").MessageOut:Connect(function(m, t)
+	if m:find("__llmms") then return end
+	if t == Enum.MessageType.MessageError then remote:FireServer("❌ [client]", m) elseif t == Enum.MessageType.MessageWarning then remote:FireServer("⚠ [client]", m) end
+end)
+]]
+	client.Parent = SPS
+	local ok, res = pcall(function() return STS:ExecutePlayModeAsync({}) end)
+	for _, o in ipairs({ remote, server, client }) do pcall(function() o:Destroy() end) end
+	if not ok then return "Impossible de lancer le test : " .. tostring(res) .. " (arrête le test en cours dans Studio si besoin)", true end
+	return tostring(res), false
+end
 local TOOLS = {
+	playtest = function(a) return playtest(a.seconds, a.checks) end,
 	get_output = function(a) return getOutput(a.lines) end,
 	get_properties = function(a) return getProps(a.path) end,
 	run_code = function(a) return runCode(a.code or a.command or "") end,

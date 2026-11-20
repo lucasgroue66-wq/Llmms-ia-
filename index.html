@@ -887,6 +887,7 @@ const PLUGIN_TOOLS=[
  {name:"search_models",description:"Cherche des modèles gratuits dans la Toolbox Roblox. Renvoie des AssetId.",inputSchema:{type:"object",properties:{query:{type:"string"}},required:["query"]}},
  {name:"insert_model",description:"Insère un modèle de la Toolbox dans Workspace à partir de son AssetId.",inputSchema:{type:"object",properties:{assetId:{type:"number"}},required:["assetId"]}},
  {name:"get_selection",description:"Ce que l'utilisateur a sélectionné dans Studio.",inputSchema:{type:"object",properties:{}}},
+ {name:"playtest",description:"MODE TESTEUR : lance une vraie partie de test (Play) dans Studio pendant quelques secondes, puis renvoie le rapport : personnage, leaderstats, interfaces affichées et TOUTES les erreurs serveur et client. checks = code Luau optionnel exécuté côté serveur à la fin du test (il peut faire return \"texte\" pour vérifier quelque chose, ex. return workspace:FindFirstChild(\"Map\") ~= nil).",inputSchema:{type:"object",properties:{seconds:{type:"number",description:"Durée du test (3 à 30 s, 8 par défaut)"},checks:{type:"string",description:"Code Luau de vérification (optionnel)"}}}},
  {name:"get_output",description:"Lit les derniers messages de la console (Output) de Studio : erreurs, avertissements, prints. À utiliser après avoir construit ou lancé un test.",inputSchema:{type:"object",properties:{lines:{type:"number"}}}},
  {name:"get_properties",description:"Lit les propriétés principales d'un objet (position, taille, couleur, texte…). path ex. Workspace.Map.Panneau",inputSchema:{type:"object",properties:{path:{type:"string"}},required:["path"]}}];
 const mcp={
@@ -1272,6 +1273,19 @@ function niceError(e,status,ct){
   return e?.message||"Problème de connexion. Renvoyez votre message.";
 }
 
+/* ---------------- 🧪 mode testeur : lance le jeu dans Studio et lit les erreurs ---------------- */
+async function testerStudio(bot,status,setStatus){
+  const has=mcp.list.find(t=>t.name==="playtest"); if(!has) return null;
+  setStatus("🧪 Mode testeur : lance le jeu dans Studio…");
+  const chips=document.createElement("div"); chips.className="chips"; chips.innerHTML=`<span class="chip run">🧪 Test du jeu en cours…</span>`; bot.txt.insertBefore(chips,status);
+  let r; try{ r=await mcp.call("playtest",{seconds:8}); }catch(e){ r={text:e.message,isError:true}; }
+  const txt=String(r.text||""), bad=r.isError||/❌|⚠/.test(txt.replace("✅ Aucune erreur dans la console",""));
+  if(/Impossible de lancer le test/.test(txt)){ chips.innerHTML=`<span class="chip">🧪 Test impossible : arrête le test en cours dans Studio</span>`; return null; }
+  if(/Outil inconnu/.test(txt)){ chips.innerHTML=`<span class="chip">🧪 Recopie le plugin pour activer le mode testeur</span>`; return null; }
+  chips.innerHTML=`<span class="chip ${bad?"err":"ok"}">${bad?"🧪 Le test a trouvé des problèmes → correction":"🧪 Test réussi : aucune erreur ✓"}</span>`;
+  return {text:txt,bad};
+}
+
 /* ---------------- installation automatique du code dans Studio ---------------- */
 function runToolOf(){ const L=mcp.list; const t=L.find(x=>/^(run_code|execute_luau|run_luau|execute_code|run_lua|luau|run_command)$/i.test(x.name))||L.find(x=>/(run|exec)/i.test(x.name)&&/(code|luau|lua|command|script)/i.test(x.name+" "+(x.description||"")));
   if(!t) return null; const p=t.inputSchema?.properties||{}; const key=Object.keys(p).find(k=>/code|command|source|script|luau|lua/i.test(k))||Object.keys(p)[0]||"code"; return {name:t.name,key}; }
@@ -1399,7 +1413,7 @@ async function agent(c){
   const setStatus=t=>{ if(status) status.lastChild.textContent=t; };
   { const lu=[...c.messages].reverse().find(m=>m.role==="user"&&!m._auto); Steps.start((lu?._video?1:0)+(boosted(c)?1:0)+1+((c.mode==="dev"||c.mode==="roblox")?(boosted(c)?2:1):0)+(isAnimReq(c)?4:1)); }
   let curStep=null;
-  let usedTools=false, qaDone=false, lastSeg=null, lastMsg=null, plan="", applyRounds=0;
+  let usedTools=false, qaDone=false, lastSeg=null, lastMsg=null, plan="", applyRounds=0, testRounds=0;
   try{
     // 0) Analyste vidéo : cahier des charges ultra détaillé avant de reproduire
     const lastU=[...c.messages].reverse().find(m=>m.role==="user"&&!m._auto);
@@ -1478,11 +1492,14 @@ async function agent(c){
             c.messages.push({role:"user",_auto:true,content:"[Studio a renvoyé des erreurs en installant ton code]\n"+res.errors.join("\n\n")+"\n\nCorrige ces erreurs et renvoie le code COMPLET corrigé (mêmes noms et emplacements)."});
             setStatus("Corrige les erreurs…"); continue;
           }
+          if(res&&res.count&&testRounds<2){ const rep=await testerStudio(bot,status,setStatus); if(rep&&rep.bad){ testRounds++; c.messages.push({role:"user",_auto:true,content:"[🧪 Mode testeur : j'ai lancé le jeu dans Studio, voici le rapport]\n"+rep.text+"\n\nCorrige TOUS les problèmes (erreurs serveur et client, personnage, interfaces) et renvoie le code COMPLET corrigé, mêmes noms et emplacements."}); setStatus("Corrige ce que le test a trouvé…"); continue; } }
           break;
         }
         // Vérification automatique dans Studio après une construction
         if(usedTools&&!qaDone&&mcp.connected){
           qaDone=true;
+          const rep=await testerStudio(bot,status,setStatus);
+          if(rep){ c.messages.push({role:"user",_auto:true,content:"[🧪 Mode testeur : j'ai lancé une vraie partie de test dans Studio, voici le rapport]\n"+rep.text+(rep.bad?"\n\nCorrige TOUS ces problèmes avec les outils, puis relance playtest pour vérifier que c'est bon.":"\n\nLe test est bon. Vérifie encore rapidement que tout ce qui a été demandé existe, puis résume ce que tu as fait.")}); setStatus(rep.bad?"Corrige ce que le test a trouvé…":"Vérifie…"); continue; }
           c.messages.push({role:"user",_auto:true,content:"[Vérification automatique llmms ia] Avant de conclure : 1) lis la sortie de la console de Studio et corrige TOUTES les erreurs et avertissements liés à ce que tu as fait ; 2) vérifie dans l'explorateur que chaque script, UI et modèle demandé existe au bon endroit et est complet ; 3) si un outil le permet, lance un test et vérifie que ça marche ; 4) termine par un bilan court : ce qui est fait, ce qui a été corrigé, comment tester."}); save();
           const ch=document.createElement("div"); ch.className="chips"; ch.innerHTML=`<span class="chip">🔍 Vérification dans Studio</span>`; bot.txt.insertBefore(ch,status);
           setStatus("Vérifie dans Studio…"); continue;
@@ -2933,6 +2950,7 @@ Méthode obligatoire avant d'écrire du code :
 ${QUALITY}
 
 Quand des outils Roblox Studio (MCP) sont disponibles :
+- MODE TESTEUR : après avoir construit, lance l'outil playtest (s'il existe) pour jouer au jeu comme un testeur, lis le rapport et corrige jusqu'à ce que le test soit propre (aucune erreur ❌).
 - OBLIGATOIRE : Studio est connecté, donc tu MODIFIES la place toi-même en appelant les outils (run_code, etc.). Ne réponds JAMAIS avec seulement du code à copier ou des explications : commence directement par appeler les outils, puis résume ce que tu as fait.
 - Construis directement dans la place ouverte avec ces outils, au lieu de donner du code à copier.
 - Regarde d'abord ce qui existe, puis construis par étapes : map/décor, éclairage, UI, scripts, puis test (lis la console, corrige jusqu'à zéro erreur).
