@@ -272,8 +272,9 @@ export default async function handler(req, res) {
     const sessionHeader = req.headers["x-llmms-session"];
     const auth = await handleAuth(body || {}, env, sessionHeader);
     if (auth) { res.status(auth.status).json(auth.json); return; }
+    // Plus de connexion obligatoire : tout le monde utilise le site (15 messages/jour par connexion internet).
+    // Seul le propriétaire se connecte (menu ⚙ → Connexion propriétaire) pour être illimité.
     const who = authEnabled(env) ? await checkSession(sessionHeader, env) : null;
-    if (authEnabled(env) && !who) { res.status(401).json({ error: "login" }); return; }
     if (body?.mode === "billing_status") { res.status(200).json(await billingStatus(req, who)); return; }
     const lim = await dailyLimit(req, body || {}, who);
     if (lim) { res.status(429).json({ error: lim }); return; }

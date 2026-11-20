@@ -460,6 +460,7 @@ aside{background:linear-gradient(180deg,#1b1d18 0%,#151612 100%);box-shadow:inse
 .plan button{margin-top:auto;border-radius:11px;padding:11px;font-weight:700;background:var(--accent);color:var(--accent-ink)}
 .plan button[disabled]{background:var(--hover);color:var(--muted)}
 .subnote{color:var(--dim);font-size:12.5px;margin:14px 0 0}.subnote a{color:var(--accent)}
+.lbox{position:relative}.lclose{position:absolute;top:10px;right:12px;font-size:18px;color:var(--muted);padding:6px}
 </style>
 </head>
 <body>
@@ -503,7 +504,7 @@ aside{background:linear-gradient(180deg,#1b1d18 0%,#151612 100%);box-shadow:inse
       <div class="ava" id="meAva">L</div>
       <div><div class="n1" id="meName" data-i18n="me1">Mon espace</div><div class="n2" data-i18n="me2">Session personnelle</div></div>
       <button class="cog" id="cog" type="button" aria-label="Réglages"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M4 7h9M17 7h3M4 17h3M11 17h9"/><circle cx="15" cy="7" r="2"/><circle cx="9" cy="17" r="2"/></svg></button>
-      <div class="menu" id="menu"><button type="button" id="openSettings" data-i18n="settings">Paramètres</button><button type="button" id="openDev" data-i18n="devSettings">Paramètres développeur</button><button type="button" id="logout" hidden>Se déconnecter</button><button type="button" id="clearAll" class="danger" data-i18n="clearAll">Effacer toutes les discussions</button></div>
+      <div class="menu" id="menu"><button type="button" id="openSettings" data-i18n="settings">Paramètres</button><button type="button" id="openDev" data-i18n="devSettings">Paramètres développeur</button><button type="button" id="ownerLogin">Connexion propriétaire 👑</button><button type="button" id="logout" hidden>Se déconnecter</button><button type="button" id="clearAll" class="danger" data-i18n="clearAll">Effacer toutes les discussions</button></div>
     </div>
   </aside>
   <div class="scrim" id="scrim"></div>
@@ -561,6 +562,7 @@ aside{background:linear-gradient(180deg,#1b1d18 0%,#151612 100%);box-shadow:inse
 </div>
 <div id="login" role="dialog" aria-modal="true" aria-labelledby="loginTitle" hidden>
   <div class="lbox">
+    <button type="button" class="lclose" id="lClose" aria-label="Fermer">✕</button>
     <div class="brand lbrand"><svg class="spark"><use href="#i-spark"/></svg><span><b>llmms</b> ia</span></div>
     <div id="lStep1">
       <h2 class="ltitle" id="loginTitle">Connexion</h2>
@@ -926,6 +928,8 @@ $("newChat").onclick=()=>{ if(busy) ctl?.abort(); curId=null; save(); render(); 
 addEventListener("keydown",e=>{ if((e.metaKey||e.ctrlKey)&&e.key.toLowerCase()==="k"){ e.preventDefault(); $("newChat").click(); } });
 $("cog").onclick=e=>{ e.stopPropagation(); $("menu").classList.toggle("open"); };
 addEventListener("click",()=>$("menu").classList.remove("open"));
+$("lClose").onclick=()=>{ $("login").hidden=true; };
+$("ownerLogin").onclick=()=>{ $("menu").classList.remove("open"); showLogin(); };
 $("logout").onclick=()=>{ store.del("llmms3-session"); store.del("llmms3-me"); location.reload(); };
 $("clearAll").onclick=()=>{ convs=[]; curId=null; save(); render(); drawRecents(); };
 $("burger").onclick=()=>document.body.classList.add("side-open");
@@ -1174,7 +1178,7 @@ async function agent(c){
       try{ r=await apiFetch({method:"POST",headers:headers(),signal:ctl.signal,body:JSON.stringify({rid,messages:forApi(c),mode:c.mode,tier,effort,search:web,lang:replyLang(),plan,spec,light:(isAnimReq(c)||isGameReq(c))&&c.mode!=="roblox",tools:c.mode==="image"||!autoStudio?[]:mcp.tools()})}); }
       catch(e){ if(e.name==="AbortError"||LOCAL_MODE) throw e; r=await recoverRes(rid,setStatus,ctl.signal); if(!r) throw e; }
       ct=r.headers.get("content-type")||"";
-      if(r.status===401){ let er=""; try{ er=(await r.clone().json()).error; }catch{} status?.remove(); status=null; bot.txt.closest(".row").remove(); if(er==="login"){ showLogin(); } else { $("gate").style.display="grid"; $("gateCode").focus(); } return; }
+      if(r.status===401){ let er=""; try{ er=(await r.clone().json()).error; }catch{} status?.remove(); status=null; bot.txt.closest(".row").remove(); if(er==="login"){ store.del("llmms3-session"); showLogin(); } else { $("gate").style.display="grid"; $("gateCode").focus(); } return; }
       if(!r.ok||!r.body||ct.includes("text/html")){ let m=""; if(ct.includes("json")){ try{ m=(await r.json()).error; }catch{} } const msg=niceError(m?new Error(m):null,r.status,ct); throw Object.assign(new Error(msg),{nice:true}); }
 
       const seg=document.createElement("div"); bot.txt.insertBefore(seg,status);
@@ -1416,10 +1420,10 @@ $("lForm2").onsubmit=async e=>{ e.preventDefault(); if($("lVerify").disabled) re
   catch{ lErr("Pas de connexion au site. Réessaie."); }
   finally{ $("lVerify").disabled=false; }
 };
-function meUI(){ const em=store.get("llmms3-me",""); if(em){ $("meName").removeAttribute("data-i18n"); $("meName").textContent=em.split("@")[0]; $("meAva").textContent=em[0].toUpperCase(); $("logout").hidden=false; } }
+function meUI(){ const em=store.get("llmms3-me",""); if($("ownerLogin")) $("ownerLogin").hidden=!!em; if(em){ $("meName").removeAttribute("data-i18n"); $("meName").textContent=em.split("@")[0]; $("meAva").textContent=em[0].toUpperCase(); $("logout").hidden=false; } }
 async function checkLogin(){
   if(LOCAL_MODE||window.claude) return; // fichier ouvert directement ou page de test : pas de connexion
-  try{ const {ok,j}=await authCall({mode:"auth_status"}); if(ok&&j.enabled&&!j.ok){ store.del("llmms3-session"); showLogin(); } else if(ok&&j.email){ store.set("llmms3-me",j.email); meUI(); } }catch{}
+  try{ const {ok,j}=await authCall({mode:"auth_status"}); if(ok&&j.enabled&&!j.ok){ store.del("llmms3-session"); store.del("llmms3-me"); } else if(ok&&j.email){ store.set("llmms3-me",j.email); meUI(); } }catch{}
 }
 
 /* ---------------- travail en arrière-plan (pont) + reprise automatique ---------------- */
