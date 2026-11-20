@@ -17,6 +17,7 @@ local RunService = game:GetService("RunService")
 if RunService:IsRunning() and not RunService:IsEdit() then return end -- pas pendant les tests en jeu
 
 local SITE = "https://ia-llmms-1.vercel.app"
+local EMBED = "" -- rempli automatiquement par le site quand tu copies le plugin
 local API = SITE .. "/api/studio"
 local GREEN, RED, GREY = Color3.fromRGB(80, 220, 120), Color3.fromRGB(255, 110, 110), Color3.fromRGB(170, 170, 180)
 
@@ -35,7 +36,7 @@ end
 label("🎮 llmms ia ↔ Roblox Studio", 16)
 label("Tape le code affiché sur le site :", 13, GREY)
 local box = Instance.new("TextBox"); box.Size = UDim2.new(1, 0, 0, 34); box.Font = Enum.Font.GothamBold; box.TextSize = 20
-box.PlaceholderText = "ex. K7P2QX"; box.Text = plugin:GetSetting("llmms_code") or ""; box.ClearTextOnFocus = false
+box.PlaceholderText = "ex. K7P2QX"; box.Text = plugin:GetSetting("llmms_code") or EMBED; box.ClearTextOnFocus = false
 box.BackgroundColor3 = Color3.fromRGB(40, 42, 50); box.TextColor3 = Color3.new(1, 1, 1); box.Parent = frame
 local btn = Instance.new("TextButton"); btn.Size = UDim2.new(1, 0, 0, 34); btn.Font = Enum.Font.GothamBold; btn.TextSize = 16
 btn.Text = "Connecter"; btn.BackgroundColor3 = Color3.fromRGB(240, 170, 120); btn.TextColor3 = Color3.fromRGB(20, 20, 20); btn.Parent = frame
@@ -195,5 +196,5 @@ btn.MouseButton1Click:Connect(function()
 	if #code < 6 then setStatus("Tape le code affiché sur le site", RED) return end
 	start(code)
 end)
-local saved = plugin:GetSetting("llmms_code")
+local saved = plugin:GetSetting("llmms_code") or (#EMBED >= 6 and EMBED or nil)
 if saved and #saved >= 6 then start(saved) end

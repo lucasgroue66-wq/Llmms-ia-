@@ -991,13 +991,13 @@ $("devJsonGo").onclick=()=>useMcpJson($("devJson").value);
 let plugPoll=null;
 function pairCode(){ let c=store.get("llmms3-pair",""); if(!/^[A-Z0-9]{6}$/.test(c)){ const A="ABCDEFGHJKLMNPQRSTUVWXYZ23456789"; c=Array.from(crypto.getRandomValues(new Uint8Array(6)),x=>A[x%A.length]).join(""); store.set("llmms3-pair",c); } return c; }
 function oneClick(){ const L=$("devLaunch"), code=pairCode(); L.hidden=false;
-  L.innerHTML=`<b>Sans rien télécharger 🎮</b><br>Ton code : <span class="pcode">${code}</span>
+  L.innerHTML=`<b>Sans rien télécharger 🎮</b>
   <ol class="dsteps" style="margin:8px 0"><li>Appuie sur <button class="dbtn" id="plugCopy" type="button">📋 Copier le plugin</button></li>
   <li>Dans <b>Roblox Studio</b> : Explorer → <b>ServerStorage</b> → <b>+</b> → <b>Script</b>, colle le code.</li>
   <li>Clic droit sur le Script → <b>Save as Local Plugin</b>, puis supprime le Script.</li>
-  <li>Onglet <b>Plugins</b> → <b>llmms ia</b> → tape <b>${code}</b> → <b>Connecter</b> (autorise le HTTP si Studio le demande).</li></ol>
+  <li>C'est tout : il se connecte <b>tout seul</b>, pas de code à taper (autorise le HTTP si Studio le demande).</li></ol>
   À faire <b>une seule fois</b> : ensuite le plugin se reconnecte tout seul. <span id="plugSt">⏳ En attente de Studio…</span>`;
-  $("plugCopy").onclick=async()=>{ try{ const t=await fetch("/pont-studio/llmms-plugin.lua",{cache:"no-store"}).then(r=>r.text()); await navigator.clipboard.writeText(t.replace(/https:\/\/ia-llmms-1\.vercel\.app/g,location.origin)); $("plugCopy").textContent="✓ Copié !"; }catch{ window.open("/pont-studio/llmms-plugin.lua","_blank"); } };
+  $("plugCopy").onclick=async()=>{ try{ const t=await fetch("/pont-studio/llmms-plugin.lua",{cache:"no-store"}).then(r=>r.text()); await navigator.clipboard.writeText(t.replace(/https:\/\/ia-llmms-1\.vercel\.app/g,location.origin).replace('local EMBED = ""',`local EMBED = "${code}"`)); $("plugCopy").textContent="✓ Copié !"; }catch{ window.open("/pont-studio/llmms-plugin.lua","_blank"); } };
   devUI("busy","En attente du plugin dans Roblox Studio…"); watchPlugin(code); }
 function watchPlugin(code){ clearInterval(plugPoll); let n=0; plugPoll=setInterval(async()=>{ if(++n>400){ clearInterval(plugPoll); return; } try{ const j=await fetch(`/api/studio?op=status&code=${code}`).then(r=>r.json()); if(j.error){ $("plugSt")&&($("plugSt").textContent="⚠️ "+j.error); return; } if(j.online){ clearInterval(plugPoll); const k=await mcp.connectPlugin(code); devUI(null,`✓ Connecté à Roblox Studio${j.place?" · "+j.place:""} — ${k} outils`); if(mode!=="roblox"){ setMode("roblox"); if(tier!=="studio") tier="5"; modelUI(); save(); } const L=$("devLaunch"); if(L) L.innerHTML=`✅ <b>Roblox Studio est connecté${j.place?" ("+esc(j.place)+")":""} !</b> Ferme cette fenêtre et dis à l'IA quoi construire.`; } }catch{} },3000); }
 $("devOneClick").onclick=oneClick;
