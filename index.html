@@ -372,6 +372,7 @@ body.dragging .drop{display:grid}
 .djson:focus{border-color:var(--accent)}
 .dlaunch{margin-top:12px;border:1px solid var(--line2);border-radius:12px;padding:12px 14px;background:var(--field);font-size:14px;line-height:1.5}
 .dlaunch code{font-family:var(--mono);font-size:12px;word-break:break-all;display:block;background:rgba(0,0,0,.25);padding:8px;border-radius:8px;margin:6px 0;user-select:all}
+.pcode{font-family:var(--mono);font-size:22px;font-weight:800;letter-spacing:.18em;background:rgba(0,0,0,.3);padding:2px 10px;border-radius:8px;user-select:all}
 .dbig{width:100%;font-size:17px;padding:15px;margin-top:4px}
 .dmore{margin-top:12px;font-size:14px;color:var(--muted)}.dmore summary{cursor:pointer}
 .dbtn{border:1px solid var(--line2);background:var(--field);border-radius:11px;padding:10px 14px;font-size:14.5px;font-weight:500;white-space:nowrap}
@@ -658,7 +659,7 @@ body.th-vert{--side:#0d1612;--bg:#09110e;--panel:#121e19;--field:#16251f;--hover
     <div class="dhead"><div><div class="dtitle" id="devTitle">Paramètres développeur</div><div class="dsub">Connecte llmms ia à ton Roblox Studio en 1 clic : elle construit directement dans ta place.</div></div><button class="dx" id="devClose" type="button" aria-label="Fermer">×</button></div>
     <div class="dstat"><span class="sdot" id="devDot"></span><div><div class="s1" id="devS1">Roblox Studio non connecté</div><div class="s2" id="devS2">Aucun serveur MCP</div></div></div>
     <button class="dbtn main dbig" id="devOneClick" type="button">🎮 Connecter mon Roblox Studio</button>
-    <div class="dhint" style="text-align:center">Le site te donne directement son serveur MCP Roblox Studio : rien à copier, rien à coller.</div>
+    <div class="dhint" style="text-align:center">Rien à télécharger : un petit plugin dans Studio, un code, et c'est connecté.</div>
     <div id="devLaunch" class="dlaunch" hidden></div>
     <details class="dmore" id="devAdv"><summary>Avancé : coller un autre JSON MCP</summary>
     <label class="dlab" for="devJson">Config MCP (JSON)</label>
@@ -679,9 +680,8 @@ body.th-vert{--side:#0d1612;--bg:#09110e;--panel:#121e19;--field:#16251f;--hover
     <div class="dlab">Comment ça marche (sur ton PC)</div>
     <ol class="dsteps">
       <li>Ouvre ta place dans <b>Roblox Studio</b> (sur le même PC que ce site).</li>
-      <li>Appuie sur <b>🎮 Connecter mon Roblox Studio</b>, puis sur <b>Télécharger</b>.</li>
-      <li>Double-clique sur le fichier téléchargé et laisse sa fenêtre ouverte.</li>
-      <li>C'est tout : le site se connecte tout seul. Si Chrome demande l'accès au réseau local, clique <b>Autoriser</b>.</li>
+      <li>Appuie sur <b>🎮 Connecter mon Roblox Studio</b> et suis les 4 petites étapes (copier-coller le plugin, une seule fois).</li>
+      <li>Tape ton code dans le plugin <b>llmms ia</b> : le site se connecte tout seul. Rien à télécharger, rien à garder ouvert à part Studio.</li>
     </ol>
   </div>
 </div>
@@ -879,8 +879,28 @@ function md(src){
 function textOf(c){ if(typeof c==="string") return c; if(Array.isArray(c)) return c.filter(p=>p.type==="text").map(p=>p.text).join("\n"); return ""; }
 
 /* ---------------- MCP (Roblox Studio) ---------------- */
+const PLUGIN_TOOLS=[
+ {name:"run_code",description:"Exécute du code Luau dans Roblox Studio (mode édition, avec les droits d'un plugin). Sert à créer/modifier des parts, modèles, scripts, UI… Utilise print() pour renvoyer des infos. Chaque appel peut être annulé avec Ctrl+Z.",inputSchema:{type:"object",properties:{code:{type:"string",description:"Code Luau à exécuter"}},required:["code"]}},
+ {name:"get_tree",description:"Liste l'arborescence de la place (Explorer). path = chemin à points, ex. Workspace ou ServerScriptService.MonDossier ; depth = profondeur 1 à 5.",inputSchema:{type:"object",properties:{path:{type:"string"},depth:{type:"number"}}}},
+ {name:"get_script",description:"Lit le code source d'un script. path ex. ServerScriptService.GameManager",inputSchema:{type:"object",properties:{path:{type:"string"}},required:["path"]}},
+ {name:"set_script",description:"Crée ou remplace le code d'un script. path ex. ServerScriptService.GameManager ; class = Script, LocalScript ou ModuleScript (si on le crée).",inputSchema:{type:"object",properties:{path:{type:"string"},source:{type:"string"},class:{type:"string"}},required:["path","source"]}},
+ {name:"search_models",description:"Cherche des modèles gratuits dans la Toolbox Roblox. Renvoie des AssetId.",inputSchema:{type:"object",properties:{query:{type:"string"}},required:["query"]}},
+ {name:"insert_model",description:"Insère un modèle de la Toolbox dans Workspace à partir de son AssetId.",inputSchema:{type:"object",properties:{assetId:{type:"number"}},required:["assetId"]}},
+ {name:"get_selection",description:"Ce que l'utilisateur a sélectionné dans Studio.",inputSchema:{type:"object",properties:{}}}];
 const mcp={
-  url:null, sid:null, n:0, list:[], connected:false, headers:{}, proxy:false,
+  url:null, sid:null, n:0, list:[], connected:false, headers:{}, proxy:false, plugin:null,
+  async connectPlugin(code){
+    this.plugin=code; this.url=location.origin+"/api/studio#"+code; this.list=PLUGIN_TOOLS.slice(); this.connected=true; this.proxy=false;
+    store.set("llmms3-plug",code); store.del("llmms3-mcp"); studioUI(); return this.list.length;
+  },
+  async pluginCall(name,args){
+    const id=Math.random().toString(36).slice(2,12), code=this.plugin;
+    const s=await fetch("/api/studio",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({op:"send",code,id,tool:name,args:args||{}})}).then(r=>r.json()).catch(e=>({error:e.message}));
+    if(s.error) throw new Error(s.error);
+    const t0=Date.now();
+    while(Date.now()-t0<180000){ const r=await fetch(`/api/studio?op=get&code=${code}&id=${id}`).then(r=>r.json()).catch(()=>({})); if(r.done) return {text:r.text||"(ok)",isError:!!r.isError}; if(r.error) throw new Error(r.error); }
+    throw new Error("Studio ne répond pas (le plugin llmms ia est-il connecté ?)");
+  },
   async post(body,timeoutMs){
     const ac=new AbortController(), t=setTimeout(()=>ac.abort(),timeoutMs);
     try{
@@ -912,9 +932,10 @@ const mcp={
     let cursor; do{ const r=await this.rpc("tools/list",cursor?{cursor}:{},20000); this.list.push(...(r.tools||[])); cursor=r.nextCursor; }while(cursor);
     this.connected=true; store.set("llmms3-mcp",url); store.set("llmms3-mcphdr",this.headers); studioUI(); return this.list.length;
   },
-  disconnect(){ this.connected=false; this.list=[]; this.sid=null; this.url=null; this.headers={}; this.proxy=false; store.del("llmms3-mcp"); store.del("llmms3-mcphdr"); studioUI(); },
+  disconnect(){ this.connected=false; this.list=[]; this.sid=null; this.url=null; this.headers={}; this.proxy=false; this.plugin=null; store.del("llmms3-mcp"); store.del("llmms3-mcphdr"); store.del("llmms3-plug"); studioUI(); },
   tools(){ return this.connected?this.list.map(t=>({type:"function",function:{name:t.name,description:String(t.description||"").slice(0,1500),parameters:t.inputSchema&&t.inputSchema.type?t.inputSchema:{type:"object",properties:{}}}})):[]; },
   async call(name,args){
+    if(this.plugin) return this.pluginCall(name,args);
     const r=await this.rpc("tools/call",{name,arguments:args||{}});
     const parts=(r.content||[]).map(c=>c.type==="text"?c.text:c.type==="image"?"[image renvoyée par Studio]":c.type==="resource"?(c.resource?.text||"[ressource]"):"["+c.type+"]");
     if(r.structuredContent&&!parts.length) parts.push(JSON.stringify(r.structuredContent));
@@ -954,6 +975,7 @@ function useMcpJson(txt){
     if(rem){ const a=rem[1].args; http=a.find(x=>/^https:\/\//.test(x)); a.forEach((x,i)=>{ if(x==="--header"&&a[i+1]){ const m=String(a[i+1]).match(/^([^:]+):\s*(.*)$/); if(m) hdr[m[1].trim()]=m[2].replace(/\$\{?([A-Z_][A-Z0-9_]*)\}?/gi,(q,k)=>(rem[1].env||{})[k]??q); } }); } }
   if(http){ $("devUrl").value=http; const L=$("devLaunch"); L.hidden=false; L.innerHTML="<b>Serveur MCP en ligne détecté ✓</b> — pas besoin de lanceur, je me connecte directement…"; devConnect(http,hdr).then(n=>{ if(n) L.innerHTML=`✅ <b>Connecté !</b> ${n} outils prêts. Ferme cette fenêtre et pose ta question.`; }); return; }
   const stdio=list.filter(([,v])=>v&&v.command); if(!stdio.length){ devUI("bad","Chaque serveur doit avoir \"command\" ou \"url\"."); return; }
+  if(stdio.some(([k,v])=>/roblox|studio/i.test(k+" "+v.command+" "+(v.args||[]).join(" ")))&&!window._forceLauncher){ oneClick(); $("devLaunch").insertAdjacentHTML("beforeend",`<div class="dhint">Ton JSON Roblox Studio est reconnu ✓ — avec le plugin, pas besoin du lanceur. <a href="#" id="useLauncher">Je préfère le lanceur</a></div>`); $("useLauncher").onclick=e=>{ e.preventDefault(); window._forceLauncher=1; useMcpJson(txt); window._forceLauncher=0; }; return; }
   const raw=JSON.stringify(cfg), b64=b64cfg(raw), org=location.origin, win=stdio.some(([,v])=>/cmd\.exe|\.bat|\.exe|\\|%[A-Z]+%/i.test(v.command+" "+(v.args||[]).join(" ")))||(!isMac()&&!/StudioMCP|\/Applications/.test(raw));
   const L=$("devLaunch"); L.hidden=false;
   const names=stdio.map(([k])=>`<b>${esc(k)}</b>`).join(", ");
@@ -966,7 +988,18 @@ function useMcpJson(txt){
   devUI("busy","En attente du lanceur sur ce PC…"); pollBridge();
 }
 $("devJsonGo").onclick=()=>useMcpJson($("devJson").value);
-function oneClick(){ const cfg=isMac()?RBX_JSON.mac:RBX_JSON.win; useMcpJson(JSON.stringify(cfg)); const L=$("devLaunch"); if(L&&!mcp.connected) L.querySelector("b")&&(L.querySelector("b").textContent="Serveur MCP Roblox Studio prêt ✓"); }
+let plugPoll=null;
+function pairCode(){ let c=store.get("llmms3-pair",""); if(!/^[A-Z0-9]{6}$/.test(c)){ const A="ABCDEFGHJKLMNPQRSTUVWXYZ23456789"; c=Array.from(crypto.getRandomValues(new Uint8Array(6)),x=>A[x%A.length]).join(""); store.set("llmms3-pair",c); } return c; }
+function oneClick(){ const L=$("devLaunch"), code=pairCode(); L.hidden=false;
+  L.innerHTML=`<b>Sans rien télécharger 🎮</b><br>Ton code : <span class="pcode">${code}</span>
+  <ol class="dsteps" style="margin:8px 0"><li>Appuie sur <button class="dbtn" id="plugCopy" type="button">📋 Copier le plugin</button></li>
+  <li>Dans <b>Roblox Studio</b> : Explorer → <b>ServerStorage</b> → <b>+</b> → <b>Script</b>, colle le code.</li>
+  <li>Clic droit sur le Script → <b>Save as Local Plugin</b>, puis supprime le Script.</li>
+  <li>Onglet <b>Plugins</b> → <b>llmms ia</b> → tape <b>${code}</b> → <b>Connecter</b> (autorise le HTTP si Studio le demande).</li></ol>
+  À faire <b>une seule fois</b> : ensuite le plugin se reconnecte tout seul. <span id="plugSt">⏳ En attente de Studio…</span>`;
+  $("plugCopy").onclick=async()=>{ try{ const t=await fetch("/pont-studio/llmms-plugin.lua",{cache:"no-store"}).then(r=>r.text()); await navigator.clipboard.writeText(t.replace(/https:\/\/ia-llmms-1\.vercel\.app/g,location.origin)); $("plugCopy").textContent="✓ Copié !"; }catch{ window.open("/pont-studio/llmms-plugin.lua","_blank"); } };
+  devUI("busy","En attente du plugin dans Roblox Studio…"); watchPlugin(code); }
+function watchPlugin(code){ clearInterval(plugPoll); let n=0; plugPoll=setInterval(async()=>{ if(++n>400){ clearInterval(plugPoll); return; } try{ const j=await fetch(`/api/studio?op=status&code=${code}`).then(r=>r.json()); if(j.error){ $("plugSt")&&($("plugSt").textContent="⚠️ "+j.error); return; } if(j.online){ clearInterval(plugPoll); const k=await mcp.connectPlugin(code); devUI(null,`✓ Connecté à Roblox Studio${j.place?" · "+j.place:""} — ${k} outils`); if(mode!=="roblox"){ setMode("roblox"); if(tier!=="studio") tier="5"; modelUI(); save(); } const L=$("devLaunch"); if(L) L.innerHTML=`✅ <b>Roblox Studio est connecté${j.place?" ("+esc(j.place)+")":""} !</b> Ferme cette fenêtre et dis à l'IA quoi construire.`; } }catch{} },3000); }
 $("devOneClick").onclick=oneClick;
 $("devJsonRbx").onclick=()=>{ $("devJson").value=JSON.stringify(isMac()?RBX_JSON.mac:RBX_JSON.win,null,2); useMcpJson($("devJson").value); };
 
@@ -974,7 +1007,7 @@ $("devJsonRbx").onclick=()=>{ $("devJson").value=JSON.stringify(isMac()?RBX_JSON
 let autoStudio=store.get("llmms3-auto",true);
 function devUI(state,msg){
   const dot=$("devDot"); dot.className="sdot"+(state==="busy"?" busy":state==="bad"?" bad":mcp.connected?" on":"");
-  $("devS1").textContent=state==="busy"?"Connexion…":state==="bad"?"Connexion impossible":mcp.connected?(/localhost|127\.0\.0\.1/.test(mcp.url||"")?"Roblox Studio connecté":"Serveur MCP connecté"+(mcp.proxy?" (via le relais)":"")):"Roblox Studio non connecté";
+  $("devS1").textContent=state==="busy"?"Connexion…":state==="bad"?"Connexion impossible":mcp.connected?(mcp.plugin||/localhost|127\.0\.0\.1/.test(mcp.url||"")?"Roblox Studio connecté":"Serveur MCP connecté"+(mcp.proxy?" (via le relais)":"")):"Roblox Studio non connecté";
   $("devS2").textContent=msg||(mcp.connected?`${mcp.list.length} outils · ${mcp.url}`:"Aucun serveur MCP");
   $("devOff").disabled=!mcp.connected; $("devTest").disabled=!mcp.connected;
   $("devTools").innerHTML=mcp.connected?mcp.list.slice(0,40).map(t=>`<span class="chip" title="${esc(t.description||"")}">${esc(t.name)}</span>`).join(""):"";
@@ -1585,7 +1618,7 @@ async function checkLogin(){
 
 /* ---------------- travail en arrière-plan (pont) + reprise automatique ---------------- */
 const sleep=ms=>new Promise(r=>setTimeout(r,ms));
-async function bridgeJobs(){ try{ const base=new URL(mcp.url).origin; const r=await fetch(base+"/jobs/ping"); const j=await r.json(); return j.jobs?base:null; }catch{ return null; } }
+async function bridgeJobs(){ if(mcp.plugin) return null; try{ const base=new URL(mcp.url).origin; const r=await fetch(base+"/jobs/ping"); const j=await r.json(); return j.jobs?base:null; }catch{ return null; } }
 async function runViaBridge(c,bot,status,setStatus,extra,base,existing){
   let id=existing?.id;
   if(!id){
@@ -1971,7 +2004,8 @@ $("gateForm").onsubmit=e=>{ e.preventDefault(); const k=$("gateCode").value.trim
 applyI18n(); webUI(); setSend(); modelUI(); meUI(); setTimeout(checkLogin,1300);
 // Zip ouvert directement (hors ligne) : on ouvre tout de suite llmms ia en ligne, où l'IA marche
 if(LOCAL_MODE&&!orKey()){ setTimeout(()=>{ const n=note("Ouverture de llmms ia en ligne…"); const a=document.createElement("a"); a.href=ONLINE_URL; a.className="dl"; a.textContent=" ✦ Ouvrir"; n.appendChild(a); location.href=ONLINE_URL; },1400); } setMode(mode); studioUI(); render(); drawRecents(); intro();
-(async()=>{ const u=store.get("llmms3-mcp",null); if(u){ try{ await mcp.connect(u,{headers:store.get("llmms3-mcphdr",{})}); }catch{ studioUI(); } } setTimeout(resumeIfNeeded,600); })();
+(async()=>{ const pc=store.get("llmms3-plug",null); if(pc){ try{ const j=await fetch(`/api/studio?op=status&code=${pc}`).then(r=>r.json()); if(j.online) await mcp.connectPlugin(pc); else watchPlugin(pc); }catch{} }
+  const u=store.get("llmms3-mcp",null); if(u){ try{ await mcp.connect(u,{headers:store.get("llmms3-mcphdr",{})}); }catch{ studioUI(); } } setTimeout(resumeIfNeeded,600); })();
 </script>
 <!--LLMMS_CORE-->
 <script type="module">
