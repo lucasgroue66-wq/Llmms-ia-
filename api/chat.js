@@ -40,6 +40,20 @@ function boostSystem(msgs) {
   if (i >= 0 && typeof out[i].content === "string" && !out[i].content.includes("Niveau d'exigence maximal")) out[i] = { ...out[i], content: out[i].content + BOOST };
   return out;
 }
+// Gemini refuse certains schémas JSON des outils MCP ($schema, anyOf, additionalProperties, type: ["string","null"]…) :
+// on les nettoie au lieu de supprimer les outils (sinon l'IA ne peut plus rien modifier dans Studio).
+function cleanSchema(s, d = 0) {
+  if (!s || typeof s !== "object" || d > 8) return { type: "string" };
+  let t = s.type; if (Array.isArray(t)) t = t.find(x => x !== "null") || "string";
+  if (!t) { const alt = (s.anyOf || s.oneOf || s.allOf || []).find(x => x && x.type !== "null"); if (alt) return cleanSchema({ ...alt, description: alt.description || s.description }, d + 1); t = s.properties ? "object" : s.items ? "array" : "string"; }
+  const o = { type: t };
+  if (s.description) o.description = String(s.description).slice(0, 500);
+  if (Array.isArray(s.enum)) { const e = s.enum.filter(x => typeof x === "string"); if (e.length) { o.enum = e; o.type = "string"; } }
+  if (t === "object") { o.properties = {}; for (const [k, v] of Object.entries(s.properties || {})) o.properties[k] = cleanSchema(v, d + 1); if (Array.isArray(s.required)) { const r = s.required.filter(k => o.properties[k]); if (r.length) o.required = r; } }
+  if (t === "array") o.items = cleanSchema(s.items || { type: "string" }, d + 1);
+  return o;
+}
+const cleanTools = tools => tools.map(t => ({ type: "function", function: { name: t.function?.name, description: String(t.function?.description || "").slice(0, 1200), parameters: cleanSchema(t.function?.parameters || { type: "object", properties: {} }) } }));
 async function tryGemini(b, opts) {
   const key = process.env.GEMINI_API_KEY; if (!key) return null;
   const maxMode = (b.messages || []).some(m => m.role === "system" && typeof m.content === "string" && m.content.includes("EFFORT MAX"));
@@ -47,20 +61,24 @@ async function tryGemini(b, opts) {
   let list = await gemModels(key);
   // réflexion courte demandée : on commence par les modèles « Flash » (les plus rapides), pas les Pro
   if (effort === "low") list = [...list.filter(m => /flash/.test(m) && !/lite/.test(m)), ...list.filter(m => !(/flash/.test(m) && !/lite/.test(m)))];
+  // 1er passage AVEC les outils sur tous les modèles ; sans outils seulement en tout dernier recours
+  const passes = b.tools ? [true, false] : [false], ctools = b.tools ? cleanTools(b.tools) : null;
+  for (const withTools of passes)
   for (const model of list) {
     if ((gemDead.get(model) || 0) > Date.now()) continue;
+    if (withTools && /gemma/i.test(model)) continue; // Gemma ne sait pas utiliser les outils
     const g = { model, stream: !!b.stream, messages: boostSystem(b.messages || []), max_tokens: Math.min(Math.max(b.max_tokens || 32000, 32000), 60000) };
     // réflexion « low » demandée (devoirs, mode Rapide) : pas de réflexion du tout → réponse immédiate
     if (!/gemma/i.test(model)) g.reasoning_effort = effort === "low" ? "none" : effort === "medium" ? "medium" : "high";
-    if (b.tools) { g.tools = b.tools; g.tool_choice = "auto"; }
-    for (let k = 0; k < 4; k++) {
+    if (withTools) { g.tools = ctools; g.tool_choice = "auto"; }
+    for (let k = 0; k < 5; k++) {
       try {
         const r = await realFetch(`${GEM_BASE}/chat/completions`, { method: "POST", headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json" }, body: JSON.stringify(g), signal: opts?.signal });
         if (r.ok) return r;
         if (r.status === 400 && g.reasoning_effort === "none") { g.reasoning_effort = "low"; continue; }
         if (r.status === 400 && g.reasoning_effort) { delete g.reasoning_effort; continue; }
         if (r.status === 400 && g.max_tokens > 8192) { g.max_tokens = 8192; continue; }
-        if (r.status === 400 && g.tools) { delete g.tools; delete g.tool_choice; continue; }
+        if (r.status === 400 && withTools) break; // ce modèle refuse les outils : on essaie le modèle suivant AVEC les outils
         if (r.status === 429) { let t = ""; try { t = await r.text(); } catch {} gemDead.set(model, Date.now() + (/limit[^0-9]{0,12}0\b|quota.{0,40}\b0\b/i.test(t) ? 6 * 3600e3 : /per.?day|PerDay|daily/i.test(t) ? 3 * 3600e3 : 30e3)); }
         if (r.status === 404 || r.status === 403) gemDead.set(model, Date.now() + 6 * 3600e3);
       } catch {}
