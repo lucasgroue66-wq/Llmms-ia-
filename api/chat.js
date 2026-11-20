@@ -21,16 +21,38 @@ async function gemModels(key) {
   return ["gemini-flash-latest", "gemini-flash-lite-latest"];
 }
 function cleanMsg(m) { const o = { role: m.role, content: m.content ?? "" }; if (m.tool_calls) o.tool_calls = m.tool_calls; if (m.tool_call_id) o.tool_call_id = m.tool_call_id; if (m.name) o.name = m.name; return o; }
+// Consignes en plus pour les modèles gratuits : ils doivent réfléchir plus et livrer du code complet et testé
+const BOOST = `
+
+=== Niveau d'exigence maximal ===
+Avant de répondre, réfléchis en profondeur (tu as un budget de réflexion : utilise-le) :
+1) Reformule pour toi ce que l'utilisateur veut VRAIMENT obtenir à la fin (le résultat visible), y compris ce qu'il n'a pas dit mais qu'un pro ferait.
+2) Planifie l'architecture complète (fichiers / scripts, où chacun va, comment ils communiquent, données).
+3) Écris TOUT le code, en entier, sans « ... », sans TODO, sans parties « à adapter ».
+4) Relis-toi comme un testeur : exécute mentalement chaque script ligne par ligne (Roblox : ordre de chargement, WaitForChild, client/serveur, RemoteEvents sécurisés, nil, joueur qui quitte ; web : chaque fonction appelée existe, chaque variable est déclarée, la boucle démarre, rien ne reste noir). Corrige toutes les erreurs AVANT d'envoyer.
+5) Soigne le rendu final comme un jeu populaire : UI moderne (UICorner, UIStroke, UIGradient, tweens, sons), effets, animations fluides, textes clairs.
+Roblox : indique pour CHAQUE script son type (Script / LocalScript / ModuleScript) et son emplacement exact dans l'Explorer (ex. ServerScriptService > GameManager). Pour une cinématique Roblox : vraie caméra scriptée (Camera.CameraType = Scriptable, TweenService sur CFrame et FieldOfView, plans enchaînés avec durées, easing cinéma, bandes noires en ScreenGui, fondus, textes, puis rendu de la caméra au joueur), décor construit par script si besoin.
+Cinématique / animation web : canvas qui dessine dès la première image, plans détaillés, vraie caméra, transitions, pas d'écran noir.`;
+function boostSystem(msgs) {
+  const out = msgs.map(cleanMsg);
+  const i = out.findIndex(m => m.role === "system");
+  if (i >= 0 && typeof out[i].content === "string" && !out[i].content.includes("Niveau d'exigence maximal")) out[i] = { ...out[i], content: out[i].content + BOOST };
+  return out;
+}
 async function tryGemini(b, opts) {
   const key = process.env.GEMINI_API_KEY; if (!key) return null;
+  const effort = b.reasoning?.effort || "medium";
   for (const model of await gemModels(key)) {
     if ((gemDead.get(model) || 0) > Date.now()) continue;
-    const g = { model, stream: !!b.stream, messages: (b.messages || []).map(cleanMsg), max_tokens: Math.min(b.max_tokens || 16000, 16000) };
+    const g = { model, stream: !!b.stream, messages: boostSystem(b.messages || []), max_tokens: Math.min(Math.max(b.max_tokens || 32000, 32000), 60000) };
+    if (!/gemma/i.test(model)) g.reasoning_effort = effort === "low" ? "low" : effort === "medium" ? "medium" : "high";
     if (b.tools) { g.tools = b.tools; g.tool_choice = "auto"; }
-    for (let k = 0; k < 2; k++) {
+    for (let k = 0; k < 3; k++) {
       try {
         const r = await realFetch(`${GEM_BASE}/chat/completions`, { method: "POST", headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json" }, body: JSON.stringify(g), signal: opts?.signal });
         if (r.ok) return r;
+        if (r.status === 400 && g.reasoning_effort) { delete g.reasoning_effort; continue; }
+        if (r.status === 400 && g.max_tokens > 8192) { g.max_tokens = 8192; continue; }
         if (r.status === 400 && g.tools) { delete g.tools; delete g.tool_choice; continue; }
         if (r.status === 429) gemDead.set(model, Date.now() + 60e3);
         if (r.status === 404 || r.status === 403) gemDead.set(model, Date.now() + 6 * 3600e3);
@@ -47,7 +69,7 @@ globalThis.fetch = async (url, opts) => {
     const b = JSON.parse(opts.body);
     if (b.modalities) return r; // création d'images : pas de version gratuite
     const g = await tryGemini(b, opts); if (g) return g;
-    b.model = "openrouter/free"; delete b.reasoning; b.max_tokens = Math.min(b.max_tokens || 16000, 16000);
+    b.model = "openrouter/free"; delete b.reasoning; b.max_tokens = Math.min(b.max_tokens || 16000, 16000); b.messages = boostSystem(b.messages || []);
     let r2 = await realFetch(url, { ...opts, body: JSON.stringify(b) });
     if (!r2.ok && b.tools) { delete b.tools; delete b.tool_choice; delete b.parallel_tool_calls; r2 = await realFetch(url, { ...opts, body: JSON.stringify(b) }); }
     return r2;
