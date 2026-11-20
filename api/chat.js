@@ -1,38 +1,53 @@
-// Netlify : /api/chat (Edge Function). La logique est dans lib/core.js.
-// La réponse de l'IA est transmise telle quelle (aucun traitement ici → pas de dépassement du temps de calcul).
-import { precheck, startChat } from "../../lib/core.js";
-import { authEnabled, checkSession, handleAuth } from "../../lib/auth.js";
+// Vercel : /api/chat (Node 20+). La logique est dans lib/core.js.
+let mods = null, loadErr = null;
+async function load() {
+  if (mods || loadErr) return;
+  try {
+    const core = await import("../lib/core.js");
+    const auth = await import("../lib/auth.js");
+    mods = { ...core, ...auth };
+  } catch (e) { loadErr = String(e?.stack || e?.message || e); }
+}
 
-export default async (request) => {
-  if (request.method !== "POST") return Response.json({ error: "POST seulement" }, { status: 405 });
-  const env = k => Netlify.env.get(k);
-  const bad = precheck(env, request.headers.get("x-llmms-code"));
-  if (bad) return Response.json({ error: bad.error }, { status: bad.status });
+export default async function handler(req, res) {
+  await load();
+  if (loadErr) { res.status(500).json({ error: "Chargement du serveur impossible : " + loadErr }); return; }
+  const { precheck, startChat, authEnabled, checkSession, handleAuth } = mods;
+  if (req.method !== "POST") { res.status(405).json({ error: "POST seulement", ok: true }); return; }
 
-  let body = {};
-  try { body = await request.json(); } catch {}
+  try {
+    const env = k => process.env[k];
+    const bad = precheck(env, req.headers["x-llmms-code"]);
+    if (bad) { res.status(bad.status).json({ error: bad.error }); return; }
 
-  const sessionHeader = request.headers.get("x-llmms-session");
-  const auth = await handleAuth(body, env, sessionHeader);
-  if (auth) return Response.json(auth.json, { status: auth.status });
-  if (authEnabled(env) && !(await checkSession(sessionHeader, env))) return Response.json({ error: "login" }, { status: 401 });
+    let body = req.body;
+    if (typeof body === "string") { try { body = JSON.parse(body); } catch { body = {}; } }
 
-  let out;
-  try { out = await startChat(body, env); }
-  catch (e) { out = { events: (async function* () { yield { t: "error", v: String(e?.message || e) }; })() }; }
+    const sessionHeader = req.headers["x-llmms-session"];
+    const auth = await handleAuth(body || {}, env, sessionHeader);
+    if (auth) { res.status(auth.status).json(auth.json); return; }
+    if (authEnabled(env) && !(await checkSession(sessionHeader, env))) { res.status(401).json({ error: "login" }); return; }
 
-  if (out.stream) {
-    return new Response(out.stream, { headers: { "Content-Type": "text/event-stream; charset=utf-8", "Cache-Control": "no-cache", "X-Llmms-Model": out.name } });
+    let out;
+    try { out = await startChat(body || {}, env); }
+    catch (e) { out = { events: (async function* () { yield { t: "error", v: String(e?.message || e) }; })() }; }
+
+    res.setHeader("Cache-Control", "no-cache, no-transform");
+    res.setHeader("X-Accel-Buffering", "no");
+    if (out.stream) {
+      res.setHeader("Content-Type", "text/event-stream; charset=utf-8");
+      res.setHeader("X-Llmms-Model", out.name);
+      const reader = out.stream.getReader();
+      try { for (;;) { const { value, done } = await reader.read(); if (done) break; res.write(Buffer.from(value)); } } catch {}
+      res.end();
+      return;
+    }
+    res.setHeader("Content-Type", "application/x-ndjson; charset=utf-8");
+    try { for await (const ev of out.events) res.write(JSON.stringify(ev) + "\n"); }
+    catch (e) { res.write(JSON.stringify({ t: "error", v: String(e?.message || e) }) + "\n"); }
+    res.end();
+  } catch (e) {
+    if (!res.headersSent) res.status(500).json({ error: "Erreur serveur : " + String(e?.message || e) });
+    else res.end();
   }
-  const enc = new TextEncoder();
-  const stream = new ReadableStream({
-    async start(c) {
-      try { for await (const ev of out.events) c.enqueue(enc.encode(JSON.stringify(ev) + "\n")); }
-      catch (e) { c.enqueue(enc.encode(JSON.stringify({ t: "error", v: String(e?.message || e) }) + "\n")); }
-      c.close();
-    },
-  });
-  return new Response(stream, { headers: { "Content-Type": "application/x-ndjson; charset=utf-8", "Cache-Control": "no-cache" } });
-};
-
-export const config = { path: "/api/chat" };
+}
