@@ -26,7 +26,7 @@
 <link rel="apple-touch-icon" href="/apple-touch-icon.png">
 <link rel="manifest" href="/manifest.webmanifest">
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"WebApplication","name":"llmms ia","alternateName":["LLMMS IA","llmms","LLMMS","llmmsia"],"description":"IA en français pour créer des jeux Roblox : scripts Luau, GUI, builds, cinématiques, connexion à Roblox Studio, images et recherche web.","applicationCategory":"DeveloperApplication","operatingSystem":"Web","inLanguage":"fr","offers":{"@type":"Offer","price":"0","priceCurrency":"EUR"}}</script>
-<meta name="theme-color" content="#181a17">
+<meta name="theme-color" content="#0e1118">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Caveat:wght@500;700&family=JetBrains+Mono:wght@400;600&display=swap">
@@ -60,7 +60,7 @@ aside{background:var(--side);border-right:1px solid var(--line);display:flex;fle
 /* ---------- logo ---------- */
 .brand{display:inline-flex;align-items:center;gap:.42em;font-weight:400;letter-spacing:-.02em;line-height:1;white-space:nowrap;color:var(--fg)}
 .brand b{font-weight:600}
-.brand svg{width:1.15em;height:1.15em}
+.brand svg{width:1.3em;height:1.3em}
 .side-top{display:flex;align-items:center;justify-content:space-between;padding:22px 6px 26px 18px}
 #logo{font-size:36px;visibility:hidden}
 .beta{font-size:11px;letter-spacing:.14em;color:var(--muted);border:1px solid var(--line2);border-radius:6px;padding:3px 7px;font-weight:500}
@@ -406,7 +406,7 @@ aside{background:linear-gradient(180deg,#151a24 0%,#10141c 100%);box-shadow:inse
 .topbar{background:rgba(14,17,24,.75);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px)}
 /* titre d'accueil en dégradé lumineux */
 .empty .big span{background:linear-gradient(100deg,#eef5ff 0%,#bfe0ff 45%,#5aa9ff 70%,#eef5ff 100%);background-size:220% 100%;-webkit-background-clip:text;background-clip:text;color:transparent;animation:llmmsShine 9s ease-in-out infinite}
-.empty .big svg{filter:drop-shadow(0 0 14px rgba(90,169,255,.55))}
+.empty .big svg{filter:drop-shadow(0 0 14px rgba(90,169,255,.45))}
 @keyframes llmmsShine{0%,100%{background-position:0% 0}50%{background-position:100% 0}}
 /* cartes : profondeur + reflet */
 .sugg button,.ideas button{background:linear-gradient(180deg,rgba(255,255,255,.035),rgba(255,255,255,0)),rgba(29,31,27,.82);backdrop-filter:blur(6px);box-shadow:0 1px 0 rgba(255,255,255,.04) inset,0 10px 30px -18px rgba(0,0,0,.8);transition:transform .18s ease,border-color .18s,box-shadow .18s,background .18s}
@@ -467,7 +467,8 @@ aside{background:linear-gradient(180deg,#151a24 0%,#10141c 100%);box-shadow:inse
 <body>
 
 <svg width="0" height="0" style="position:absolute" aria-hidden="true">
-  <symbol id="i-spark" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round" stroke-linecap="round"><path d="M10 3.5l1.55 4.6a3 3 0 0 0 1.9 1.9L18 11.5l-4.55 1.5a3 3 0 0 0-1.9 1.9L10 19.5l-1.55-4.6a3 3 0 0 0-1.9-1.9L2 11.5l4.55-1.5a3 3 0 0 0 1.9-1.9z"/><path d="M18.5 2.5v4M16.5 4.5h4"/></g></symbol>
+  <defs><linearGradient id="lgBg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#14254a"/><stop offset=".55" stop-color="#0b1426"/><stop offset="1" stop-color="#060a14"/></linearGradient><radialGradient id="lgGlow" cx=".3" cy=".25" r=".7"><stop offset="0" stop-color="#3b82f6" stop-opacity=".45"/><stop offset="1" stop-color="#3b82f6" stop-opacity="0"/></radialGradient><linearGradient id="lgSt" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#8fd0ff"/><stop offset="1" stop-color="#3b82f6"/></linearGradient><linearGradient id="lgRim" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff" stop-opacity=".22"/><stop offset="1" stop-color="#fff" stop-opacity=".03"/></linearGradient><pattern id="lgGrid" width="10" height="10" patternUnits="userSpaceOnUse"><path d="M10 0H0V10" fill="none" stroke="#5aa9ff" stroke-opacity=".07" stroke-width=".6"/></pattern></defs>
+  <symbol id="i-spark" viewBox="0 0 100 100"><rect width="100" height="100" rx="24" fill="url(#lgBg)"/><rect width="100" height="100" rx="24" fill="url(#lgGrid)"/><rect width="100" height="100" rx="24" fill="url(#lgGlow)"/><path d="M36 24 V66 a8 8 0 0 0 8 8 H62" stroke="#3b82f6" stroke-opacity=".35" stroke-width="18" fill="none" stroke-linecap="round"/><path d="M36 24 V66 a8 8 0 0 0 8 8 H62" stroke="url(#lgSt)" stroke-width="12" fill="none" stroke-linecap="round"/><path d="M36 24 V50" stroke="#fff" stroke-width="12" fill="none" stroke-linecap="round"/><circle cx="74" cy="74" r="6" fill="#fff"/><rect x=".75" y=".75" width="98.5" height="98.5" rx="23.3" fill="none" stroke="url(#lgRim)" stroke-width="1.5"/></symbol>
 </svg>
 
 <div id="splash" aria-hidden="true"><div id="splashLogo" class="brand"><svg class="spark"><use href="#i-spark"/></svg><span><b>llmms</b> ia</span></div></div>
@@ -685,11 +686,7 @@ const ICON={
   "dessin":["#fbcfe8","#be185d","M15 4l5 5L9 20H4v-5zM13 6l5 5"]
 };
 let icoN=0;
-function modelIcon(key){
-  const ic=["#7cc0ff","#2563eb",'M10 3.5l1.55 4.6a3 3 0 0 0 1.9 1.9L18 11.5l-4.55 1.5a3 3 0 0 0-1.9 1.9L10 19.5l-1.55-4.6a3 3 0 0 0-1.9-1.9L2 11.5l4.55-1.5a3 3 0 0 0 1.9-1.9zM18.5 2.5v4M16.5 4.5h4'];
-  const id="gi"+(++icoN);
-  return `<svg class="mico" viewBox="0 0 40 40" aria-hidden="true"><defs><linearGradient id="${id}" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="${ic[0]}"/><stop offset="1" stop-color="${ic[1]}"/></linearGradient><radialGradient id="${id}h" cx="30%" cy="15%" r="70%"><stop offset="0" stop-color="#fff" stop-opacity=".55"/><stop offset=".55" stop-color="#fff" stop-opacity="0"/></radialGradient></defs><rect x="1" y="1" width="38" height="38" rx="11" fill="url(#${id})"/><rect x="1" y="1" width="38" height="38" rx="11" fill="url(#${id}h)"/><rect x="1.5" y="1.5" width="37" height="37" rx="10.5" fill="none" stroke="#fff" stroke-opacity=".35"/><g transform="translate(8 8)" fill="none" stroke="#fff" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" style="filter:drop-shadow(0 1px 1.5px rgba(0,0,0,.35))"><path d="${ic[2]}"/></g></svg>`;
-}
+function modelIcon(key){ return '<svg class="mico" viewBox="0 0 100 100" aria-hidden="true"><use href="#i-spark"/></svg>'; }
 const IMG_STYLES=[
   ["auto","✨ Auto",""],
   ["crayon","✏️ Crayon à papier","Dessin au crayon à papier (graphite) sur papier blanc légèrement texturé, comme fait à la main par un artiste : traits fins et précis, croquis de construction légers, ombres en hachures et à l'estompe, dégradés de gris riches, contrastes doux, noir et blanc, très détaillé et beau."],
