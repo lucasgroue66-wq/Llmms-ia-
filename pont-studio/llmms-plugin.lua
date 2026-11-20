@@ -215,7 +215,26 @@ end)
 	if not ok then return "Impossible de lancer le test : " .. tostring(res) .. " (arrête le test en cours dans Studio si besoin)", true end
 	return tostring(res), false
 end
+-- 📸 Photo de la place : position, taille, orientation et couleur des pièces visibles (le site dessine l'image 3D)
+local function snapshot(max)
+	max = math.clamp(tonumber(max) or 2500, 50, 4000)
+	local list = {}
+	for _, o in ipairs(workspace:GetDescendants()) do
+		if o:IsA("BasePart") and not o:IsA("Terrain") and o.Transparency < 0.95 then local z = o.Size; table.insert(list, { o, z.X * z.Y * z.Z }) end
+	end
+	table.sort(list, function(a, b) return a[2] > b[2] end)
+	local r = function(v, m) return math.floor(v * m + 0.5) / m end
+	local out = {}
+	for i = 1, math.min(max, #list) do
+		local p = list[i][1]; local cf, z, c = p.CFrame, p.Size, p.Color
+		local R, U = cf.RightVector, cf.UpVector
+		local shape = (p:IsA("Part") and p.Shape == Enum.PartType.Ball) and 1 or (p:IsA("Part") and p.Shape == Enum.PartType.Cylinder) and 2 or 0
+		table.insert(out, { r(p.Position.X, 10), r(p.Position.Y, 10), r(p.Position.Z, 10), r(z.X, 10), r(z.Y, 10), r(z.Z, 10), r(R.X, 100), r(R.Y, 100), r(R.Z, 100), r(U.X, 100), r(U.Y, 100), r(U.Z, 100), math.floor(c.R * 255) * 65536 + math.floor(c.G * 255) * 256 + math.floor(c.B * 255), r(p.Transparency, 10), shape })
+	end
+	return HttpService:JSONEncode({ parts = out, total = #list, place = game.Name }), false
+end
 local TOOLS = {
+	snapshot = function(a) return snapshot(a.max) end,
 	playtest = function(a) return playtest(a.seconds, a.checks) end,
 	get_output = function(a) return getOutput(a.lines) end,
 	get_properties = function(a) return getProps(a.path) end,

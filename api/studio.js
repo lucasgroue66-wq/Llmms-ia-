@@ -39,7 +39,7 @@ export default async function handler(req, res) {
     }
     if (op === "result") {
       const id = String(b.id || "").slice(0, 40); if (!id) return res.status(400).json({ error: "id manquant" });
-      const out = JSON.stringify({ text: String(b.text ?? "").slice(0, 60000), isError: !!b.isError });
+      const out = JSON.stringify({ text: String(b.text ?? "").slice(0, 600000), isError: !!b.isError });
       await kv([["SET", `${k}:r:${id}`, out, "EX", 300]]);
       return res.status(200).json({ ok: true });
     }
