@@ -3,19 +3,37 @@
 // puis sur le routeur gratuit d'OpenRouter. Clé Google dans Vercel : GEMINI_API_KEY.
 const realFetch = globalThis.fetch;
 const OR_URL = "openrouter.ai/api/v1/chat/completions";
-const GEM_URL = "https://generativelanguage.googleapis.com/v1beta/openai/chat/completions";
-const GEM_MODELS = (process.env.GEMINI_MODELS || "gemini-flash-latest,gemini-flash-lite-latest").split(",").map(x => x.trim()).filter(Boolean);
+const GEM_BASE = "https://generativelanguage.googleapis.com/v1beta/openai";
+// Chaque modèle gratuit de Google a SON PROPRE quota : on les utilise tous, l'un après l'autre.
+let gemList = null, gemAt = 0;
+const gemDead = new Map();
+function rank(id) { const v = parseFloat((id.match(/(\d+(?:\.\d+)?)/) || [])[1] || 0); return (id.includes("gemma") ? 0 : 1000) + v * 10 + (id.includes("lite") ? 0 : 5); }
+async function gemModels(key) {
+  if (process.env.GEMINI_MODELS) return process.env.GEMINI_MODELS.split(",").map(x => x.trim()).filter(Boolean);
+  if (gemList && Date.now() - gemAt < 6 * 3600e3) return gemList;
+  try {
+    const r = await realFetch(`${GEM_BASE}/models`, { headers: { Authorization: `Bearer ${key}` } });
+    const j = await r.json();
+    const ids = (j.data || []).map(m => String(m.id || "").replace(/^models\//, ""))
+      .filter(id => /(flash|gemma)/i.test(id) && !/(image|tts|live|audio|transcri|embed|robot|computer|vision|banana|native)/i.test(id));
+    if (ids.length) { gemList = [...new Set(ids)].sort((a, b) => rank(b) - rank(a)).slice(0, 14); gemAt = Date.now(); return gemList; }
+  } catch {}
+  return ["gemini-flash-latest", "gemini-flash-lite-latest"];
+}
 function cleanMsg(m) { const o = { role: m.role, content: m.content ?? "" }; if (m.tool_calls) o.tool_calls = m.tool_calls; if (m.tool_call_id) o.tool_call_id = m.tool_call_id; if (m.name) o.name = m.name; return o; }
 async function tryGemini(b, opts) {
   const key = process.env.GEMINI_API_KEY; if (!key) return null;
-  for (const model of GEM_MODELS) {
+  for (const model of await gemModels(key)) {
+    if ((gemDead.get(model) || 0) > Date.now()) continue;
     const g = { model, stream: !!b.stream, messages: (b.messages || []).map(cleanMsg), max_tokens: Math.min(b.max_tokens || 16000, 16000) };
     if (b.tools) { g.tools = b.tools; g.tool_choice = "auto"; }
     for (let k = 0; k < 2; k++) {
       try {
-        const r = await realFetch(GEM_URL, { method: "POST", headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json" }, body: JSON.stringify(g), signal: opts?.signal });
+        const r = await realFetch(`${GEM_BASE}/chat/completions`, { method: "POST", headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json" }, body: JSON.stringify(g), signal: opts?.signal });
         if (r.ok) return r;
         if (r.status === 400 && g.tools) { delete g.tools; delete g.tool_choice; continue; }
+        if (r.status === 429) gemDead.set(model, Date.now() + 60e3);
+        if (r.status === 404 || r.status === 403) gemDead.set(model, Date.now() + 6 * 3600e3);
       } catch {}
       break;
     }
@@ -86,4 +104,4 @@ export default async function handler(req, res) {
     if (!res.headersSent) res.status(500).json({ error: "Erreur serveur : " + String(e?.message || e) });
     else res.end();
   }
-  }
+      }
