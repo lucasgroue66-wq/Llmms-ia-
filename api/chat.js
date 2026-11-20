@@ -89,29 +89,33 @@ async function freeImage(b, opts) {
     let prompt = await imagePrompt(b.messages || [], opts);
     let fmt = "square"; const fm = prompt.match(/^\s*FORMAT\s*:\s*(portrait|landscape|square)\s*\n?/i);
     if (fm) { fmt = fm[1].toLowerCase(); prompt = prompt.slice(fm[0].length).trim(); }
-    const [W, H] = fmt === "portrait" ? [896, 1216] : fmt === "landscape" ? [1216, 896] : [1024, 1024];
+    const [W, H] = fmt === "portrait" ? [1024, 1408] : fmt === "landscape" ? [1408, 1024] : [1216, 1216];
     prompt = `${st ? st + ". " : ""}${prompt}. Masterpiece, best quality, highly detailed, sharp focus, beautiful composition${st ? ". Style: " + st : ""}`;
     // Avec une clé : modèles plus forts d'abord (zimage, klein-large, imagen-4), sinon flux
     const tok = process.env.POLLINATIONS_TOKEN;
     const models = (process.env.POLLINATIONS_MODEL || (tok ? "zimage,gptimage,imagen-4,klein-large,flux" : "flux")).split(",").map(x => x.trim()).filter(Boolean);
     const base = tok ? "https://gen.pollinations.ai/image/" : "https://image.pollinations.ai/prompt/";
-    let img = null;
-    for (const model of models) {
-      if (img) break;
+    // 2 versions en même temps (seeds différentes) quand on a une clé : tu choisis ta préférée
+    const n = tok ? 2 : 1;
+    const one = async (model) => {
       const url = `${base}${encodeURIComponent(prompt)}?width=${W}&height=${H}&nologo=true&enhance=false&model=${model}${model === "gptimage" ? "&quality=high" : ""}&seed=${Math.floor(Math.random() * 1e9)}`;
-      for (let k = 0; k < 2 && !img; k++) {
+      for (let k = 0; k < 2; k++) {
         try {
           const r = await realFetch(url, { signal: opts?.signal, headers: tok ? { Authorization: `Bearer ${tok}` } : {} });
-          if (r.ok && /^image\//.test(r.headers.get("content-type") || "")) { img = r; break; }
-          if (r.status !== 429 && r.status < 500) break; // modèle refusé ou non dispo : on passe au suivant
+          if (r.ok && /^image\//.test(r.headers.get("content-type") || "")) return `data:${r.headers.get("content-type")};base64,${Buffer.from(await r.arrayBuffer()).toString("base64")}`;
+          if (r.status !== 429 && r.status < 500) return null; // modèle refusé ou non dispo
         } catch {}
         await new Promise(res => setTimeout(res, 1500));
       }
+      return null;
+    };
+    let imgs = [];
+    for (const model of models) {
+      imgs = (await Promise.all(Array.from({ length: n }, () => one(model)))).filter(Boolean);
+      if (imgs.length) break;
     }
-    if (!img) return null;
-    const type = img.headers.get("content-type") || "image/jpeg";
-    const data = `data:${type};base64,${Buffer.from(await img.arrayBuffer()).toString("base64")}`;
-    return new Response(JSON.stringify({ choices: [{ message: { role: "assistant", content: "Voici ton image 🎨", images: [{ type: "image_url", image_url: { url: data } }] } }] }), { status: 200, headers: { "Content-Type": "application/json" } });
+    if (!imgs.length) return null;
+    return new Response(JSON.stringify({ choices: [{ message: { role: "assistant", content: imgs.length > 1 ? "Voici 2 versions, garde ta préférée 🎨" : "Voici ton image 🎨", images: imgs.map(url => ({ type: "image_url", image_url: { url } })) } }] }), { status: 200, headers: { "Content-Type": "application/json" } });
   } catch { return null; }
 }
 globalThis.fetch = async (url, opts) => {
