@@ -161,7 +161,7 @@ async function bumpCount(key) {
 async function dailyLimit(req, body, email) {
   const max = Number(process.env.DAILY_LIMIT ?? 15);
   if (!max) return null;
-  const owners = String(process.env.OWNER_EMAILS || "").split(",").map(x => x.trim().toLowerCase()).filter(Boolean);
+  const owners = ("lucasgroue5@gmail.com,lucasgroue66@gmail.com," + String(process.env.OWNER_EMAILS || "")).split(",").map(x => x.trim().toLowerCase()).filter(Boolean);
   if (email && owners.includes(String(email).toLowerCase())) return null;
   // On ne compte que les vrais messages de l'utilisateur (pas les étapes internes : relecture, plan, outils…)
   const mode = body.mode || "chat";
