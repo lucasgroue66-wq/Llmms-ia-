@@ -1,6 +1,7 @@
 {
   "functions": {
-    "api/chat.js": { "maxDuration": 300 }
+    "api/chat.js": { "maxDuration": 300 },
+    "api/mcp.js": { "maxDuration": 60 }
   },
   "rewrites": [
     { "source": "/robots.txt", "destination": "/api/seo?f=robots" },

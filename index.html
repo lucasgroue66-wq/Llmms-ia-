@@ -654,7 +654,7 @@ body.th-vert{--side:#0d1612;--bg:#09110e;--panel:#121e19;--field:#16251f;--hover
 </div>
 <div id="dev" class="modal" role="dialog" aria-modal="true" aria-labelledby="devTitle">
   <div class="dbox">
-    <div class="dhead"><div><div class="dtitle" id="devTitle">Paramètres développeur</div><div class="dsub">Connecte llmms ia à ton Roblox Studio : elle modifie ta place directement.</div></div><button class="dx" id="devClose" type="button" aria-label="Fermer">×</button></div>
+    <div class="dhead"><div><div class="dtitle" id="devTitle">Paramètres développeur</div><div class="dsub">Connecte llmms ia à ton Roblox Studio ou à n'importe quel serveur MCP : colle ton JSON, comme dans Claude.</div></div><button class="dx" id="devClose" type="button" aria-label="Fermer">×</button></div>
     <div class="dstat"><span class="sdot" id="devDot"></span><div><div class="s1" id="devS1">Roblox Studio non connecté</div><div class="s2" id="devS2">Aucun serveur MCP</div></div></div>
     <label class="dlab" for="devJson">Config MCP (JSON)</label>
     <textarea id="devJson" class="djson" spellcheck="false" autocomplete="off" placeholder='{
@@ -876,14 +876,20 @@ function textOf(c){ if(typeof c==="string") return c; if(Array.isArray(c)) retur
 
 /* ---------------- MCP (Roblox Studio) ---------------- */
 const mcp={
-  url:null, sid:null, n:0, list:[], connected:false,
+  url:null, sid:null, n:0, list:[], connected:false, headers:{}, proxy:false,
+  async post(body,timeoutMs){
+    const ac=new AbortController(), t=setTimeout(()=>ac.abort(),timeoutMs);
+    try{
+      if(this.proxy){ const r=await fetch("/api/mcp",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({url:this.url,headers:this.headers,sid:this.sid,body}),signal:ac.signal}); const j=await r.json().catch(()=>({error:"relais injoignable"})); if(j.error) throw new Error(j.error); return {ok:j.status<400,status:j.status,ct:j.ct||"",sid:j.sid,raw:j.text||""}; }
+      const headers={"Content-Type":"application/json","Accept":"application/json, text/event-stream",...this.headers}; if(this.sid) headers["Mcp-Session-Id"]=this.sid;
+      const r=await fetch(this.url,{method:"POST",headers,body,signal:ac.signal}); return {ok:r.ok,status:r.status,ct:r.headers.get("content-type")||"",sid:r.headers.get("mcp-session-id"),raw:await r.text()};
+    } finally{ clearTimeout(t); }
+  },
   async rpc(method,params,timeoutMs=15*60*1000){
-    const id=++this.n, headers={"Content-Type":"application/json","Accept":"application/json, text/event-stream"};
-    if(this.sid) headers["Mcp-Session-Id"]=this.sid;
-    const ac=new AbortController(), t=setTimeout(()=>ac.abort(),timeoutMs); let r;
-    try{ r=await fetch(this.url,{method:"POST",headers,body:JSON.stringify({jsonrpc:"2.0",id,method,params:params||{}}),signal:ac.signal}); } finally{ clearTimeout(t); }
-    const sid=r.headers.get("mcp-session-id"); if(sid) this.sid=sid;
-    const ct=r.headers.get("content-type")||"", raw=await r.text(); let msg=null;
+    const id=++this.n;
+    const r=await this.post(JSON.stringify({jsonrpc:"2.0",id,method,params:params||{}}),this.proxy?58000:timeoutMs);
+    if(r.sid) this.sid=r.sid;
+    const ct=r.ct, raw=r.raw; let msg=null;
     if(ct.includes("text/event-stream")){ for(const line of raw.split(/\r?\n/)){ if(!line.startsWith("data:")) continue; try{ const j=JSON.parse(line.slice(5).trim()); if(j.id===id){ msg=j; break; } }catch{} } }
     else { try{ msg=JSON.parse(raw); if(Array.isArray(msg)) msg=msg.find(x=>x.id===id); }catch{} }
     if(!r.ok&&!msg) throw new Error(`HTTP ${r.status}`);
@@ -891,15 +897,18 @@ const mcp={
     if(msg.error) throw new Error(msg.error.message||"erreur MCP");
     return msg.result;
   },
-  async notify(method){ const h={"Content-Type":"application/json","Accept":"application/json, text/event-stream"}; if(this.sid) h["Mcp-Session-Id"]=this.sid; try{ await fetch(this.url,{method:"POST",headers:h,body:JSON.stringify({jsonrpc:"2.0",method})}); }catch{} },
-  async connect(url){
-    this.url=url; this.sid=null; this.list=[]; this.connected=false;
-    await this.rpc("initialize",{protocolVersion:"2025-03-26",capabilities:{},clientInfo:{name:"llmms ia",version:"3.0"}},20000);
+  async notify(method){ try{ await this.post(JSON.stringify({jsonrpc:"2.0",method}),15000); }catch{} },
+  async connect(url,opts={}){
+    this.url=url; this.sid=null; this.list=[]; this.connected=false; this.headers=opts.headers||{}; this.proxy=false;
+    const local=/^https?:\/\/(localhost|127\.0\.0\.1|\[::1\])/i.test(url);
+    try{ await this.rpc("initialize",{protocolVersion:"2025-03-26",capabilities:{},clientInfo:{name:"llmms ia",version:"3.0"}},20000); }
+    catch(e){ if(local||!/^https:/i.test(url)) throw e; this.proxy=true; this.sid=null; // le serveur refuse les navigateurs (CORS) → on passe par le relais du site
+      await this.rpc("initialize",{protocolVersion:"2025-03-26",capabilities:{},clientInfo:{name:"llmms ia",version:"3.0"}},20000); }
     await this.notify("notifications/initialized");
     let cursor; do{ const r=await this.rpc("tools/list",cursor?{cursor}:{},20000); this.list.push(...(r.tools||[])); cursor=r.nextCursor; }while(cursor);
-    this.connected=true; store.set("llmms3-mcp",url); studioUI(); return this.list.length;
+    this.connected=true; store.set("llmms3-mcp",url); store.set("llmms3-mcphdr",this.headers); studioUI(); return this.list.length;
   },
-  disconnect(){ this.connected=false; this.list=[]; this.sid=null; this.url=null; store.del("llmms3-mcp"); studioUI(); },
+  disconnect(){ this.connected=false; this.list=[]; this.sid=null; this.url=null; this.headers={}; this.proxy=false; store.del("llmms3-mcp"); store.del("llmms3-mcphdr"); studioUI(); },
   tools(){ return this.connected?this.list.map(t=>({type:"function",function:{name:t.name,description:String(t.description||"").slice(0,1500),parameters:t.inputSchema&&t.inputSchema.type?t.inputSchema:{type:"object",properties:{}}}})):[]; },
   async call(name,args){
     const r=await this.rpc("tools/call",{name,arguments:args||{}});
@@ -933,8 +942,13 @@ function pollBridge(){ clearInterval(bridgePoll); let n=0; bridgePoll=setInterva
 function useMcpJson(txt){
   let cfg; try{ cfg=parseMcpJson(txt); }catch(e){ devUI("bad",e.message); return; }
   store.set("llmms3-mcpjson",cfg); $("devJson").value=JSON.stringify(cfg,null,2);
-  const list=Object.entries(cfg.mcpServers), http=list.find(([,v])=>v&&(v.url||v.serverUrl));
-  if(http){ const u=http[1].url||http[1].serverUrl; $("devUrl").value=u; devConnect(u); return; }
+  const list=Object.entries(cfg.mcpServers);
+  // serveur en ligne : {"url": "...", "headers": {...}}  ou  npx mcp-remote https://... --header "Authorization: ..."
+  let http=list.find(([,v])=>v&&(v.url||v.serverUrl||v.httpUrl)), hdr={};
+  if(http){ hdr=http[1].headers||{}; http=http[1].url||http[1].serverUrl||http[1].httpUrl; }
+  else { const rem=list.find(([,v])=>v&&v.command&&(v.args||[]).some(a=>/mcp-remote/.test(a))&&(v.args||[]).some(a=>/^https:\/\//.test(a)));
+    if(rem){ const a=rem[1].args; http=a.find(x=>/^https:\/\//.test(x)); a.forEach((x,i)=>{ if(x==="--header"&&a[i+1]){ const m=String(a[i+1]).match(/^([^:]+):\s*(.*)$/); if(m) hdr[m[1].trim()]=m[2].replace(/\$\{?([A-Z_][A-Z0-9_]*)\}?/gi,(q,k)=>(rem[1].env||{})[k]??q); } }); } }
+  if(http){ $("devUrl").value=http; const L=$("devLaunch"); L.hidden=false; L.innerHTML="<b>Serveur MCP en ligne détecté ✓</b> — pas besoin de lanceur, je me connecte directement…"; devConnect(http,hdr).then(n=>{ if(n) L.innerHTML=`✅ <b>Connecté !</b> ${n} outils prêts. Ferme cette fenêtre et pose ta question.`; }); return; }
   const stdio=list.filter(([,v])=>v&&v.command); if(!stdio.length){ devUI("bad","Chaque serveur doit avoir \"command\" ou \"url\"."); return; }
   const raw=JSON.stringify(cfg), b64=b64cfg(raw), org=location.origin, win=stdio.some(([,v])=>/cmd\.exe|\.bat|\.exe|\\|%[A-Z]+%/i.test(v.command+" "+(v.args||[]).join(" ")))||(!isMac()&&!/StudioMCP|\/Applications/.test(raw));
   const L=$("devLaunch"); L.hidden=false;
@@ -954,7 +968,7 @@ $("devJsonRbx").onclick=()=>{ $("devJson").value=JSON.stringify(isMac()?RBX_JSON
 let autoStudio=store.get("llmms3-auto",true);
 function devUI(state,msg){
   const dot=$("devDot"); dot.className="sdot"+(state==="busy"?" busy":state==="bad"?" bad":mcp.connected?" on":"");
-  $("devS1").textContent=state==="busy"?"Connexion…":state==="bad"?"Connexion impossible":mcp.connected?"Roblox Studio connecté":"Roblox Studio non connecté";
+  $("devS1").textContent=state==="busy"?"Connexion…":state==="bad"?"Connexion impossible":mcp.connected?(/localhost|127\.0\.0\.1/.test(mcp.url||"")?"Roblox Studio connecté":"Serveur MCP connecté"+(mcp.proxy?" (via le relais)":"")):"Roblox Studio non connecté";
   $("devS2").textContent=msg||(mcp.connected?`${mcp.list.length} outils · ${mcp.url}`:"Aucun serveur MCP");
   $("devOff").disabled=!mcp.connected; $("devTest").disabled=!mcp.connected;
   $("devTools").innerHTML=mcp.connected?mcp.list.slice(0,40).map(t=>`<span class="chip" title="${esc(t.description||"")}">${esc(t.name)}</span>`).join(""):"";
@@ -962,11 +976,11 @@ function devUI(state,msg){
 }
 function openDev(){ $("devUrl").value=mcp.url||store.get("llmms3-mcp",null)||"http://localhost:3333/mcp"; const sj=store.get("llmms3-mcpjson",null); if(sj&&!$("devJson").value) $("devJson").value=JSON.stringify(sj,null,2); devUI(); $("dev").classList.add("open"); $("menu").classList.remove("open"); setTimeout(()=>$("devJson").focus(),50); }
 function closeDev(){ $("dev").classList.remove("open"); }
-async function devConnect(url){
+async function devConnect(url,headers){
   url=(url||"").trim(); if(!/^https?:\/\//i.test(url)){ devUI("bad","Mets une adresse qui commence par http:// ou https://"); return false; }
   devUI("busy",url); $("devConnect").disabled=true;
-  try{ const n=await mcp.connect(url); devUI(null); if(mode!=="roblox"){ setMode("roblox"); if(tier!=="studio") tier="5"; modelUI(); save(); } return n; }
-  catch(e){ studioUI(); devUI("bad",`${url} ne répond pas (${e.message}). Vérifie que le pont tourne sur CE PC et que Studio est ouvert.`); return false; }
+  try{ const n=await mcp.connect(url,{headers:headers||{}}); devUI(null); if(mode!=="roblox"){ setMode("roblox"); if(tier!=="studio") tier="5"; modelUI(); save(); } return n; }
+  catch(e){ studioUI(); devUI("bad",/localhost|127\.0\.0\.1/.test(url)?`${url} ne répond pas (${e.message}). Vérifie que le pont tourne sur CE PC et que Studio est ouvert.`:`${url} ne répond pas : ${e.message}. Vérifie l'adresse et, si le serveur demande une clé, ajoute "headers" dans ton JSON.`); return false; }
   finally{ $("devConnect").disabled=false; }
 }
 $("openDev").onclick=e=>{ e.stopPropagation(); closeSide(); openDev(); };
@@ -1951,7 +1965,7 @@ $("gateForm").onsubmit=e=>{ e.preventDefault(); const k=$("gateCode").value.trim
 applyI18n(); webUI(); setSend(); modelUI(); meUI(); setTimeout(checkLogin,1300);
 // Zip ouvert directement (hors ligne) : on ouvre tout de suite llmms ia en ligne, où l'IA marche
 if(LOCAL_MODE&&!orKey()){ setTimeout(()=>{ const n=note("Ouverture de llmms ia en ligne…"); const a=document.createElement("a"); a.href=ONLINE_URL; a.className="dl"; a.textContent=" ✦ Ouvrir"; n.appendChild(a); location.href=ONLINE_URL; },1400); } setMode(mode); studioUI(); render(); drawRecents(); intro();
-(async()=>{ const u=store.get("llmms3-mcp",null); if(u){ try{ await mcp.connect(u); }catch{ studioUI(); } } setTimeout(resumeIfNeeded,600); })();
+(async()=>{ const u=store.get("llmms3-mcp",null); if(u){ try{ await mcp.connect(u,{headers:store.get("llmms3-mcphdr",{})}); }catch{ studioUI(); } } setTimeout(resumeIfNeeded,600); })();
 </script>
 <!--LLMMS_CORE-->
 <script type="module">
