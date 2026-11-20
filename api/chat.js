@@ -374,6 +374,10 @@ export default async function handler(req, res) {
     // la session signée reste valable même si l'envoi d'e-mails est coupé (le propriétaire reste illimité)
     const who = await checkSession(sessionHeader, env);
     if (body?.mode === "billing_status") { res.status(200).json(await billingStatus(req, who)); return; }
+    // Claude Opus 5.5 (payant) : réservé au propriétaire. Propria = Claude Opus 5.5 pour le propriétaire, IA gratuite pour les autres.
+    body = body || {};
+    body._owner = isOwner(who);
+    if (String(body.tier) === "claude" && !body._owner) { res.status(403).json({ error: "Le modèle « Claude Opus 5.5 » est réservé au propriétaire du site. Choisis un autre modèle 🙂" }); return; }
     const lim = await dailyLimit(req, body || {}, who);
     if (lim) { res.status(429).json({ error: lim }); return; }
 
