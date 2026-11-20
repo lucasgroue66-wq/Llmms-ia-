@@ -416,6 +416,7 @@ function admin(){ const S=(t,h)=>`<h2 style="margin-top:18px">${t}</h2><div clas
   <h2 style="margin-top:14px">🧱 Joueurs de mes jeux Bloxy</h2><div class="row" style="gap:6px;flex-wrap:wrap"><select class="in" id="bgs" style="width:auto">${(P().blox.length?P().blox:[{id:"",n:"(aucun jeu)"}]).map(g=>`<option value="${g.id}">${esc(g.n)}</option>`).join("")}</select><input class="in" id="bnb" type="number" placeholder="Joueurs"><button class="btn" id="bad">Mettre</button></div>
   <h2 style="margin-top:14px">🌐 Utilisateurs de mes sites</h2><div class="row" style="gap:6px;flex-wrap:wrap"><select class="in" id="sws" style="width:auto">${((P().sites||[]).length?P().sites:[{id:"",n:"(aucun site)"}]).map(x=>`<option value="${x.id}">${esc(x.n)}</option>`).join("")}</select><input class="in" id="swu" type="number" placeholder="Utilisateurs"><button class="btn" id="swb">Mettre</button></div>
   <h2 style="margin-top:14px">🏢 Racheter une entreprise</h2><div class="row" style="gap:6px;flex-wrap:wrap"><select class="in" id="cps" style="width:auto">${COMP.map((c,i)=>`<option value="${i}">${c[0]} ${c[1]} (+${fmt(c[3])}/min)</option>`).join("")}</select><button class="btn" id="cpb">Me la donner</button><button class="btn gh" id="ap5">Toutes</button></div>
+  ${xAdminHTML()}
   ${S("⭐ Encore plus",`<button id="x100">⏩ Vitesse x100</button><button id="ntx">${E.noTax?"✅":"⬜"} Plus jamais d'impôts</button><button id="bz1">📈 Tous mes business +1 niveau</button><button id="fl">⚽ Toutes les stars dans mon club</button><button id="mx">💰 Monétisation max sur mes jeux</button><button id="sv">☁️ Sauvegarder en ligne</button>`)}
   <h2 style="margin-top:14px">💸 Pluie d'argent (chaque seconde)</h2><div class="row" style="gap:6px;flex-wrap:wrap"><input class="in" id="rnv" type="number" placeholder="€ par seconde" value="${E.rain||""}"><button class="btn" id="rnb">Activer</button><button class="btn gh" id="rnx">Arrêter</button></div>
   <h2 style="margin-top:14px">🖱️ Clic : niveau exact</h2><div class="row" style="gap:6px;flex-wrap:wrap"><input class="in" id="clv" type="number" min="1" max="${CLICK.length}" placeholder="1 à ${CLICK.length}" value="${E.cl+1}"><button class="btn" id="clb">Mettre</button><button class="btn gh" id="ac10">🤖 +10 auto-clics</button><button class="btn gh" id="crm">💥 Critique max</button></div>
@@ -424,6 +425,7 @@ function admin(){ const S=(t,h)=>`<h2 style="margin-top:18px">${t}</h2><div clas
   ${S("⏱ Temps",`<button data-sk="1">+1 jour</button><button data-sk="30">+30 jours</button><button data-sk="365">+1 an</button><button id="ag">🎂 -5 ans (plus jeune)</button>`)}
   <div class="row" style="margin-top:16px"><button class="btn r" id="rs">Tout réinitialiser</button><span class="grow"></span><button class="btn gh" id="x">Fermer</button></div>`,()=>{
   const ok=t=>{ save(); head(); toast(t); };
+  xAdminBind(ok);
   document.querySelectorAll("[data-am]").forEach(b=>b.onclick=()=>{ E.cash+=+b.dataset.am; ok("+"+fmt(+b.dataset.am)); });
   $("inf").onclick=()=>{ E.inf=!E.inf; if(E.inf) E.cash=Math.max(E.cash,1e15); ok(E.inf?"♾️ Argent infini activé":"Argent infini désactivé"); admin(); };
   $("amg").onclick=()=>{ const v=+$("amv").value||0; if(v){ E.cash+=v; ok("+"+fmt(v)); } };
@@ -519,9 +521,9 @@ function appsDaily(){ const A=P(); let n=-teamPower().cost; (A.sites||[]).forEac
 setInterval(()=>{ const r=acqRate(); if(r>0){ E.cash+=r; E.ph.acqE=(E.ph.acqE||0)+r; head(); const el=$("acqT"); if(el) el.textContent="+"+fmt(r); } },10000);
 
 /* ---------- écran Apps ---------- */
-const APPS=[["web","🌐","Sites web","Ton site d'IA & abonnements","#0ea5e9"],["build","🛠️","Bloxy Créateur","Crée ta map","#14b8a6"],["shop","🛍️","ShopNova","Dropshipping & e-commerce","#f97316"],["ai","🤖","Neura Studio","Crée tes IA","#8b5cf6"],["vid","▶️","VidTube","Fais des vidéos","#ef4444"],["form","🎓","Academy","Vends des formations","#0ea5e9"],["blox","🧱","Bloxy Studio","Crée ton jeu","#22c55e"],["chat","💬","Disko","Discute avec des gens","#5865f2"],["s:face","👥","Facely","Réseau social","#1877f2"],["s:snap","👻","Snappo","Stories","#eab308"],["s:pix","📸","Pixgram","Photos","#e1306c"],["s:chirp","🐦","Chirp","Posts","#1d9bf0"],["s:tok","🎵","TokTik","Vidéos courtes","#ff0050"],["pc","🖥️","PC Store","Achète des PC","#64748b"],["acq","🏢","Rachat","Rachète des entreprises","#eab308"]];
+const APPS=[["web","🌐","Sites web","Ton site d'IA & abonnements","#0ea5e9"],["build","🛠️","Bloxy Créateur","Crée ta map","#14b8a6"],["shop","🛍️","ShopNova","Dropshipping & e-commerce","#f97316"],["ai","🤖","Neura Studio","Crée tes IA","#8b5cf6"],["vid","▶️","VidTube","Fais des vidéos","#ef4444"],["form","🎓","Academy","Vends des formations","#0ea5e9"],["blox","🧱","Bloxy Studio","Crée ton jeu","#22c55e"],["chat","💬","Disko","Discute avec des gens","#5865f2"],["s:face","👥","Facely","Réseau social","#1877f2"],["s:snap","👻","Snappo","Stories","#eab308"],["s:pix","📸","Pixgram","Photos","#e1306c"],["s:chirp","🐦","Chirp","Posts","#1d9bf0"],["s:tok","🎵","TokTik","Vidéos courtes","#ff0050"],["pc","🖥️","PC Store","Achète des PC","#64748b"],["acq","🏢","Rachat","Rachète des entreprises","#eab308"],["gog","🔎","Gogole","Ton moteur de recherche","#4285f4"],["coin","🪙","LLMMS Coin","Ta propre crypto","#f59e0b"],["casino","🎰","Casino","Roulette & machines","#16a34a"],["mus","🎤","Label","Ta maison de disques","#db2777"],["quest","🏆","Défis","Quêtes, rival & prestige","#dc2626"]];
 let app=null;
-function apps(){ const A=P(); if(app&&app.startsWith("s:")){ socApp=app.slice(2); return appSoc(); } if(app) return ({web:appWeb,build:appBuild,shop:appShop,ai:appAI,vid:appVid,form:appForm,blox:appBlox,chat:appChat,pc:appPC,acq:appAcq})[app]();
+function apps(){ const A=P(); if(app&&app.startsWith("s:")){ socApp=app.slice(2); return appSoc(); } if(app) return ({web:appWeb,build:appBuild,shop:appShop,ai:appAI,vid:appVid,form:appForm,blox:appBlox,chat:appChat,pc:appPC,acq:appAcq,gog:appGog,coin:appCoin,casino:appCasino,mus:appMus,quest:appQuest})[app]();
   const unread=Object.values(A.unread).reduce((a,b)=>a+b,0);
   $("main").innerHTML=`<div class="card"><div class="row"><div class="grow"><div class="hint">Revenus des applis</div><b class="${appsDaily()>=0?"up":"dn"}" style="font-size:20px">${fmt(appsDaily())}/jour</b></div><div style="text-align:right"><div class="hint">Rachats</div><b class="up">+${fmt(acqRate())}/min</b></div></div><p class="hint" style="margin:6px 0 0">🏠 Coût de la vie ${fmt(25+Object.keys(E.items).length*40)}/j · ⚡ électricité ${fmt(elec())}/j · 🧾 impôts 20 % chaque mois${A.share?` · 👩‍💼 Kaïa prend ${Math.round(A.share*100)} %`:""}</p></div>
   <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:14px 8px;padding:8px 4px">${APPS.map(([k,ic,n,,c])=>`<button data-app="${k}" style="display:flex;flex-direction:column;align-items:center;gap:6px;position:relative"><span style="width:62px;height:62px;border-radius:18px;display:grid;place-items:center;font-size:30px;background:linear-gradient(145deg,${c},#0b1020);box-shadow:0 6px 16px -6px ${c}">${ic}</span><span style="font-size:11.5px;font-weight:700">${n}</span>${k==="chat"&&unread?`<span style="position:absolute;top:-4px;right:8px;background:#ef4444;border-radius:999px;padding:1px 7px;font-size:12px;font-weight:900">${unread}</span>`:""}</button>`).join("")}</div>`;
@@ -917,6 +919,202 @@ if(!E.market.length) refreshMarket();
 const away=Math.min(400,Math.floor((Date.now()-(E.ts||Date.now()))/4000));
 if(away>=3){ const c0=E.cash; for(let i=0;i<away;i++) tick(1); if(E.cash<c0) E.cash=c0; save(); setTimeout(()=>popup(`<h3>👋 Bon retour !</h3><p>Pendant ton absence, <b>${away} jours</b> sont passés.</p><p style="font-size:22px;font-weight:900" class="${E.cash>=c0?"up":"dn"}">${E.cash>=c0?"+":""}${fmt(E.cash-c0)}</p><button class="btn g" id="x" style="width:100%">Super !</button>`,()=>{ $("x").onclick=closePop; }),300); }
 else if(E.day===1&&!E.taps) setTimeout(()=>popup(`<h3>💼 Bienvenue dans EMPIRE MILLIONNAIRE</h3><p>Tu commences avec <b>300 €</b>. Ton but : devenir <b>la personne la plus riche du monde</b>.</p><p class="hint">1️⃣ Touche l'écran pour gagner de l'argent et monte le niveau de ton clic.<br>2️⃣ Crée ton premier business : un magasin à 5 000 €.<br>3️⃣ Investis dans les actions, l'immobilier et la crypto.<br>4️⃣ Fusionne tes entreprises pour créer des empires.<br>5️⃣ Achète voitures, jets, yachts, tableaux et îles.<br><br>1 jour = 4 secondes, même jeu fermé. Le panel 🛠️ est en haut à droite.</p><button class="btn g" id="x" style="width:100%">C'est parti !</button>`,()=>{ $("x").onclick=closePop; }),300);
+/* ================= ✨ EXTENSIONS : Gogole, LLMMS Coin, Casino, Label, Défis, Rival, Prestige, Événements & cinématiques ================= */
+function X(){ if(!E.x) E.x={gog:null,coin:null,mus:null,ql:{},cw:0,cl:0,evOn:1,evF:45,luck:0,pres:0,rv:null,beat:0}; const x=E.x; if(!x.rv) x.rv={n:"Damien Kross",w:Math.max(5e4,netWorth()*1.6)}; return x; }
+const PMULT=()=>Math.pow(2,(E.x&&E.x.pres)||0);
+PEOPLE.rival=["😈","Damien Kross","Ton rival milliardaire"];
+
+/* ---------- 🎬 Cinématiques ---------- */
+(()=>{ const st=document.createElement("style"); st.textContent=`
+#cine{position:fixed;inset:0;z-index:9999;overflow:hidden;display:grid;place-items:center;color:#fff;text-align:center;cursor:pointer;animation:cIn .5s ease}
+#cine .bar{position:absolute;left:0;right:0;height:0;background:#000;z-index:3;transition:height .6s ease}#cine .bar.t{top:0}#cine .bar.b{bottom:0}#cine.on .bar{height:11vh}
+#cine .ic{font-size:min(38vw,190px);line-height:1;animation:cPop 1.1s cubic-bezier(.2,1.6,.4,1) both;filter:drop-shadow(0 10px 40px rgba(0,0,0,.6))}
+#cine .tt{font-size:min(9vw,46px);font-weight:900;letter-spacing:1px;margin:14px 16px 6px;text-shadow:0 4px 20px rgba(0,0,0,.7)}#cine .tt span{display:inline-block;opacity:0;animation:cL .35s ease forwards}
+#cine .ss{font-size:min(4.6vw,20px);opacity:0;animation:cF .8s ease 1.3s forwards;max-width:560px;margin:0 22px;text-shadow:0 2px 10px #000}
+#cine .fx{position:absolute;top:-10%;font-size:28px;animation:cFall linear forwards;z-index:1}
+#cine .sk{position:absolute;bottom:13vh;right:16px;z-index:4;font-size:13px;opacity:.75;background:#0008;padding:6px 12px;border-radius:999px}
+#cine .ray{position:absolute;width:220vmax;height:220vmax;background:repeating-conic-gradient(#fff1 0 8deg,#0000 8deg 20deg);animation:cRot 14s linear infinite;z-index:0}
+#cine .in{position:relative;z-index:2}
+#cine.shake .in{animation:cSh .45s linear 3}
+@keyframes cIn{from{opacity:0}}@keyframes cPop{0%{transform:scale(0) rotate(-40deg)}100%{transform:scale(1) rotate(0)}}@keyframes cL{from{opacity:0;transform:translateY(25px) scale(1.6)}to{opacity:1;transform:none}}
+@keyframes cF{to{opacity:1}}@keyframes cFall{to{transform:translateY(125vh) rotate(720deg)}}@keyframes cRot{to{transform:rotate(360deg)}}
+@keyframes cSh{0%,100%{transform:none}25%{transform:translate(-8px,4px)}75%{transform:translate(8px,-4px)}}`; document.head.appendChild(st); })();
+const CSTY={or:["#78350f","#fbbf24","💰💸💎🪙"],vert:["#064e3b","#22c55e","💸💵🍀✨"],rouge:["#450a0a","#ef4444","🔥💥⚠️"],bleu:["#0c1e4a","#3b82f6","✨⭐💫"],violet:["#2e1065","#a855f7","🎉🎊✨⭐"],noir:["#000","#555","💀🖤⚡"]};
+function cine(o){ return new Promise(res=>{ const old=$("cine"); if(old) old.remove(); const [bg,c2,fx]=CSTY[o.col]||CSTY.or;
+  const d=document.createElement("div"); d.id="cine"; d.style.background=`radial-gradient(circle at 50% 45%,${c2}66,${bg} 55%,#000)`;
+  d.innerHTML=`<div class="ray"></div><div class="bar t"></div><div class="bar b"></div><div class="in"><div class="ic">${o.ic||"🎬"}</div><div class="tt">${[...String(o.t||"")].map((ch,i)=>`<span style="animation-delay:${.5+i*.045}s">${ch===" "?"&nbsp;":esc(ch)}</span>`).join("")}</div><div class="ss">${esc(o.s||"")}</div></div><div class="sk">Toucher pour passer ⏭</div>`;
+  document.body.appendChild(d); requestAnimationFrame(()=>d.classList.add("on")); if(o.col==="rouge"||o.col==="noir") setTimeout(()=>d.classList.add("shake"),600);
+  const em=[...fx]; let n=0; const rain=setInterval(()=>{ if(++n>40) return clearInterval(rain); const f=document.createElement("div"); f.className="fx"; f.textContent=pick(em); f.style.left=rnd(0,96)+"%"; f.style.animationDuration=rnd(1.6,3.2)+"s"; f.style.fontSize=rnd(18,40)+"px"; d.appendChild(f); },70);
+  try{ navigator.vibrate&&navigator.vibrate(o.col==="rouge"?[80,60,80]:40); }catch{}
+  let done=false; const end=()=>{ if(done) return; done=true; clearInterval(rain); d.style.transition="opacity .4s"; d.style.opacity=0; setTimeout(()=>{ d.remove(); res(); },400); };
+  d.onclick=end; setTimeout(end,o.ms||4800); }); }
+
+/* ---------- ⚡ Événements aléatoires ---------- */
+const bestGame=()=>P().blox.slice().sort((a,b)=>(b.pl||0)-(a.pl||0))[0];
+const XEV=[
+ ["influ","📱","UN INFLUENCEUR PARLE DE TOI","rose","vert",()=>{ const g=bestGame(); if(g){ g.pl=(g.pl||0)+50000; g.hype=(g.hype||1)*2; return `${pick(["NoxGaming","Lila Vlogs","Tibo Clash"])} a joué à « ${g.n} » en live : +50 000 joueurs !`; } const v=Math.max(20000,netWorth()*.02); E.cash+=v; return `Il a parlé de ton empire en vidéo : +${fmt(v)} de nouveaux clients.`; }],
+ ["hack","💻","ALERTE : HACKER !","","rouge",()=>{ const v=Math.round(E.cash*.04); E.cash-=v; return `Un hacker a attaqué tes serveurs. Tu as perdu ${fmt(v)} avant que tes experts le bloquent.`; }],
+ ["fisc","🧾","CONTRÔLE FISCAL","","rouge",()=>{ if(E.noTax) return "Les impôts sont passés… mais tu es intouchable 😎 (0 € à payer)."; const v=Math.round(E.cash*.06); E.cash-=v; return `Les impôts ont vérifié tes comptes : amende de ${fmt(v)}.`; }],
+ ["viral","🚀","TU ES VIRAL !","","violet",()=>{ const so=S0(); let tot=0; for(const k in so){ const a=Math.round(so[k].f*.5+5000); so[k].f+=a; tot+=a; } P().vid.subs=Math.round(P().vid.subs*1.3+3000); return `Ton post a explosé sur tous les réseaux : +${tot.toLocaleString("fr-FR")} abonnés !`; }],
+ ["herit","👴","HÉRITAGE SURPRISE","","or",()=>{ const v=Math.max(50000,Math.round(netWorth()*.05)); E.cash+=v; return `Un oncle d'Amérique que tu ne connaissais pas t'a laissé ${fmt(v)} !`; }],
+ ["loto","🎟️","JACKPOT AU LOTO !","","or",()=>{ const v=Math.max(1e7,Math.round(netWorth()*.02)); E.cash+=v; return `Tu as gagné ${fmt(v)} au loto !`; }],
+ ["krach","📉","KRACH BOURSIER","","rouge",()=>{ E.mkt=-.8; E.mktT=6; return "Les marchés s'effondrent… c'est peut-être le moment d'acheter pas cher."; }],
+ ["boom","📈","LA BOURSE S'ENVOLE","","vert",()=>{ E.mkt=.6; E.mktT=8; return "Toutes les actions et cryptos montent pendant plusieurs jours !"; }],
+ ["pump","🪙","LLMMS COIN EXPLOSE","","or",()=>{ const c=X().coin; if(!c) { E.cash+=25000; return "Tout le monde parle de crypto… crée ta LLMMS Coin dans les applis ! (+25 000 € de bonus)"; } c.p*=5; c.hype+=3; return `Un milliardaire a tweeté sur ta crypto : le prix est x5 (${fmt(c.p,1)}) !`; }],
+ ["gog","🔎","GOGOLE CARTONNE","","bleu",()=>{ const g=X().gog; if(!g){ E.cash+=25000; return "Les gens cherchent un nouveau moteur de recherche… lance Gogole dans les applis ! (+25 000 €)"; } g.s=Math.round(g.s*3+100000); return `Gogole est n°1 des téléchargements : ${g.s.toLocaleString("fr-FR")} recherches par jour !`; }],
+ ["tube","🎤","TON ARTISTE A UN TUBE","","violet",()=>{ const m=X().mus; const a=m&&m.a.length?pick(m.a):null; if(!a){ E.cash+=25000; return "La musique paie… lance ton label dans les applis ! (+25 000 €)"; } a.str=(a.str||0)+5e6; return `« ${a.n} » est n°1 des charts : +5 millions d'écoutes par jour !`; }],
+ ["fire","🔥","INCENDIE !","","rouge",()=>{ const v=Math.round(E.cash*.03); E.cash-=v; return `Un incendie dans un de tes locaux. L'assurance couvre presque tout : il te reste ${fmt(v)} à payer.`; }],
+ ["rival","😈","TON RIVAL ATTAQUE","","noir",()=>{ const r=X().rv; r.w*=1.25; msg("rival",pick(["Je viens de racheter une boîte de plus. Tu me suivras jamais 😏","T'es mignon avec ton petit empire 😂","Le n°1 c'est moi. Pour toujours."])); return `${r.n} vient de racheter une entreprise géante : sa fortune passe à ${fmt(r.w)}.`; }],
+ ["star","⚽","UNE STAR VEUT TON CLUB","","bleu",()=>{ const b=E.biz.find(x=>x.t==="foot"); if(!b){ E.cash+=50000; return "Une star du foot cherche un club… achète un club de foot ! (+50 000 €)"; } const i=ri(0,FOOTP.length-1); b.squad=b.squad||[]; if(!b.squad.includes(i)) b.squad.push(i); return `${FOOTP[i][0]||"Une star"} signe gratuitement dans ton club !`; }],
+];
+async function runEv(k,silent){ const ev=XEV.find(e=>e[0]===k); if(!ev) return; const txt=ev[5](); logEv(`${ev[1]} ${txt}`); save(); head(); if(!silent){ await cine({ic:ev[1],t:ev[2],s:txt,col:ev[4]}); if(page!=="home") draw(); } }
+
+/* ---------- 🔎 Gogole ---------- */
+const FAKE=["Wikipédia","Météo France","YouTube","Recette facile","Forum Jeux","Le Monde","Amazone","Carte du monde","Traducteur"];
+function gogDay(){ const g=X().gog; if(!g) return 0; const target=20000*Math.pow(g.q,2.3)*(1+g.mk*.5); g.s=Math.max(0,Math.round(g.s+(target-g.s)*.08+gauss()*Math.sqrt(g.s+1)*3)); g.last=Math.round(g.s*.08*(1+g.ads*.7)-g.q*120); return g.last; }
+function appGog(){ const x=X(), g=x.gog;
+  if(!g){ $("main").innerHTML=back("Gogole","🔎")+`<div class="card" style="text-align:center"><div style="font-size:54px">🔎</div><h3 style="margin:6px 0"><span style="color:#4285f4">G</span><span style="color:#ea4335">o</span><span style="color:#fbbc05">g</span><span style="color:#4285f4">o</span><span style="color:#34a853">l</span><span style="color:#ea4335">e</span></h3><p>Crée ton propre moteur de recherche. Des millions de gens font des recherches, et toi tu gagnes de l'argent avec les pubs au-dessus des résultats.</p><button class="btn g" id="gc" style="width:100%">Lancer Gogole · ${fmt(250000)}</button></div>`; bindBack();
+    $("gc").onclick=()=>{ if(!pay(250000)) return; x.gog={s:5000,q:1,ads:0,mk:0,last:0,top:null,tot:0}; save(); cine({ic:"🔎",t:"GOGOLE EST EN LIGNE",s:"Ton moteur de recherche vient d'être lancé !",col:"bleu",ms:3500}); appGog(); }; return; }
+  const cost={q:150000*g.q*g.q,a:300000*Math.pow(2.2,g.ads),m:80000*(g.mk+1)};
+  $("main").innerHTML=back("Gogole","🔎")+`<div class="card" style="text-align:center;background:#fff;color:#202124"><div style="font-size:34px;font-weight:900"><span style="color:#4285f4">G</span><span style="color:#ea4335">o</span><span style="color:#fbbc05">g</span><span style="color:#4285f4">o</span><span style="color:#34a853">l</span><span style="color:#ea4335">e</span></div>
+   <div class="row" style="gap:6px;margin-top:10px"><input class="in" id="gq" placeholder="Rechercher sur Gogole…" style="background:#f1f3f4;color:#202124;border-color:#dfe1e5"><button class="btn" id="gs">🔎</button></div><div id="gres" style="text-align:left;margin-top:8px"></div></div>
+   <div class="card"><div class="row"><div class="grow"><div class="hint">Recherches par jour</div><b style="font-size:22px">${g.s.toLocaleString("fr-FR")}</b></div><div style="text-align:right"><div class="hint">Gain / jour</div><b class="${g.last>=0?"up":"dn"}" style="font-size:20px">${fmt(g.last)}</b></div></div>
+   <div class="qty" style="margin-top:8px"><button id="gu1">🖥️ Serveurs niv ${g.q} → ${g.q+1} · ${fmt(cost.q)}</button><button id="gu2">📢 Pubs niv ${g.ads} → ${g.ads+1} · ${fmt(cost.a)}</button><button id="gu3">📺 Campagne de pub (+${g.mk+1}) · ${fmt(cost.m)}</button></div>
+   <p class="hint" style="margin:8px 0 0">Plus de serveurs = plus de recherches. Plus de pubs = plus d'argent par recherche.</p></div>
+   <div class="card"><b>⭐ Mettre un de mes sites en 1er résultat</b><p class="hint" style="margin:4px 0 8px">Ton site gagne des visiteurs chaque jour grâce à Gogole.</p>${(P().sites||[]).length?`<div class="row" style="gap:6px"><select class="in" id="gtp">${P().sites.map(s=>`<option value="${s.id}" ${g.top==s.id?"selected":""}>${esc(s.n)}</option>`).join("")}</select><button class="btn g" id="gtb">Mettre en 1er · ${fmt(50000)}</button></div>`:`<button class="btn gh" id="gw" style="width:100%">🌐 Créer d'abord un site</button>`}</div>`;
+  bindBack();
+  const up=(c,f)=>()=>{ if(!pay(c)) return; f(); save(); appGog(); };
+  $("gu1").onclick=up(cost.q,()=>g.q++); $("gu2").onclick=up(cost.a,()=>g.ads++); $("gu3").onclick=up(cost.m,()=>g.mk++);
+  if($("gtb")) $("gtb").onclick=()=>{ if(!pay(50000)) return; g.top=+$("gtp").value; save(); toast("⭐ Ton site est maintenant 1er sur Gogole"); appGog(); };
+  if($("gw")) $("gw").onclick=()=>{ app="web"; apps(); };
+  const search=()=>{ const q=$("gq").value.trim(); if(!q) return; const ql=q.toLowerCase(), A=P(), R=[];
+    (A.sites||[]).forEach(s=>R.push([s.id==g.top?99:2,"🌐",s.n,`${(s.users||0).toLocaleString("fr-FR")} utilisateurs · ton site`,"web"]));
+    A.blox.forEach(b=>R.push([2,"🧱",b.n+" — Bloxy",`${(b.pl||0).toLocaleString("fr-FR")} joueurs en ce moment`,"blox"]));
+    if(A.shop) R.push([2,"🛍️",A.shop.n,"Boutique en ligne · livraison rapide","shop"]);
+    A.ai.forEach(m=>R.push([2,"🤖",m.n,"Intelligence artificielle","ai"]));
+    E.biz.forEach(b=>R.push([1,BT[b.t].ic,b.name,BT[b.t].n,null]));
+    if(x.coin) R.push([2,"🪙",x.coin.n+" (LMC)","Prix : "+fmt(x.coin.p,1),"coin"]);
+    for(const k in S0()) R.push([1,SOC[k][0],SOC[k][1]+" — ton compte",S0()[k].f.toLocaleString("fr-FR")+" abonnés","s:"+k]);
+    let res=R.filter(r=>r[0]===99||String(r[2]+r[3]).toLowerCase().includes(ql)||ql.split(/\s+/).some(w=>w.length>2&&String(r[2]).toLowerCase().includes(w)));
+    if(!res.length) res=R.slice(0,3);
+    res.sort((a,b)=>b[0]-a[0]); const fk=[0,1,2].map(()=>pick(FAKE));
+    $("gres").innerHTML=`<div style="font-size:12px;color:#5f6368;margin-bottom:6px">Environ ${ri(2,900)} ${ri(100,999)} 000 résultats</div><div style="font-size:12px;color:#202124;background:#fef7e0;border-radius:8px;padding:6px 8px;margin-bottom:6px"><b>Annonce</b> · ${esc(pick(["Achète ta Supercar","Formation dropshipping","Casino Royal","Banque Atlas"]))} — +${fmt(.08*(1+g.ads*.7),1)} pour toi</div>`+
+      res.slice(0,8).map(r=>`<div style="padding:7px 0;border-bottom:1px solid #eee;cursor:pointer" ${r[4]?`data-ga="${r[4]}"`:""}><div style="font-size:12px;color:#5f6368">${r[1]} ${r[0]===99?"⭐ 1er résultat":""}</div><div style="color:#1a0dab;font-weight:700">${esc(r[2])}</div><div style="font-size:12.5px;color:#4d5156">${esc(r[3])}</div></div>`).join("")+
+      fk.map(f=>`<div style="padding:7px 0;border-bottom:1px solid #eee"><div style="color:#1a0dab;font-weight:700">${esc(q)} — ${f}</div><div style="font-size:12.5px;color:#4d5156">Tout savoir sur « ${esc(q)} ».</div></div>`).join("");
+    g.tot=(g.tot||0)+1; E.cash+=Math.round(.08*(1+g.ads*.7)*100)/100; head();
+    document.querySelectorAll("[data-ga]").forEach(e=>e.onclick=()=>{ app=e.dataset.ga; apps(); scrollTo(0,0); }); };
+  $("gs").onclick=search; $("gq").onkeydown=e=>{ if(e.key==="Enter") search(); }; }
+
+/* ---------- 🪙 LLMMS Coin ---------- */
+function coinMove(c,days){ for(let i=0;i<days;i++){ const r=.002+.09*gauss()+c.hype*.04; c.p=Math.max(.0001,c.p*(1+r)); c.hype=Math.max(0,c.hype*.85-.02); if(Math.random()<.012&&c.p>.5){ c.p*=.35; logEv(`📉 Grosse vente sur la ${c.n} : -65 %`); } c.hold=Math.max(10,Math.round(c.hold*(1+r*.6+c.hype*.01))); c.h.push(c.p); if(c.h.length>80) c.h.shift(); } }
+function appCoin(){ const x=X(), c=x.coin;
+  if(!c){ $("main").innerHTML=back("LLMMS Coin","🪙")+`<div class="card" style="text-align:center"><div style="font-size:54px">🪙</div><p>Crée ta propre crypto. Tu gardes 400 millions de jetons. Fais du hype sur tes réseaux pour que le prix monte… et revends au bon moment ! (Attention, ça peut aussi s'écraser.)</p><input class="in" id="cn" placeholder="Nom de ta crypto" value="LLMMS Coin"><button class="btn g" id="cc" style="width:100%;margin-top:8px">Créer ma crypto · ${fmt(50000)}</button></div>`; bindBack();
+    $("cc").onclick=()=>{ if(!pay(50000)) return; x.coin={n:($("cn").value.trim()||"LLMMS Coin").slice(0,20),p:.001,q:4e8,hype:1,hold:50,h:[.001],sold:0}; save(); cine({ic:"🪙",t:"TA CRYPTO EST NÉE",s:"Le prix de départ est de 0,001 €. Fais monter la hype !",col:"or",ms:3500}); appCoin(); }; return; }
+  const val=c.q*c.p, foll=Object.values(S0()).reduce((a,s)=>a+s.f,0)+P().vid.subs;
+  $("main").innerHTML=back(esc(c.n),"🪙")+`<div class="card" style="background:linear-gradient(135deg,#78350f44,var(--card))"><div class="hint">Prix d'un jeton</div><div style="font-size:30px;font-weight:900" class="up" id="cpx">${fmt(c.p,1)}</div><canvas id="cch" height="110" style="width:100%;margin-top:6px"></canvas>
+    <div class="row hint"><span class="grow">Tu as ${Math.round(c.q).toLocaleString("fr-FR")} jetons</span><b class="up" id="cval">${fmt(val)}</b></div><div class="hint">👥 ${c.hold.toLocaleString("fr-FR")} détenteurs · 🔥 hype ${c.hype.toFixed(1).replace(".",",")}</div></div>
+   <div class="card"><b>📣 Faire du hype</b><p class="hint" style="margin:4px 0 8px">Poste sur tes réseaux (${foll.toLocaleString("fr-FR")} abonnés) : plus tu as d'abonnés, plus ça monte.</p><div class="qty"><button id="ch1">🐦 Poster sur Chirp · gratuit</button><button id="ch2">📢 Campagne influenceurs · ${fmt(100000)}</button><button id="ch3">🏟️ Pub au Super Bowl · ${fmt(5e6)}</button></div></div>
+   <div class="card"><b>💰 Revendre des jetons</b><p class="hint" style="margin:4px 0 8px">Vendre beaucoup d'un coup fait baisser le prix.</p><div class="qty">${[5,10,25,50,100].map(p=>`<button data-cs="${p}">Vendre ${p} %</button>`).join("")}</div><p class="hint" style="margin:6px 0 0">Déjà gagné : <b class="up">${fmt(c.sold)}</b></p></div>`;
+  bindBack();
+  const cv=$("cch"), ctx=cv.getContext("2d"); cv.width=cv.clientWidth*2; cv.height=220; const h=c.h, mn=Math.min(...h), mx=Math.max(...h); ctx.lineWidth=4; ctx.strokeStyle=h[h.length-1]>=h[0]?"#22c55e":"#ef4444"; ctx.beginPath(); h.forEach((v,i)=>{ const X0=i/(h.length-1||1)*cv.width, Y=cv.height-10-(v-mn)/((mx-mn)||1)*(cv.height-20); i?ctx.lineTo(X0,Y):ctx.moveTo(X0,Y); }); ctx.stroke();
+  const hy=(cost,amt,t)=>()=>{ if(cost&&!pay(cost)) return; c.hype+=amt; coinMove(c,1); save(); toast(t); appCoin(); };
+  $("ch1").onclick=hy(0,Math.min(4,.3+foll/2e5),"🐦 Post publié : la hype monte !"); $("ch2").onclick=hy(100000,2.5,"📢 Les influenceurs en parlent !"); $("ch3").onclick=hy(5e6,8,"🏟️ Ta pub passe au Super Bowl !");
+  document.querySelectorAll("[data-cs]").forEach(b=>b.onclick=()=>{ const n=c.q*(+b.dataset.cs)/100; if(n<1) return; const imp=Math.min(.6,n/c.q*.5*(1+400/(c.hold+1))); const got=n*c.p*(1-imp/2); c.q-=n; c.p*=(1-imp); c.sold+=got; E.cash+=got; c.h.push(c.p); save(); head(); toast(`💰 +${fmt(got)}`); appCoin(); }); }
+
+/* ---------- 🎰 Casino ---------- */
+const SLOT=["🍒","🍋","🔔","⭐","7️⃣","💎"];
+function appCasino(){ const x=X();
+  $("main").innerHTML=back("Casino Royal","🎰")+`<div class="card" style="background:linear-gradient(135deg,#14532d,#052e16);text-align:center"><div class="hint" style="color:#bbf7d0">Mise</div><div class="row" style="gap:6px;justify-content:center"><input class="in" id="bet" type="number" value="${x.lb||1000}" style="max-width:160px"><button class="btn gh" id="bx2">x2</button><button class="btn gh" id="bmx">Tapis</button></div>
+   <div class="hint" style="margin-top:6px;color:#bbf7d0">Gagné : ${fmt(x.cw)} · Perdu : ${fmt(x.cl)}</div></div>
+   <div class="card" style="text-align:center"><b>🎰 Machine à sous</b><div id="reels" style="font-size:54px;letter-spacing:8px;margin:8px 0">🍒🔔💎</div><button class="btn o" id="spin" style="width:100%">LANCER</button><p class="hint" style="margin:6px 0 0">3 pareils = x10 · 3 💎 = x50 · 3 7️⃣ = x25 · 2 pareils = x2</p></div>
+   <div class="card" style="text-align:center"><b>🎡 Roulette</b><div id="rou" style="font-size:40px;font-weight:900;margin:8px 0">–</div><div class="qty" style="justify-content:center"><button data-ro="r" style="background:#b91c1c;color:#fff">🔴 Rouge x2</button><button data-ro="n" style="background:#111;color:#fff">⚫ Noir x2</button><button data-ro="v" style="background:#15803d;color:#fff">🟢 0 x36</button></div>
+   <div class="row" style="gap:6px;margin-top:8px"><input class="in" id="rn" type="number" min="0" max="36" placeholder="Numéro 0-36"><button class="btn" id="rnb">Miser x36</button></div></div>
+   <div class="card" style="text-align:center"><b>🪙 Pile ou face</b><div class="qty" style="justify-content:center;margin-top:6px"><button data-pf="p">Pile x2</button><button data-pf="f">Face x2</button></div><div id="pfr" style="font-size:30px;margin-top:6px"></div></div>
+   <p class="hint" style="text-align:center">🎲 Argent du jeu uniquement. Le casino gagne souvent…</p>`;
+  bindBack();
+  const getBet=()=>{ const b=Math.floor(+$("bet").value||0); if(b<=0){ toast("Mets une mise"); return 0; } if(E.cash<b){ toast("Pas assez d'argent 💸"); return 0; } x.lb=b; E.cash-=b; return b; };
+  const res=(b,mult,el,txt)=>{ if(mult>0){ const w=b*mult; E.cash+=w; x.cw+=w-b; el.innerHTML+=`<div class="up" style="font-size:16px">+${fmt(w-b)} 🎉</div>`; if(mult>=25) cine({ic:"🎰",t:"JACKPOT !",s:`Tu gagnes ${fmt(w)} !`,col:"or",ms:3200}); } else { x.cl+=b; el.innerHTML+=`<div class="dn" style="font-size:16px">-${fmt(b)}</div>`; } save(); head(); };
+  $("bx2").onclick=()=>{ $("bet").value=Math.floor((+$("bet").value||0)*2); }; $("bmx").onclick=()=>{ $("bet").value=Math.floor(E.cash); };
+  $("spin").onclick=()=>{ const b=getBet(); if(!b) return; const el=$("reels"); $("spin").disabled=true; let n=0; const iv=setInterval(()=>{ el.textContent=[0,1,2].map(()=>pick(SLOT)).join(""); if(++n>14){ clearInterval(iv); let r=[0,1,2].map(()=>pick(SLOT)); if(x.luck) r=Math.random()<.5?["💎","💎","💎"]:["7️⃣","7️⃣","7️⃣"]; el.textContent=r.join(""); const m=r[0]===r[1]&&r[1]===r[2]?(r[0]==="💎"?50:r[0]==="7️⃣"?25:10):(r[0]===r[1]||r[1]===r[2]||r[0]===r[2])?2:0; res(b,m,el); $("spin").disabled=false; } },70); };
+  const roul=(win)=>{ const b=getBet(); if(!b) return; const el=$("rou"); let n=0; const iv=setInterval(()=>{ el.textContent=ri(0,36); if(++n>16){ clearInterval(iv); const v=ri(0,36), red=[1,3,5,7,9,12,14,16,18,19,21,23,25,27,30,32,34,36].includes(v); const out=x.luck?win("force"):win(v,red); el.innerHTML=`${v===0?"🟢":red?"🔴":"⚫"} ${x.luck&&out.n!=null?out.n:v}`; res(b,out.m,el); } },60); };
+  document.querySelectorAll("[data-ro]").forEach(bt=>bt.onclick=()=>{ const k=bt.dataset.ro; roul((v,red)=>v==="force"?{m:k==="v"?36:2,n:k==="v"?0:null}:{m:k==="v"?(v===0?36:0):v!==0&&((k==="r")===red)?2:0}); });
+  $("rnb").onclick=()=>{ const N=Math.floor(+$("rn").value); if(isNaN(N)||N<0||N>36) return toast("Choisis un numéro de 0 à 36"); roul((v)=>v==="force"?{m:36,n:N}:{m:v===N?36:0}); };
+  document.querySelectorAll("[data-pf]").forEach(bt=>bt.onclick=()=>{ const b=getBet(); if(!b) return; const r=x.luck?bt.dataset.pf:(Math.random()<.5?"p":"f"); $("pfr").innerHTML=r==="p"?"🪙 Pile":"🪙 Face"; res(b,r===bt.dataset.pf?2:0,$("pfr")); }); }
+
+/* ---------- 🎤 Label de musique ---------- */
+const ART1=["Lil","Big","Young","MC","DJ","Baby","King","Nova"], ART2=["Kayzo","Rayan","Mélo","Zed","Sky","Nina","Tox","Luna","Saïko","Jaya"], GENRE=["🎤 Rap","🎹 Pop","🎧 Électro","🎸 Rock","🌴 Afro"];
+function musDay(){ const m=X().mus; if(!m) return 0; let rv=0; m.a.forEach(a=>{ a.str=Math.max(0,Math.round((a.str||0)*.97)); rv+=a.str*.05; }); m.last=Math.round(rv-m.a.length*500); return m.last; }
+function appMus(){ const x=X();
+  if(!x.mus){ $("main").innerHTML=back("Label","🎤")+`<div class="card" style="text-align:center"><div style="font-size:54px">🎤</div><p>Crée ton label de musique : signe des artistes, sors des sons, gagne de l'argent sur chaque écoute et organise des concerts.</p><input class="in" id="ln" value="LLMMS Records"><button class="btn g" id="lc" style="width:100%;margin-top:8px">Créer le label · ${fmt(100000)}</button></div>`; bindBack();
+    $("lc").onclick=()=>{ if(!pay(100000)) return; x.mus={n:($("ln").value.trim()||"LLMMS Records").slice(0,24),a:[],pool:[],last:0}; save(); appMus(); }; return; }
+  const m=x.mus; if(m.pool.length<3) while(m.pool.length<4){ const t=ri(1,10); m.pool.push({n:pick(ART1)+" "+pick(ART2),g:pick(GENRE),t,c:Math.round(20000*Math.pow(t,2.2))}); }
+  $("main").innerHTML=back(esc(m.n),"🎤")+`<div class="card"><div class="row"><div class="grow"><div class="hint">Écoutes par jour</div><b style="font-size:22px">${m.a.reduce((s,a)=>s+(a.str||0),0).toLocaleString("fr-FR")}</b></div><div style="text-align:right"><div class="hint">Gain / jour</div><b class="${m.last>=0?"up":"dn"}" style="font-size:20px">${fmt(m.last)}</b></div></div></div>
+   <h2>Tes artistes</h2>${m.a.length?m.a.map((a,i)=>`<div class="item" style="flex-wrap:wrap"><div class="ic">${a.g.split(" ")[0]}</div><div class="grow"><div class="t">${esc(a.n)} · ⭐${a.t}</div><div class="d">${(a.str||0).toLocaleString("fr-FR")} écoutes/jour · ${a.songs||0} sons</div></div><div class="qty"><button data-ms="${i}">💿 Sortir un son · ${fmt(5000*a.t)}</button><button data-mc="${i}">🏟️ Concert · ${fmt(20000*a.t)}</button></div></div>`).join(""):'<p class="hint">Signe ton premier artiste ↓</p>'}
+   <h2>Artistes à signer</h2>${m.pool.map((a,i)=>`<div class="item"><div class="ic">${a.g.split(" ")[0]}</div><div class="grow"><div class="t">${esc(a.n)}</div><div class="d">${a.g} · talent ⭐${a.t}/10</div></div><button class="btn g" data-mg="${i}">Signer · ${fmt(a.c)}</button></div>`).join("")}<button class="btn gh" id="mrf" style="width:100%">🔄 Voir d'autres artistes · ${fmt(2000)}</button>`;
+  bindBack();
+  document.querySelectorAll("[data-mg]").forEach(b=>b.onclick=()=>{ const a=m.pool[+b.dataset.mg]; if(!pay(a.c)) return; m.pool.splice(+b.dataset.mg,1); m.a.push({n:a.n,g:a.g,t:a.t,str:0,songs:0}); save(); toast(`✍️ ${a.n} a signé chez ${m.n} !`); appMus(); });
+  document.querySelectorAll("[data-ms]").forEach(b=>b.onclick=()=>{ const a=m.a[+b.dataset.ms]; if(!pay(5000*a.t)) return; a.songs=(a.songs||0)+1; const hit=Math.random()<.04*a.t; const s=Math.round(Math.pow(a.t,2.6)*rnd(3000,8000)*(hit?40:1)); a.str=(a.str||0)+s; save(); if(hit) cine({ic:"💿",t:"C'EST UN TUBE !",s:`Le nouveau son de ${a.n} fait ${s.toLocaleString("fr-FR")} écoutes par jour !`,col:"violet",ms:3500}); else toast(`💿 Nouveau son : +${s.toLocaleString("fr-FR")} écoutes/jour`); appMus(); });
+  document.querySelectorAll("[data-mc]").forEach(b=>b.onclick=()=>{ const a=m.a[+b.dataset.mc]; if(!pay(20000*a.t)) return; const fans=Math.round((a.str||0)*.05+a.t*800*rnd(.6,1.4)), g=fans*rnd(30,60); E.cash+=g; save(); head(); toast(`🏟️ ${fans.toLocaleString("fr-FR")} fans · +${fmt(g)}`); appMus(); });
+  $("mrf").onclick=()=>{ if(!pay(2000)) return; m.pool=[]; save(); appMus(); }; }
+
+/* ---------- 🏆 Défis, rival & prestige ---------- */
+const QS=[["cash","💶","Avoir {v} sur ton compte",()=>E.cash,[1e4,1e6,1e8,1e10,1e12,1e14],1],
+ ["nw","🏦","Atteindre {v} de fortune",()=>netWorth(),[1e5,1e7,1e9,1e11,1e13],1],
+ ["fol","👥","Avoir {n} abonnés au total",()=>Object.values(S0()).reduce((a,s)=>a+s.f,0)+P().vid.subs,[1000,1e5,1e6,1e7,1e8],0],
+ ["pl","🧱","Avoir {n} joueurs sur un jeu Bloxy",()=>Math.max(0,...P().blox.map(g=>g.pl||0)),[100,10000,1e5,1e6],0],
+ ["ship","📦","Expédier {n} colis",()=>(P().shop&&P().shop.shipped)||0,[100,10000,1e5,1e6],0],
+ ["gog","🔎","Avoir {n} recherches/jour sur Gogole",()=>(X().gog&&X().gog.s)||0,[10000,1e5,1e6,1e7],0],
+ ["str","🎤","Avoir {n} écoutes/jour sur ton label",()=>X().mus?X().mus.a.reduce((s,a)=>s+(a.str||0),0):0,[10000,1e6,1e8],0],
+ ["biz","🏪","Posséder {n} business",()=>E.biz.length,[1,5,10,25],0],
+ ["tap","👆","Toucher l'écran {n} fois",()=>E.taps||0,[100,1000,10000,1e5],0]];
+function qReward(q,l){ const t=q[4][l]; return Math.round(q[5]?t*.15:Math.max(5000,Math.pow(t,.85)*25)); }
+function rivalDay(){ const r=X().rv; r.w*=1+rnd(.001,.009); const me=netWorth(); if(r.w<me*.3&&Math.random()<.03){ r.w=me*rnd(.9,1.2); msg("rival","Je suis de retour. Et plus riche que toi 😏"); } if(!X().beat&&me>r.w){ X().beat=1; msg("rival","Quoi ?! Tu m'as dépassé ?! Ça va pas se passer comme ça… 😤"); return true; } if(me<r.w) X().beat=0; return false; }
+function appQuest(){ const x=X(), r=x.rv, me=netWorth(), pct=Math.min(100,me/(me+r.w)*100), need=1e9*Math.pow(10,x.pres);
+  $("main").innerHTML=back("Défis","🏆")+`<div class="card" style="background:linear-gradient(135deg,#3b0a0a,var(--card))"><b>😈 Ton rival : ${esc(r.n)}</b><div class="row" style="margin-top:8px"><span class="grow">⭐ Toi <b class="up">${fmt(me)}</b></span><span>${fmt(r.w)} <b>😈</b></span></div><div style="height:12px;background:#ef444455;border-radius:9px;overflow:hidden;margin-top:6px"><div style="height:100%;width:${pct}%;background:#22c55e"></div></div><p class="hint" style="margin:6px 0 0">${me>r.w?"🏆 Tu es devant lui ! Il va tout faire pour te repasser…":"Dépasse sa fortune pour gagner un gros bonus."}</p></div>
+   <h2>🎯 Quêtes</h2>${QS.map(q=>{ const l=x.ql[q[0]]||0; if(l>=q[4].length) return `<div class="item"><div class="ic">${q[1]}</div><div class="grow"><div class="t">${q[2].replace("{v}",fmt(q[4][q[4].length-1])).replace("{n}",q[4][q[4].length-1].toLocaleString("fr-FR"))} ✅</div><div class="d">Toutes les étapes finies !</div></div></div>`; const t=q[4][l], v=q[3](), ok=v>=t; return `<div class="item"><div class="ic">${q[1]}</div><div class="grow"><div class="t">${q[2].replace("{v}",fmt(t)).replace("{n}",t.toLocaleString("fr-FR"))}</div><div class="d">${q[5]?fmt(Math.min(v,t)):Math.min(v,t).toLocaleString("fr-FR")} / ${q[5]?fmt(t):t.toLocaleString("fr-FR")} · étape ${l+1}/${q[4].length}</div><div style="height:6px;background:var(--line);border-radius:9px;margin-top:5px"><div style="height:100%;width:${Math.min(100,v/t*100)}%;background:var(--gold);border-radius:9px"></div></div></div><button class="btn ${ok?"g":"gh"}" data-qc="${q[0]}" ${ok?"":"disabled"}>🎁 ${fmt(qReward(q,l))}</button></div>`; }).join("")}
+   <h2>🌟 Prestige ${x.pres?`(niveau ${x.pres} · tous tes revenus x${PMULT()})`:""}</h2><div class="card"><p style="margin-top:0">Recommence à zéro avec un <b>bonus permanent</b> : tous tes revenus <b>x${PMULT()*2}</b> pour toujours.</p><p class="hint">Il faut ${fmt(need)} de fortune. Tu perds ton argent et tes business, mais tu gardes le prestige.</p><button class="btn ${me>=need?"o":"gh"}" id="prs" style="width:100%" ${me>=need?"":"disabled"}>🌟 Passer prestige ${x.pres+1}</button></div>`;
+  bindBack();
+  document.querySelectorAll("[data-qc]").forEach(b=>b.onclick=()=>{ const q=QS.find(z=>z[0]===b.dataset.qc), l=x.ql[q[0]]||0, rw=qReward(q,l); x.ql[q[0]]=l+1; E.cash+=rw; save(); head(); cine({ic:"🏆",t:"QUÊTE RÉUSSIE",s:`Récompense : ${fmt(rw)}`,col:"or",ms:2600}); appQuest(); });
+  $("prs").onclick=()=>{ if(!$("prs").dataset.k){ $("prs").dataset.k=1; $("prs").textContent="⚠️ Appuie encore : tout repart à zéro"; return; } doPrestige(); }; }
+async function doPrestige(){ const k={pres:X().pres+1,ql:{},evOn:X().evOn,evF:X().evF}, keep={dly:E.dly,dlyS:E.dlyS,ach:E.ach}; await cine({ic:"🌟",t:"PRESTIGE "+k.pres,s:`Tout recommence… mais tes revenus sont maintenant x${Math.pow(2,k.pres)} pour toujours !`,col:"violet",ms:5000});
+  const n=fresh(); Object.assign(n,keep); n.x={gog:null,coin:null,mus:null,cw:0,cl:0,luck:0,rv:null,beat:0,...k}; n.cash=300*Math.pow(10,k.pres); for(let i=0;i<45;i++){ step(n.st,STOCKS); step(n.cr,CRYPTO); } try{ localStorage.setItem(KEY,JSON.stringify(n)); }catch{} E=n; save(); location.reload(); }
+
+/* ---------- ⏱ Chaque jour ---------- */
+const _tick=tick;
+tick=function(silent){ const c0=E.cash; _tick(silent); const g=E.cash-c0; if(g>0&&PMULT()>1) E.cash+=g*(PMULT()-1);
+  const x=X(); let v=gogDay()+musDay(); if(x.coin) coinMove(x.coin,1); E.cash+=v>0?v*PMULT():v;
+  const g2=x.gog; if(g2&&g2.top){ const s=(P().sites||[]).find(z=>z.id==g2.top); if(s) s.users=(s.users||0)+Math.round(g2.s*.003); }
+  if(x.coin&&x.coin.q<1) x.coin.q=0;
+  if(rivalDay()&&!silent){ const rw=Math.round(netWorth()*.05); E.cash+=rw; logEv(`🏆 Tu as dépassé ${x.rv.n} ! Bonus ${fmt(rw)}`); cine({ic:"🏆",t:"TU AS BATTU TON RIVAL",s:`${x.rv.n} est derrière toi. Bonus : ${fmt(rw)} !`,col:"or"}); }
+  else if(!silent&&x.evOn&&!$("cine")&&Math.random()<1/(x.evF||45)) runEv(pick(XEV)[0]); };
+const _di=dailyIncome; dailyIncome=function(){ const x=E.x; return _di()+(x?((x.gog&&x.gog.last)||0)+((x.mus&&x.mus.last)||0):0); };
+
+/* ---------- 🛠️ Panel : événements, cinématiques et nouveautés ---------- */
+function xAdminHTML(){ const x=X(); return `<h2 style="margin-top:18px">🎬 Événements & cinématiques</h2>
+  <div class="row" style="gap:6px;flex-wrap:wrap"><select class="in" id="xev" style="width:auto">${XEV.map(e=>`<option value="${e[0]}">${e[1]} ${e[2]}</option>`).join("")}</select><button class="btn" id="xevb">▶️ Lancer l'événement</button></div>
+  <div class="qty" style="margin-top:6px"><button id="xevr">🎲 Événement au hasard</button><button id="xevo">${x.evOn?"✅":"⬜"} Événements automatiques</button><select class="in" id="xevf" style="width:auto"><option value="120" ${x.evF==120?"selected":""}>Rares</option><option value="45" ${x.evF==45?"selected":""}>Normaux</option><option value="12" ${x.evF==12?"selected":""}>Souvent</option><option value="3" ${x.evF==3?"selected":""}>Tout le temps</option></select></div>
+  <p class="hint" style="margin:10px 0 4px">🎬 Crée ta propre cinématique :</p><div class="row" style="gap:6px;flex-wrap:wrap"><input class="in" id="xci" placeholder="Emoji" value="👑" style="max-width:70px"><input class="in" id="xct" placeholder="Titre" value="LLMMS EST LE PLUS RICHE"></div>
+  <div class="row" style="gap:6px;flex-wrap:wrap;margin-top:6px"><input class="in" id="xcs" placeholder="Texte en dessous" value="Personne ne peut l'arrêter."><select class="in" id="xcc" style="width:auto">${Object.keys(CSTY).map(k=>`<option>${k}</option>`).join("")}</select><input class="in" id="xcg" type="number" placeholder="€ à gagner (option)" style="max-width:150px"><button class="btn o" id="xcb">🎬 Jouer</button></div>
+  <h2 style="margin-top:18px">✨ Nouveautés</h2>
+  <div class="row" style="gap:6px;flex-wrap:wrap"><input class="in" id="xrv" type="number" placeholder="Fortune du rival €" style="max-width:190px"><button class="btn" id="xrvb">😈 Mettre</button><button class="btn gh" id="xrvd">😈 Rival ruiné</button></div>
+  <div class="row" style="gap:6px;flex-wrap:wrap;margin-top:6px"><input class="in" id="xgs" type="number" placeholder="Recherches Gogole/jour" style="max-width:190px"><button class="btn" id="xgsb">🔎 Mettre</button></div>
+  <div class="row" style="gap:6px;flex-wrap:wrap;margin-top:6px"><input class="in" id="xcp" type="number" step="any" placeholder="Prix de ta crypto €" style="max-width:190px"><button class="btn" id="xcpb">🪙 Mettre</button></div>
+  <div class="row" style="gap:6px;flex-wrap:wrap;margin-top:6px"><input class="in" id="xps" type="number" min="0" max="30" placeholder="Niveau prestige" value="${x.pres}" style="max-width:150px"><button class="btn" id="xpsb">🌟 Mettre</button></div>
+  <div class="qty" style="margin-top:6px"><button id="xlk">${x.luck?"✅":"⬜"} 🎰 Toujours gagner au casino</button><button id="xtb">💿 Tube pour tous mes artistes</button><button id="xql">🏆 Finir toutes les quêtes</button><button id="xall">🎁 Débloquer Gogole, crypto et label</button></div>`; }
+function xAdminBind(ok){ const x=X();
+  $("xevb").onclick=()=>{ closePop(); runEv($("xev").value); }; $("xevr").onclick=()=>{ closePop(); runEv(pick(XEV)[0]); };
+  $("xevo").onclick=()=>{ x.evOn=!x.evOn; ok(x.evOn?"✅ Événements automatiques":"⬜ Événements coupés"); admin(); }; $("xevf").onchange=()=>{ x.evF=+$("xevf").value; ok("⏱ Fréquence changée"); };
+  $("xcb").onclick=()=>{ const gain=+$("xcg").value||0, o={ic:$("xci").value||"🎬",t:$("xct").value,s:$("xcs").value,col:$("xcc").value}; closePop(); cine(o).then(()=>{ if(gain){ E.cash+=gain; save(); head(); toast("+"+fmt(gain)); } }); };
+  $("xrvb").onclick=()=>{ const v=+$("xrv").value; if(!$("xrv").value) return toast("Écris un montant"); x.rv.w=Math.max(0,v); x.beat=0; ok("😈 Fortune du rival : "+fmt(x.rv.w)); };
+  $("xrvd").onclick=()=>{ x.rv.w=1000; ok("😈 Le rival est ruiné !"); };
+  $("xgsb").onclick=()=>{ if(!x.gog) x.gog={s:0,q:1,ads:0,mk:0,last:0,top:null,tot:0}; x.gog.s=Math.max(0,Math.floor(+$("xgs").value||0)); x.gog.q=Math.max(x.gog.q,Math.ceil(Math.pow(x.gog.s/20000,1/2.3))); ok("🔎 Gogole : "+x.gog.s.toLocaleString("fr-FR")+" recherches/jour"); };
+  $("xcpb").onclick=()=>{ if(!x.coin) x.coin={n:"LLMMS Coin",p:.001,q:4e8,hype:1,hold:50,h:[.001],sold:0}; const v=+$("xcp").value; if(!(v>0)) return toast("Écris un prix"); x.coin.p=v; x.coin.h.push(v); ok("🪙 Prix : "+fmt(v,1)); };
+  $("xpsb").onclick=()=>{ x.pres=Math.max(0,Math.min(30,Math.floor(+$("xps").value||0))); ok(`🌟 Prestige ${x.pres} : revenus x${PMULT()}`); };
+  $("xlk").onclick=()=>{ x.luck=!x.luck; ok(x.luck?"🎰 Tu gagnes à chaque fois":"🎰 Casino normal"); admin(); };
+  $("xtb").onclick=()=>{ if(!x.mus||!x.mus.a.length) return toast("Crée ton label et signe un artiste"); x.mus.a.forEach(a=>a.str=(a.str||0)+5e6); ok("💿 +5 M écoutes/jour pour chaque artiste"); };
+  $("xql").onclick=()=>{ QS.forEach(q=>x.ql[q[0]]=q[4].length); ok("🏆 Toutes les quêtes finies"); };
+  $("xall").onclick=()=>{ if(!x.gog) x.gog={s:5000,q:1,ads:0,mk:0,last:0,top:null,tot:0}; if(!x.coin) x.coin={n:"LLMMS Coin",p:.001,q:4e8,hype:1,hold:50,h:[.001],sold:0}; if(!x.mus) x.mus={n:"LLMMS Records",a:[],pool:[],last:0}; ok("🎁 Gogole, crypto et label débloqués"); }; }
+
 draw(); startClock();
 // partie plus récente en ligne (autre appareil / navigateur) → on la reprend
 (async()=>{ try{ const d=await cloudLoad(CID); if(d&&d.ts&&d.ts>LOCAL_TS+10000&&typeof d.cash==="number"){ localStorage.setItem(KEY,JSON.stringify(d)); location.reload(); } else { cloudDirty=true; cloudSave(); } }catch{} })();
