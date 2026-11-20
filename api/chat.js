@@ -7,7 +7,7 @@ const GEM_BASE = "https://generativelanguage.googleapis.com/v1beta/openai";
 // Chaque modèle gratuit de Google a SON PROPRE quota : on les utilise tous, l'un après l'autre.
 let gemList = null, gemAt = 0;
 const gemDead = new Map();
-function rank(id) { const v = parseFloat((id.match(/(\d+(?:\.\d+)?)/) || [])[1] || 0); return (id.includes("gemma") ? 0 : 1000) + v * 10 + (id.includes("lite") ? 0 : 5); }
+function rank(id) { const v = parseFloat((id.match(/(\d+(?:\.\d+)?)/) || [])[1] || 0); return (id.includes("gemma") ? 0 : 1000) + v * 10 + (/lite/.test(id) ? 0 : /pro/.test(id) ? 9 : 5) - (/preview|exp/.test(id) ? 1 : 0); }
 async function gemModels(key) {
   if (process.env.GEMINI_MODELS) return process.env.GEMINI_MODELS.split(",").map(x => x.trim()).filter(Boolean);
   if (gemList && Date.now() - gemAt < 6 * 3600e3) return gemList;
@@ -15,8 +15,8 @@ async function gemModels(key) {
     const r = await realFetch(`${GEM_BASE}/models`, { headers: { Authorization: `Bearer ${key}` } });
     const j = await r.json();
     const ids = (j.data || []).map(m => String(m.id || "").replace(/^models\//, ""))
-      .filter(id => /(flash|gemma)/i.test(id) && !/(image|tts|live|audio|transcri|embed|robot|computer|vision|banana|native)/i.test(id));
-    if (ids.length) { gemList = [...new Set(ids)].sort((a, b) => rank(b) - rank(a)).slice(0, 14); gemAt = Date.now(); return gemList; }
+      .filter(id => /^(gemini|gemma)/i.test(id) && !/(image|tts|live|audio|transcri|embed|robot|computer|vision|banana|native|aqa|learnlm|veo|lyria|imagen|decision|genie|omni|deep-research)/i.test(id));
+    if (ids.length) { gemList = [...new Set(ids)].sort((a, b) => rank(b) - rank(a)).slice(0, 18); gemAt = Date.now(); return gemList; }
   } catch {}
   return ["gemini-flash-latest", "gemini-flash-lite-latest"];
 }
@@ -54,7 +54,7 @@ async function tryGemini(b, opts) {
         if (r.status === 400 && g.reasoning_effort) { delete g.reasoning_effort; continue; }
         if (r.status === 400 && g.max_tokens > 8192) { g.max_tokens = 8192; continue; }
         if (r.status === 400 && g.tools) { delete g.tools; delete g.tool_choice; continue; }
-        if (r.status === 429) gemDead.set(model, Date.now() + 60e3);
+        if (r.status === 429) { let t = ""; try { t = await r.text(); } catch {} gemDead.set(model, Date.now() + (/limit[^0-9]{0,12}0\b|quota.{0,40}\b0\b/i.test(t) ? 6 * 3600e3 : 60e3)); }
         if (r.status === 404 || r.status === 403) gemDead.set(model, Date.now() + 6 * 3600e3);
       } catch {}
       break;
@@ -118,6 +118,19 @@ async function freeImage(b, opts) {
     return new Response(JSON.stringify({ choices: [{ message: { role: "assistant", content: imgs.length > 1 ? "Voici 2 versions, garde ta préférée 🎨" : "Voici ton image 🎨", images: imgs.map(url => ({ type: "image_url", image_url: { url } })) } }] }), { status: 200, headers: { "Content-Type": "application/json" } });
   } catch { return null; }
 }
+// Modèles gratuits d'OpenRouter (:free), choisis automatiquement — les meilleurs en code d'abord
+let orFree = null, orFreeAt = 0;
+const orDead = new Map();
+async function orFreeModels() {
+  if (orFree && Date.now() - orFreeAt < 6 * 3600e3) return orFree;
+  try {
+    const j = await (await realFetch("https://openrouter.ai/api/v1/models")).json();
+    const score = m => { const id = m.id.toLowerCase(); return (/cod(e|er)|flint|devstral|north/.test(id) ? 60 : 0) + (/deepseek|qwen|grok|kimi|glm|nemotron|gpt-oss|minimax|llama-4|mistral-large|hy4/.test(id) ? 30 : 0) + Math.min(20, (m.context_length || 0) / 5e4) - (/\b(1|3|4|7|8)b\b|mini|nano|small|tiny/.test(id) ? 25 : 0); };
+    const list = (j.data || []).filter(m => String(m.id).endsWith(":free") && !/image|tts|audio|embed|guard/i.test(m.id) && (m.context_length || 0) >= 32000)
+      .sort((a, b) => score(b) - score(a)).map(m => m.id).slice(0, 4);
+    orFree = list; orFreeAt = Date.now(); return list;
+  } catch { return []; }
+}
 globalThis.fetch = async (url, opts) => {
   const r = await realFetch(url, opts);
   if (r.ok || !String(url).includes(OR_URL)) return r;
@@ -129,9 +142,15 @@ globalThis.fetch = async (url, opts) => {
     const b = JSON.parse(opts.body);
     if (b.modalities) return (await freeImage(b, opts)) || r; // images : version gratuite (Pollinations)
     const g = await tryGemini(b, opts); if (g) return g;
-    b.model = "openrouter/free"; delete b.reasoning; b.max_tokens = Math.min(b.max_tokens || 16000, 16000); b.messages = boostSystem(b.messages || []);
-    let r2 = await realFetch(url, { ...opts, body: JSON.stringify(b) });
-    if (!r2.ok && b.tools) { delete b.tools; delete b.tool_choice; delete b.parallel_tool_calls; r2 = await realFetch(url, { ...opts, body: JSON.stringify(b) }); }
+    delete b.reasoning; b.max_tokens = Math.min(b.max_tokens || 16000, 32000); b.messages = boostSystem(b.messages || []);
+    let r2 = r;
+    for (const model of [...(await orFreeModels()).filter(m => (orDead.get(m) || 0) < Date.now()), "openrouter/free"]) {
+      const bb = { ...b, model };
+      r2 = await realFetch(url, { ...opts, body: JSON.stringify(bb) });
+      if (!r2.ok && bb.tools) { delete bb.tools; delete bb.tool_choice; delete bb.parallel_tool_calls; r2 = await realFetch(url, { ...opts, body: JSON.stringify(bb) }); }
+      if (r2.ok) return r2;
+      if (model !== "openrouter/free") orDead.set(model, Date.now() + (r2.status === 429 ? 120e3 : 3600e3));
+    }
     return r2;
   } catch { return r; }
 };
