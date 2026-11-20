@@ -147,7 +147,29 @@ local function getSelection()
 	return #out > 0 and table.concat(out, "\n") or "Rien n'est sélectionné", false
 end
 
+local LogService = game:GetService("LogService")
+local function getOutput(n)
+	n = math.clamp(tonumber(n) or 60, 5, 200)
+	local h, out = LogService:GetLogHistory(), {}
+	for i = math.max(1, #h - n + 1), #h do
+		local e = h[i]; local tag = e.messageType == Enum.MessageType.MessageError and "❌" or e.messageType == Enum.MessageType.MessageWarning and "⚠" or "•"
+		table.insert(out, tag .. " " .. e.message)
+	end
+	return #out > 0 and table.concat(out, "\n") or "Console vide", false
+end
+local function getProps(path)
+	local o = resolve(path); if not o then return "Introuvable : " .. tostring(path), true end
+	local out = { o:GetFullName() .. " [" .. o.ClassName .. "]" }
+	for _, p in ipairs({ "Position", "Size", "Color", "BrickColor", "Material", "Transparency", "Anchored", "CanCollide", "Text", "TextColor3", "BackgroundColor3", "Visible", "Enabled", "Value", "Disabled" }) do
+		local ok, v = pcall(function() return o[p] end)
+		if ok and v ~= nil then table.insert(out, p .. " = " .. tostring(v)) end
+	end
+	table.insert(out, "Enfants : " .. #o:GetChildren())
+	return table.concat(out, "\n"), false
+end
 local TOOLS = {
+	get_output = function(a) return getOutput(a.lines) end,
+	get_properties = function(a) return getProps(a.path) end,
 	run_code = function(a) return runCode(a.code or a.command or "") end,
 	get_tree = function(a) return tree(a.path, a.depth) end,
 	get_script = function(a) return getScript(a.path) end,

@@ -886,7 +886,9 @@ const PLUGIN_TOOLS=[
  {name:"set_script",description:"Crée ou remplace le code d'un script. path ex. ServerScriptService.GameManager ; class = Script, LocalScript ou ModuleScript (si on le crée).",inputSchema:{type:"object",properties:{path:{type:"string"},source:{type:"string"},class:{type:"string"}},required:["path","source"]}},
  {name:"search_models",description:"Cherche des modèles gratuits dans la Toolbox Roblox. Renvoie des AssetId.",inputSchema:{type:"object",properties:{query:{type:"string"}},required:["query"]}},
  {name:"insert_model",description:"Insère un modèle de la Toolbox dans Workspace à partir de son AssetId.",inputSchema:{type:"object",properties:{assetId:{type:"number"}},required:["assetId"]}},
- {name:"get_selection",description:"Ce que l'utilisateur a sélectionné dans Studio.",inputSchema:{type:"object",properties:{}}}];
+ {name:"get_selection",description:"Ce que l'utilisateur a sélectionné dans Studio.",inputSchema:{type:"object",properties:{}}},
+ {name:"get_output",description:"Lit les derniers messages de la console (Output) de Studio : erreurs, avertissements, prints. À utiliser après avoir construit ou lancé un test.",inputSchema:{type:"object",properties:{lines:{type:"number"}}}},
+ {name:"get_properties",description:"Lit les propriétés principales d'un objet (position, taille, couleur, texte…). path ex. Workspace.Map.Panneau",inputSchema:{type:"object",properties:{path:{type:"string"}},required:["path"]}}];
 const mcp={
   url:null, sid:null, n:0, list:[], connected:false, headers:{}, proxy:false, plugin:null,
   async connectPlugin(code){
@@ -1301,16 +1303,26 @@ s = s or Instance.new(${JSON.stringify(cls)})
 s.Name = ${JSON.stringify(name)}
 s.Source = ${luaLong(code)}
 s.Parent = parent
+local ok, err = pcall(function() return loadstring(s.Source) end)
+local fn, serr = nil, nil
+if ok then fn, serr = loadstring(s.Source) end
+if not fn and serr then error("Erreur de syntaxe dans " .. s:GetFullName() .. " : " .. tostring(serr)) end
 print("Installé : " .. s:GetFullName())`;
   return {kind:"script",lua,where:[svc,...folders,name].join(" > "),cls}; }
 async function autoApplyStudio(content,bot,status){
   const rt=runToolOf(); if(!rt) throw new Error("ton serveur MCP n'a pas d'outil pour exécuter du code");
-  const re=/```(?:lua|luau)[^\n]*\n([\s\S]*?)```/gi; let m, i=0; const chips=document.createElement("div"); chips.className="chips"; bot.txt.insertBefore(chips,status);
-  while((m=re.exec(content))){ const ctx=content.slice(Math.max(0,m.index-500),m.index).split("\n").slice(-5).join("\n"); const job=installerFor(m[1],ctx,i++);
+  const errors=[]; const re=/```(?:lua|luau)[^\n]*\n([\s\S]*?)```/gi; let m, i=0; const chips=document.createElement("div"); chips.className="chips"; bot.txt.insertBefore(chips,status);
+  let prevEnd=0;
+  while((m=re.exec(content))){ const ctx=content.slice(Math.max(prevEnd,m.index-500),m.index).split("\n").slice(-5).join("\n"); prevEnd=m.index+m[0].length; const job=installerFor(m[1],ctx,i++);
     const chip=document.createElement("span"); chip.className="chip run"; chip.textContent=job.kind==="script"?`Installe ${job.cls} → ${job.where}`:"Construit dans Studio"; chips.appendChild(chip);
     let r; try{ r=await mcp.call(rt.name,{[rt.key]:job.lua}); }catch(e){ r={text:e.message,isError:true}; }
-    chip.className="chip "+(r.isError?"err":"ok"); chip.textContent=(r.isError?"✗ ":"✓ ")+chip.textContent+(r.isError?" — "+String(r.text).slice(0,120):""); }
-  if(i) { const n=note(`✅ J'ai installé le code directement dans ta place Roblox Studio (${i} élément${i>1?"s":""}). Ctrl+Z dans Studio pour annuler.`); n.className="note ok"; }
+    const bad=r.isError||/^(Erreur|Error)|:\d+: /m.test(String(r.text||""));
+    if(bad) errors.push(`${job.kind==="script"?job.where:"Code de construction n°"+i} :\n${String(r.text).slice(0,1500)}`);
+    chip.className="chip "+(bad?"err":"ok"); chip.textContent=(bad?"✗ ":"✓ ")+chip.textContent+(bad?" — "+String(r.text).slice(0,120):""); }
+  // les scripts installés : on vérifie qu'ils compilent (erreurs de syntaxe) via loadstring
+  return {count:i,errors};
+  if(i&&!errors.length){ const n=note(`✅ J'ai installé le code directement dans ta place Roblox Studio (${i} élément${i>1?"s":""}). Ctrl+Z dans Studio pour annuler.`); n.className="note ok"; }
+  return {count:i,errors};
 }
 
 /* ---------------- envoi ---------------- */
@@ -1387,7 +1399,7 @@ async function agent(c){
   const setStatus=t=>{ if(status) status.lastChild.textContent=t; };
   { const lu=[...c.messages].reverse().find(m=>m.role==="user"&&!m._auto); Steps.start((lu?._video?1:0)+(boosted(c)?1:0)+1+((c.mode==="dev"||c.mode==="roblox")?(boosted(c)?2:1):0)+(isAnimReq(c)?4:1)); }
   let curStep=null;
-  let usedTools=false, qaDone=false, lastSeg=null, lastMsg=null, plan="";
+  let usedTools=false, qaDone=false, lastSeg=null, lastMsg=null, plan="", applyRounds=0;
   try{
     // 0) Analyste vidéo : cahier des charges ultra détaillé avant de reproduire
     const lastU=[...c.messages].reverse().find(m=>m.role==="user"&&!m._auto);
@@ -1458,6 +1470,16 @@ async function agent(c){
       Steps.trackDone(); Steps.end(curStep,true,(msg.content||"").replace(/```[\s\S]*?```/g,"[code]").trim().split("\n").find(l=>l.trim())||"");
       if(!msg.tool_calls?.length){
         lastSeg=seg; lastMsg=msg;
+        // Studio connecté mais l'IA a seulement écrit du code → on l'installe nous-mêmes, puis on lui renvoie les erreurs à corriger
+        if(mcp.connected&&autoStudio&&c.mode!=="image"&&applyRounds<3&&/```(lua|luau)\b/i.test(msg.content||"")&&(!usedTools||applyRounds>0)){
+          applyRounds++; setStatus("Installe dans Studio…");
+          let res=null; try{ res=await autoApplyStudio(msg.content,bot,status); }catch(e){ note("Installation dans Studio impossible : "+e.message).className="note bad"; }
+          if(res&&res.errors.length&&applyRounds<3){
+            c.messages.push({role:"user",_auto:true,content:"[Studio a renvoyé des erreurs en installant ton code]\n"+res.errors.join("\n\n")+"\n\nCorrige ces erreurs et renvoie le code COMPLET corrigé (mêmes noms et emplacements)."});
+            setStatus("Corrige les erreurs…"); continue;
+          }
+          break;
+        }
         // Vérification automatique dans Studio après une construction
         if(usedTools&&!qaDone&&mcp.connected){
           qaDone=true;
@@ -1503,9 +1525,6 @@ async function agent(c){
       const ch=document.createElement("div"); ch.className="chips"; ch.innerHTML=`<span class="chip ok">✓ ${corrections?`Code vérifié et corrigé (${corrections} correction${corrections>1?"s":""})`:"Code vérifié"}</span>`; bot.txt.insertBefore(ch,status);
     }
     // Filet de sécurité : Studio connecté mais l'IA a seulement écrit du code → on l'installe nous-mêmes dans la place
-    if(!usedTools&&mcp.connected&&autoStudio&&c.mode!=="image"&&/```(lua|luau)\b/i.test(lastMsg?.content||"")){
-      setStatus("Installe dans Studio…"); try{ await autoApplyStudio(lastMsg.content,bot,status); }catch(e){ note("Installation dans Studio impossible : "+e.message).className="note bad"; }
-    }
     status?.remove(); status=null;
   }catch(e){
     status?.remove(); status=null; Steps.fail();
