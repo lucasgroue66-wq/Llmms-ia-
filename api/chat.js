@@ -203,20 +203,38 @@ async function loadRes(rid) {
   const v = j?.[0]?.result ?? memRes.get(rid);
   try { return v ? JSON.parse(v) : null; } catch { return null; }
 }
+// ---------- Abonnements (Stripe) : Gratuit 15/jour, Pro 30/jour, Max 50/jour ----------
+const PLAN_LIMITS = { free: () => Number(process.env.DAILY_LIMIT ?? 15), pro: () => Number(process.env.PRO_LIMIT ?? 30), max: () => Number(process.env.MAX_LIMIT ?? 50) };
+const isOwner = email => !!email && ("lucasgroue5@gmail.com,lucasgroue66@gmail.com," + String(process.env.OWNER_EMAILS || "")).split(",").map(x => x.trim().toLowerCase()).filter(Boolean).includes(String(email).toLowerCase());
+async function planOf(email) {
+  if (!email) return "free";
+  const j = await kv([["GET", `llmms:sub:${String(email).toLowerCase()}`]]);
+  try { const o = JSON.parse(j?.[0]?.result || "null"); if (o && o.until * 1000 > Date.now() && PLAN_LIMITS[o.plan]) return o.plan; } catch {}
+  return "free";
+}
+const limitId = (req, email) => email || String(req.headers["x-forwarded-for"] || req.socket?.remoteAddress || "anon").split(",")[0].trim();
+const today = () => new Date().toLocaleDateString("fr-CA", { timeZone: "Europe/Paris" });
+async function billingStatus(req, email) {
+  const owner = isOwner(email), plan = owner ? "owner" : await planOf(email);
+  const limit = owner ? 0 : PLAN_LIMITS[plan]();
+  const j = await kv([["GET", `llmms:lim:${today()}:${limitId(req, email)}`]]);
+  const used = Number(j?.[0]?.result || memCount.get(`llmms:lim:${today()}:${limitId(req, email)}`) || 0);
+  const links = { pro: process.env.STRIPE_LINK_PRO || "", max: process.env.STRIPE_LINK_MAX || "", portal: process.env.STRIPE_PORTAL_LINK || "" };
+  return { plan, limit, used: Math.min(used, limit || used), email: email || null, links };
+}
 async function dailyLimit(req, body, email) {
-  const max = Number(process.env.DAILY_LIMIT ?? 15);
-  if (!max) return null;
-  const owners = ("lucasgroue5@gmail.com,lucasgroue66@gmail.com," + String(process.env.OWNER_EMAILS || "")).split(",").map(x => x.trim().toLowerCase()).filter(Boolean);
-  if (email && owners.includes(String(email).toLowerCase())) return null;
+  if (isOwner(email)) return null;
   // On ne compte que les vrais messages de l'utilisateur (pas les étapes internes : relecture, plan, outils…)
   const mode = body.mode || "chat";
-  if (/^auth_/.test(mode) || ["review", "plan", "tool"].includes(mode)) return null;
+  if (/^(auth_|billing_)/.test(mode) || ["review", "plan", "tool"].includes(mode)) return null;
   const last = (body.messages || [])[body.messages?.length - 1];
   if (!last || last.role !== "user" || body.light === "auto") return null;
-  const id = email || String(req.headers["x-forwarded-for"] || req.socket?.remoteAddress || "anon").split(",")[0].trim();
-  const day = new Date().toLocaleDateString("fr-CA", { timeZone: "Europe/Paris" });
-  const n = await bumpCount(`llmms:lim:${day}:${id}`);
-  if (n > max) return `Tu as utilisé tes ${max} messages gratuits d'aujourd'hui sur llmms ia 🙂 Ça revient demain matin !`;
+  const plan = await planOf(email), max = PLAN_LIMITS[plan]();
+  if (!max) return null;
+  const n = await bumpCount(`llmms:lim:${today()}:${limitId(req, email)}`);
+  if (n > max) return plan === "free"
+    ? `Tu as utilisé tes ${max} messages gratuits d'aujourd'hui 🙂 Ça revient demain matin, ou passe à llmms ia Pro (30/jour) ou Max (50/jour) avec le bouton ⭐ Abonnements.`
+    : `Tu as utilisé tes ${max} messages ${plan === "max" ? "Max" : "Pro"} d'aujourd'hui 🙂 Ça revient demain matin !`;
   return null;
 }
 let mods = null, loadErr = null;
@@ -256,6 +274,7 @@ export default async function handler(req, res) {
     if (auth) { res.status(auth.status).json(auth.json); return; }
     const who = authEnabled(env) ? await checkSession(sessionHeader, env) : null;
     if (authEnabled(env) && !who) { res.status(401).json({ error: "login" }); return; }
+    if (body?.mode === "billing_status") { res.status(200).json(await billingStatus(req, who)); return; }
     const lim = await dailyLimit(req, body || {}, who);
     if (lim) { res.status(429).json({ error: lim }); return; }
 
