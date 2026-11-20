@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<title>ULTRA CLUB — jeu de foot de llmms ia</title>
+<meta name="description" content="ULTRA CLUB : gère ton club, ouvre des packs de joueurs et gagne la ligue. Un jeu créé avec llmms ia.">
+<link rel="icon" href="/favicon.svg">
+<style>
+:root{--bg:#07110c;--card:#0f1f17;--line:#1d3a2a;--txt:#effaf3;--dim:#8fb3a0;--a:#22c55e;--b:#facc15;--r:#ef4444}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;height:100%;background:radial-gradient(900px 500px at 50% -10%,#14532d 0%,transparent 60%),var(--bg);color:var(--txt);font:15px/1.4 system-ui,-apple-system,Segoe UI,Roboto,sans-serif;user-select:none}
+button{font:inherit;color:inherit;border:0;cursor:pointer}
+#app{max-width:980px;margin:0 auto;min-height:100%;display:flex;flex-direction:column}
+header{display:flex;align-items:center;gap:10px;padding:12px 14px;position:sticky;top:0;background:rgba(7,17,12,.85);backdrop-filter:blur(8px);z-index:5;border-bottom:1px solid var(--line)}
+.logo{font-weight:900;font-size:20px;letter-spacing:.05em;background:linear-gradient(90deg,#4ade80,#facc15);-webkit-background-clip:text;background-clip:text;color:transparent}
+.grow{flex:1}.pill{background:var(--card);border:1px solid var(--line);border-radius:999px;padding:6px 12px;font-weight:700;white-space:nowrap}
+main{flex:1;padding:14px}
+nav{display:flex;gap:6px;padding:10px 14px 16px;position:sticky;bottom:0;background:rgba(7,17,12,.92);border-top:1px solid var(--line)}
+nav button{flex:1;background:var(--card);border:1px solid var(--line);border-radius:12px;padding:10px 4px;font-weight:700;font-size:13.5px}
+nav button.on{background:linear-gradient(135deg,#16a34a,#15803d);border-color:transparent}
+h2{margin:4px 0 12px;font-size:16px;letter-spacing:.06em;text-transform:uppercase;color:var(--dim)}
+.box{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:14px;margin-bottom:14px}
+.btn{background:linear-gradient(135deg,#22c55e,#16a34a);border-radius:12px;padding:12px 16px;font-weight:800}
+.btn.gold{background:linear-gradient(135deg,#fde047,#ca8a04);color:#1a1400}
+.btn.ghost{background:#163024;border:1px solid var(--line)}
+.btn[disabled]{opacity:.45}
+/* terrain */
+.pitch{position:relative;aspect-ratio:3/4;max-height:68vh;margin:0 auto;border-radius:16px;overflow:hidden;background:repeating-linear-gradient(0deg,#15803d 0 40px,#16a34a 40px 80px);border:3px solid #dcfce7}
+.pitch:before{content:"";position:absolute;left:10%;right:10%;top:50%;height:2px;background:rgba(255,255,255,.6)}
+.pitch:after{content:"";position:absolute;left:50%;top:50%;width:22%;aspect-ratio:1;border:2px solid rgba(255,255,255,.6);border-radius:50%;transform:translate(-50%,-50%)}
+.slot{position:absolute;transform:translate(-50%,-50%);z-index:2}
+/* carte joueur */
+.pc{width:76px;border-radius:12px;padding:6px 5px 7px;text-align:center;position:relative;color:#111;box-shadow:0 6px 14px -6px #000;font-size:11px;line-height:1.15}
+.pc .rt{font-size:20px;font-weight:900}.pc .ps{font-weight:800;font-size:10px}
+.pc .fc{font-size:24px;margin:2px 0}.pc .nm{font-weight:800;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.r0{background:linear-gradient(160deg,#e7c3a2,#a8724b)}.r1{background:linear-gradient(160deg,#f1f5f9,#94a3b8)}.r2{background:linear-gradient(160deg,#fef08a,#ca8a04)}.r3{background:linear-gradient(160deg,#c4b5fd,#7c3aed);color:#fff}
+.r3:after{content:"";position:absolute;inset:0;border-radius:12px;box-shadow:0 0 18px 3px rgba(167,139,250,.8);pointer-events:none}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(80px,1fr));gap:10px;justify-items:center}
+.pc.sel{outline:3px solid #fff}
+.stats{display:flex;gap:10px;flex-wrap:wrap}.stats .pill{font-size:13px}
+table{width:100%;border-collapse:collapse;font-size:14px}td,th{padding:7px 6px;border-bottom:1px solid var(--line);text-align:left}th{color:var(--dim);font-weight:600}
+tr.me td{color:#4ade80;font-weight:800}
+.packs{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px}
+.pack{border-radius:16px;padding:16px;text-align:center;border:1px solid var(--line)}
+.pack .pi{font-size:46px}.pack b{display:block;font-size:17px;margin:4px 0}
+/* match */
+.score{display:flex;align-items:center;justify-content:center;gap:16px;font-size:34px;font-weight:900;margin:6px 0 10px}
+.score .tn{font-size:15px;font-weight:800;max-width:34%;text-align:center;line-height:1.2}
+.score small{display:block;font-size:13px;font-weight:600;color:var(--dim)}
+.feed{height:240px;overflow:auto;background:#0a1711;border-radius:12px;padding:10px;font-size:14px}
+.feed div{padding:4px 0;border-bottom:1px dashed #173225}.feed .g{color:#facc15;font-weight:800}
+.bar{height:8px;background:#163024;border-radius:9px;overflow:hidden}.bar i{display:block;height:100%;background:linear-gradient(90deg,#22c55e,#facc15)}
+/* popups */
+#pop{position:fixed;inset:0;background:rgba(0,0,0,.75);display:none;place-items:center;z-index:20;padding:16px}
+#pop.on{display:grid}#pop .in{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:18px;width:min(520px,100%);text-align:center}
+.reveal{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin:14px 0}
+.reveal .pc{animation:flip .6s both}@keyframes flip{from{transform:rotateY(90deg) scale(.6);opacity:0}to{transform:none;opacity:1}}
+#toast{position:fixed;left:50%;top:70px;transform:translateX(-50%);background:#16a34a;padding:10px 16px;border-radius:12px;font-weight:800;opacity:0;transition:.25s;z-index:30;pointer-events:none}
+#toast.on{opacity:1}
+.hint{color:var(--dim);font-size:13px}
+.row2{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+</style>
+</head>
+<body>
+<div id="app">
+  <header><span class="logo">ULTRA CLUB</span><span class="grow"></span><span class="pill">🪙 <span id="coins">0</span></span><span class="pill">⭐ <span id="ovr">0</span></span></header>
+  <main id="main"></main>
+  <nav><button data-p="club" class="on">🏟️ Club</button><button data-p="match">⚽ Match</button><button data-p="packs">🎁 Packs</button><button data-p="ligue">🏆 Ligue</button></nav>
+</div>
+<div id="pop"><div class="in" id="popIn"></div></div>
+<div id="toast"></div>
+<script>
+(function(){
+const $=id=>document.getElementById(id);
+const FLAGS=["🇫🇷","🇧🇷","🇦🇷","🇪🇸","🇵🇹","🇩🇪","🇮🇹","🇳🇱","🇧🇪","🇸🇳","🇲🇦","🇩🇿","🇳🇬","🇯🇵","🇺🇸","🇬🇧","🇨🇮","🇭🇷"];
+const SYL=["ka","lo","mi","ra","vo","di","zu","ne","ta","bo","ri","sa","le","mo","gu","fa","pe","xa","ni","ko","ru","dé","yo","va"];
+const RNAME=["Common","Rare","Or","Légende"];
+const POS=["GB","DEF","MIL","ATT"];
+const FORM=[["GB",50,90],["DEF",15,70],["DEF",38,74],["DEF",62,74],["DEF",85,70],["MIL",25,48],["MIL",50,52],["MIL",75,48],["ATT",20,22],["ATT",50,16],["ATT",80,22]];
+const rnd=(a,b)=>a+Math.random()*(b-a), ri=(a,b)=>Math.floor(rnd(a,b+1)), pick=a=>a[ri(0,a.length-1)];
+const cap=s=>s[0].toUpperCase()+s.slice(1);
+const mkName=()=>cap(pick(SYL)+pick(SYL)+(Math.random()<.5?pick(SYL):""))+" "+cap(pick(SYL)+pick(SYL));
+let uid=Date.now();
+function mkPlayer(rar,pos){ const base=[[50,64],[63,74],[74,84],[85,95]][rar]; return {id:++uid,n:mkName(),p:pos||pick(POS),r:ri(base[0],base[1]),k:rar,f:pick(FLAGS)}; }
+function rollRarity(odds){ let x=Math.random()*100; for(let i=3;i>=0;i--){ if(x<odds[i]) return i; x-=odds[i]; } return 0; }
+const OPP=["FC Tornade","Olympique Néon","Racing Éclair","Atlético Volcan","Sporting Requins","Dynamo Comète","Inter Phénix"];
+const DEF={coins:1500,club:"Mon Club",squad:[],line:[],table:null,day:0,season:1,trophies:0};
+let S; try{ S=JSON.parse(localStorage.getItem("ultraclub")||"null"); }catch{ S=null; }
+if(!S){ S=JSON.parse(JSON.stringify(DEF)); const need=["GB","DEF","DEF","DEF","DEF","MIL","MIL","MIL","ATT","ATT","ATT"]; need.forEach(p=>S.squad.push(mkPlayer(0,p))); for(let i=0;i<4;i++) S.squad.push(mkPlayer(0)); S.line=S.squad.slice(0,11).map(p=>p.id); }
+if(!S.table) newSeason(false);
+function newSeason(bump){ if(bump){ S.season++; } S.day=0; S.table=[{n:S.club,me:1,pts:0,j:0,bp:0,bc:0,ovr:0}].concat(OPP.map((n,i)=>({n,pts:0,j:0,bp:0,bc:0,ovr:ri(56,68)+S.season*3+ri(0,i)}))); save(); }
+function save(){ try{ localStorage.setItem("ultraclub",JSON.stringify(S)); }catch{} }
+const byId=id=>S.squad.find(p=>p.id===id);
+function teamOvr(){ const L=S.line.map(byId).filter(Boolean); if(!L.length) return 0; let s=0; L.forEach((p,i)=>{ const want=FORM[i][0]; s+=p.r-(p.p===want?0:8); }); return Math.round(s/11); }
+let AC=null; const beep=(f,d=.08,t="triangle",v=.08)=>{ try{ AC=AC||new (window.AudioContext||window.webkitAudioContext)(); const o=AC.createOscillator(),g=AC.createGain(); o.type=t; o.frequency.value=f; g.gain.value=v; g.gain.exponentialRampToValueAtTime(.0001,AC.currentTime+d); o.connect(g).connect(AC.destination); o.start(); o.stop(AC.currentTime+d); }catch{} };
+function toast(t){ const e=$("toast"); e.textContent=t; e.classList.add("on"); clearTimeout(toast.t); toast.t=setTimeout(()=>e.classList.remove("on"),1600); }
+function card(p,extra=""){ return `<div class="pc r${p.k} ${extra}" data-id="${p.id}"><div class="rt">${p.r}</div><div class="ps">${p.p}</div><div class="fc">${p.f}</div><div class="nm">${p.n.split(" ")[1]||p.n}</div></div>`; }
+function head(){ $("coins").textContent=S.coins.toLocaleString("fr-FR"); $("ovr").textContent=teamOvr(); }
+let page="club", selSlot=null;
+function go(p){ page=p; document.querySelectorAll("nav button").forEach(b=>b.classList.toggle("on",b.dataset.p===p)); draw(); }
+document.querySelectorAll("nav button").forEach(b=>b.onclick=()=>{ if(matchRunning) return; go(b.dataset.p); });
+function draw(){ head(); ({club,match,packs,ligue})[page](); }
+// ---------- CLUB
+function club(){
+  const bench=S.squad.filter(p=>!S.line.includes(p.id)).sort((a,b)=>b.r-a.r);
+  $("main").innerHTML=`<div class="box"><div class="row2"><b style="font-size:18px">${esc(S.club)}</b><button class="btn ghost" id="rn" style="padding:6px 10px">✏️</button><span class="grow"></span><span class="pill">🏆 ${S.trophies}</span><span class="pill">Saison ${S.season}</span></div>
+  <p class="hint">Touche un joueur sur le terrain, puis un remplaçant pour les échanger. Un joueur à un mauvais poste perd 8 de note.</p>
+  <div class="pitch">${FORM.map(([pos,x,y],i)=>{ const p=byId(S.line[i]); return `<div class="slot" style="left:${x}%;top:${y}%" data-slot="${i}">${p?card(p,(selSlot===i?"sel":"")):""}</div>`; }).join("")}</div></div>
+  <div class="box"><h2>Remplaçants (${bench.length})</h2><div class="grid">${bench.map(p=>card(p)).join("")||'<span class="hint">Ouvre des packs pour avoir plus de joueurs.</span>'}</div>
+  <div class="row2" style="margin-top:12px"><button class="btn ghost" id="best">⚡ Meilleure équipe auto</button><button class="btn ghost" id="sell">💰 Vendre les doublons faibles</button><button class="btn ghost" id="train">🏋️ Entraîner (+1 à tous, 800 🪙)</button></div></div>`;
+  document.querySelectorAll(".slot").forEach(s=>s.onclick=()=>{ selSlot=+s.dataset.slot; club(); });
+  document.querySelectorAll(".grid .pc").forEach(c=>c.onclick=()=>{ if(selSlot==null){ toast("Choisis d'abord un joueur sur le terrain"); return; } S.line[selSlot]=+c.dataset.id; selSlot=null; save(); beep(660); draw(); });
+  $("rn").onclick=()=>popup(`<h2>Nom du club</h2><input id="cn" maxlength="22" value="${esc(S.club)}" style="width:100%;padding:12px;border-radius:12px;border:1px solid var(--line);background:#0a1711;color:#fff;font-size:17px"><div class="row2" style="justify-content:center;margin-top:12px"><button class="btn" id="ok">Valider</button></div>`,()=>{ $("ok").onclick=()=>{ const v=$("cn").value.trim().slice(0,22); if(v){ S.club=v; S.table.find(t=>t.me).n=v; save(); } closePop(); draw(); }; });
+  $("best").onclick=()=>{ const used=new Set(); S.line=FORM.map(([pos])=>{ const c=S.squad.filter(p=>!used.has(p.id)).sort((a,b)=>(b.r-(b.p===pos?0:8))-(a.r-(a.p===pos?0:8)))[0]; used.add(c.id); return c.id; }); save(); beep(880); toast("Meilleure équipe placée !"); draw(); };
+  $("sell").onclick=()=>{ const keep=new Set(S.line); const extra=S.squad.filter(p=>!keep.has(p.id)).sort((a,b)=>a.r-b.r); const sold=extra.slice(0,Math.max(0,extra.length-7)); if(!sold.length) return toast("Rien à vendre"); const gain=sold.reduce((a,p)=>a+[60,200,600,2000][p.k],0); S.squad=S.squad.filter(p=>!sold.includes(p)); S.coins+=gain; save(); beep(990); toast(`+${gain} 🪙 (${sold.length} vendus)`); draw(); };
+  $("train").onclick=()=>{ if(S.coins<800) return toast("Pas assez de pièces"); S.coins-=800; S.line.map(byId).forEach(p=>{ if(p.r<99) p.r++; }); save(); beep(523); beep(784); toast("Entraînement : +1 à tous les titulaires"); draw(); };
+}
+// ---------- PACKS
+const PACKS=[["Bronze","🟫",500,3,[78,20,2,0],"linear-gradient(160deg,#5b3a22,#2a1a10)"],["Argent","⬜",1500,4,[35,50,13,2],"linear-gradient(160deg,#475569,#1e293b)"],["Or","🟨",4000,5,[0,45,45,10],"linear-gradient(160deg,#854d0e,#3f2a06)"],["Légende","💜",12000,3,[0,0,60,40],"linear-gradient(160deg,#5b21b6,#2e1065)"]];
+function packs(){
+  $("main").innerHTML=`<h2>Packs de joueurs</h2><div class="packs">${PACKS.map(([n,ic,price,nb,odds,bg],i)=>`<div class="pack" style="background:${bg}"><div class="pi">${ic}</div><b>Pack ${n}</b><div class="hint" style="color:#ddd">${nb} joueurs · Légende ${odds[3]}% · Or ${odds[2]}%</div><button class="btn ${i>=2?"gold":""}" style="margin-top:10px;width:100%" data-pack="${i}" ${S.coins<price?"disabled":""}>Ouvrir · ${price.toLocaleString("fr-FR")} 🪙</button></div>`).join("")}</div>
+  <p class="hint">Gagne des pièces en jouant des matchs et en vendant tes doublons.</p>`;
+  document.querySelectorAll("[data-pack]").forEach(b=>b.onclick=()=>openPack(+b.dataset.pack));
+}
+function openPack(i){ const [n,ic,price,nb,odds]=PACKS[i]; if(S.coins<price) return; S.coins-=price; const got=[]; for(let k=0;k<nb;k++){ const p=mkPlayer(rollRarity(odds)); got.push(p); S.squad.push(p); } save(); head();
+  const best=got.reduce((a,b)=>b.r>a.r?b:a); got.sort((a,b)=>a.r-b.r);
+  popup(`<h2>Pack ${n}</h2><div class="reveal">${got.map((p,j)=>card(p).replace('class="pc','style="animation-delay:'+(j*.35)+'s" class="pc')).join("")}</div><p>Meilleur : <b>${esc(best.n)}</b> (${best.r} · ${RNAME[best.k]})</p><button class="btn" id="ok">Super !</button>`,()=>{ $("ok").onclick=()=>{ closePop(); draw(); }; });
+  got.forEach((p,j)=>setTimeout(()=>beep(400+p.r*6,.15,p.k===3?"sawtooth":"triangle",.07),j*350));
+}
+// ---------- LIGUE
+function ligue(){ const t=S.table.slice().sort((a,b)=>b.pts-a.pts||(b.bp-b.bc)-(a.bp-a.bc));
+  $("main").innerHTML=`<div class="box"><h2>Ligue · Saison ${S.season} · Journée ${S.day}/14</h2><table><tr><th>#</th><th>Club</th><th>J</th><th>Diff</th><th>Pts</th></tr>${t.map((r,i)=>`<tr class="${r.me?"me":""}"><td>${i+1}</td><td>${esc(r.n)}</td><td>${r.j}</td><td>${r.bp-r.bc>0?"+":""}${r.bp-r.bc}</td><td><b>${r.pts}</b></td></tr>`).join("")}</table><p class="hint">Le 1er à la fin des 14 journées gagne le trophée et 10 000 🪙.</p></div>`; }
+// ---------- MATCH
+let matchRunning=false;
+function opponent(){ const others=S.table.filter(t=>!t.me); return others[S.day%others.length]; }
+function match(){ if(S.day>=14) return endSeason();
+  const o=opponent(), me=teamOvr();
+  $("main").innerHTML=`<div class="box" style="text-align:center"><h2>Journée ${S.day+1}/14</h2><div class="score"><div class="tn">${esc(S.club)}<small>⭐ ${me}</small></div><div>VS</div><div class="tn">${esc(o.n)}<small>⭐ ${o.ovr}</small></div></div>
+  <div class="bar"><i style="width:${Math.round(100*me/(me+o.ovr))}%"></i></div><p class="hint">Chances de victoire selon les notes</p><button class="btn" id="kick" style="width:100%;font-size:18px">⚽ Jouer le match</button></div>`;
+  $("kick").onclick=()=>playMatch(o);
+}
+function playMatch(o){ matchRunning=true; const me=teamOvr(); let a=0,b=0,min=0;
+  const myAtt=S.line.map(byId).filter(p=>p.p==="ATT"||p.p==="MIL");
+  $("main").innerHTML=`<div class="box"><div class="score"><div class="tn">${esc(S.club)}</div><div id="sc">0 - 0</div><div class="tn">${esc(o.n)}</div></div><div style="text-align:center" class="hint" id="mn">0'</div><div class="feed" id="feed"></div></div>`;
+  const feed=$("feed"), add=(t,g)=>{ const d=document.createElement("div"); if(g) d.className="g"; d.textContent=t; feed.prepend(d); };
+  add("Coup d'envoi ! 🟢");
+  const tick=setInterval(()=>{ min+=3; $("mn").textContent=min+"'";
+    const pMe=.075*Math.pow(me/o.ovr,2.2), pOp=.075*Math.pow(o.ovr/me,2.2);
+    if(Math.random()<pMe){ a++; const s=pick(myAtt)||byId(S.line[10]); add(`${min}' ⚽ BUT ! ${s.n} marque pour ${S.club} !`,1); beep(880,.2); beep(1175,.3); }
+    else if(Math.random()<pOp){ b++; add(`${min}' ⚽ But de ${o.n}…`,1); beep(220,.3,"sawtooth",.05); }
+    else if(Math.random()<.25) add(`${min}' ${pick(["Belle action","Frappe à côté","Arrêt du gardien","Corner","Carton jaune","Contre-attaque","Tir sur la barre !"])}`);
+    $("sc").textContent=`${a} - ${b}`;
+    if(min>=90){ clearInterval(tick); finish(o,a,b); }
+  },420);
+}
+function finish(o,a,b){ matchRunning=false; const me=S.table.find(t=>t.me);
+  const res=(x,y,t)=>{ t.j++; t.bp+=x; t.bc+=y; t.pts+=x>y?3:x===y?1:0; };
+  res(a,b,me); res(b,a,o);
+  S.table.filter(t=>!t.me&&t!==o).forEach((t,i,arr)=>{ if(i%2) return; const u=arr[i+1]; if(!u) return; const x=ri(0,3),y=ri(0,3); res(x,y,t); res(y,x,u); });
+  S.day++; const gain=a>b?900:a===b?400:200; S.coins+=gain+a*100; save(); head();
+  popup(`<h2>${a>b?"VICTOIRE 🎉":a===b?"Match nul":"Défaite 😤"}</h2><div class="score">${a} - ${b}</div><p>+${gain+a*100} 🪙</p><button class="btn" id="ok">Continuer</button>`,()=>{ $("ok").onclick=()=>{ closePop(); go(S.day>=14?"ligue":"match"); if(S.day>=14) setTimeout(endSeason,300); }; });
+}
+function endSeason(){ const t=S.table.slice().sort((a,b)=>b.pts-a.pts||(b.bp-b.bc)-(a.bp-a.bc)); const rank=t.findIndex(r=>r.me)+1;
+  if(rank===1){ S.trophies++; S.coins+=10000; } else S.coins+=Math.max(500,4000-rank*400);
+  popup(`<h2>Fin de la saison ${S.season}</h2><p style="font-size:20px">Tu finis <b>${rank}${rank===1?"er 🏆":"e"}</b></p><p>${rank===1?"+10 000 🪙 et un trophée !":"Récompense versée. Renforce ton équipe !"}</p><button class="btn" id="ok">Saison suivante</button>`,()=>{ $("ok").onclick=()=>{ newSeason(true); closePop(); go("club"); }; });
+  save();
+}
+function popup(html,after){ $("popIn").innerHTML=html; $("pop").classList.add("on"); after&&after(); }
+function closePop(){ $("pop").classList.remove("on"); }
+function esc(s){ return String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c])); }
+draw();
+})();
+</script>
+</body>
+</html>
