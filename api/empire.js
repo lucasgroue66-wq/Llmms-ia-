@@ -54,6 +54,7 @@ export default async function handler(req, res) {
       const cmds = [["HSET", P + "p:" + pid, "n", name, "w", String(w), "l", String(legit), "s", s, "t", String(Date.now())], ["EXPIRE", P + "p:" + pid, 120 * DAY], ["ZADD", P + "lba", w, pid]];
       cmds.push(legit ? ["ZADD", P + "lbl", w, pid] : ["ZREM", P + "lbl", pid]);
       cmds.push(["LRANGE", P + "in:" + pid, 0, -1], ["DEL", P + "in:" + pid], ["ZREVRANK", P + "lba", pid], ["ZREVRANK", P + "lbl", pid], ["ZCARD", P + "lba"]);
+      { const sk = P + "season:" + Math.floor(Date.now() / (30 * DAY * 1000)); cmds.push(legit ? ["ZADD", sk, w, pid] : ["ZREM", sk, pid], ["EXPIRE", sk, 100 * DAY]); }
       const r = await kv(cmds);
       const inbox = (r[4] || []).map(x => { try { return JSON.parse(x); } catch { return null; } }).filter(Boolean);
       return res.json({ ok: true, inbox, rank: r[6] == null ? null : r[6] + 1, rankL: r[7] == null ? null : r[7] + 1, players: r[8] || 0 });
@@ -142,6 +143,10 @@ export default async function handler(req, res) {
     const ch = clean(b.ch, 12).replace(/\W/g, "") || "general";
     if (op === "dsay") { const t = clean(b.text, 160).replace(BAD, "***"); if (!t) throw new Error("message vide"); const k = P + "disko:" + ch; await kv([["LPUSH", k, JSON.stringify({ id: pid, n: await me(), t, ts: Date.now() })], ["LTRIM", k, 0, 49], ["EXPIRE", k, 30 * DAY]]); return res.json({ ok: true }); }
     if (op === "dread") { const [l] = await kv([["LRANGE", P + "disko:" + ch, 0, 39]]); return res.json({ list: (l || []).map(parse).filter(Boolean) }); }
+
+    if (op === "season_get") { const m = Math.floor(Date.now() / (30 * DAY * 1000)) - (b.prev ? 1 : 0), sk = P + "season:" + m; const [rk] = await kv([["ZREVRANK", sk, pid]]); return res.json({ mo: m, end: (m + 1) * 30 * DAY * 1000, top: await list(sk, 10), rank: rk === null || rk === undefined ? null : rk + 1 }); }
+    if (op === "code_new") { const c = String(b.code || "").toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, 16); if (c.length < 4) throw new Error("code trop court (4 caractères minimum)"); if (/(pute|merde|fdp|nique|salope|encul|connard)/i.test(c)) throw new Error("code refusé"); const amt = Math.min(Math.max(1, num(b.amt, 1e6)), 1e6), uses = Math.min(Math.max(1, Math.floor(num(b.uses, 100))), 100); const [ok] = await kv([["SET", P + "code:" + c, JSON.stringify({ by: pid, n: await me(), amt, uses, left: uses }), "NX", "EX", 30 * DAY]]); if (!ok) throw new Error("ce code existe déjà"); return res.json({ ok: true, code: c }); }
+    if (op === "code_use") { const c = String(b.code || "").toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, 16); const k = P + "code:" + c; const [v] = await kv([["GET", k]]); const o = parse(v); if (!o) throw new Error("code inconnu ou expiré"); if (o.by === pid) throw new Error("tu ne peux pas utiliser ton propre code"); if (o.left <= 0) throw new Error("ce code a déjà été utilisé au maximum"); const [added] = await kv([["SADD", k + ":u", pid], ["EXPIRE", k + ":u", 30 * DAY]]); if (!added) throw new Error("tu as déjà utilisé ce code"); o.left--; await kv([["SET", k, JSON.stringify(o), "KEEPTTL"]]); return res.json({ ok: true, amt: o.amt, by: o.n }); }
     res.status(400).json({ error: "opération inconnue" });
   } catch (e) { res.status(e.message?.startsWith("base") ? 500 : 400).json({ error: e.message }); }
 }
