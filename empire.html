@@ -432,10 +432,11 @@ function prof(){ const nw=netWorth(); let st=0,cr=0,re=0,nre=0; STOCKS.forEach(s
   <h2>🏆 Classement des plus riches</h2><div class="card">${list.map((r,i)=>`<div class="row" style="padding:6px 0;border-bottom:1px solid var(--line);${r[0]==="⭐ TOI"?"color:#fbbf24;font-weight:900":""}"><b style="width:34px">#${i+1}</b><span class="grow">${r[0]}</span><b>${fmt(r[1])}</b></div>`).join("")}</div>
   ${achHTML()}
   <h2>☁️ Sauvegarde</h2><div class="card"><p style="margin:0">Ta partie est sauvegardée <b>sur ton appareil et en ligne</b>${cloudOK===false?' <span class="tag h">hors ligne</span>':""}. Ton code : <b style="font-family:monospace;font-size:18px;letter-spacing:.1em;user-select:all">${CID}</b></p><p class="hint">Garde ce code : il te permet de retrouver ta partie sur un autre téléphone ou navigateur.</p><div class="row" style="gap:6px;flex-wrap:wrap"><input class="in" id="rcode" placeholder="Code d'une partie" style="width:170px;text-transform:uppercase"><button class="btn" id="rload">Charger cette partie</button><button class="btn gh" id="rnow">☁️ Sauvegarder maintenant</button></div></div>
+  <h2>🎬 Cinématiques</h2><div class="card"><p class="hint" style="margin:0 0 8px">Choisis quand les animations plein écran apparaissent. Sinon, tu as juste une petite notification.</p><div class="qty" style="margin:0">${[["all","🎬 Toutes"],["imp","⭐ Seulement mes actions"],["off","🔕 Aucune"]].map(([k,l])=>`<button data-cm2="${k}" class="${cineMode()===k?"on":""}">${l}</button>`).join("")}</div></div>
   <h2>🗑️ Recommencer</h2><div class="card"><p style="margin:0 0 8px">Efface <b>toute</b> ta partie (argent, business, applis, abonnés…) sur cet appareil <b>et en ligne</b>, et repars de 300 €.</p><button class="btn r" id="rdata" style="width:100%">🗑️ Réinitialiser ma partie</button></div>
   <h2>📰 Historique</h2><div class="card ev">${E.log.map(l=>`<div class="hint" style="padding:3px 0">${l}</div>`).join("")||'<div class="hint">Rien pour l’instant.</div>'}</div>`;
   bindAch(prof);
-  $("rdata").onclick=askReset;
+  $("rdata").onclick=askReset; document.querySelectorAll("[data-cm2]").forEach(b=>b.onclick=()=>{ try{ localStorage.setItem("empire_cine",b.dataset.cm2); }catch{} toast(b.textContent); prof(); });
   $("rnow").onclick=async()=>{ save(); cloudDirty=true; await cloudSave(); toast(cloudOK?"☁️ Partie sauvegardée en ligne":"⚠️ Sauvegarde en ligne impossible (gardée sur l'appareil)"); prof(); };
   $("rload").onclick=async()=>{ const c=$("rcode").value.trim().toUpperCase(); if(!c) return; try{ const d=await cloudLoad(c); if(!d) return toast("Aucune partie avec ce code"); localStorage.setItem("empire_cloud",c); localStorage.setItem(KEY,JSON.stringify(d)); toast("✅ Partie chargée !"); setTimeout(()=>location.reload(),600); }catch(e){ toast("Erreur : "+e.message); } }; }
 
@@ -1009,7 +1010,7 @@ function bindTeam(after){ const A=P(); A.team=A.team||{};
   if($("tnow")) $("tnow").onclick=()=>{ const pw=teamPower(); if(!pay(pw.cost*2)) return; let n=0; (A.maps||[]).forEach(m=>{ n+=teamWork(m,pw.tiles*2); const g=m.pub&&A.blox.find(x=>x.id===m.pub); if(g) g.q=Math.min(100,Math.max(g.q,mapScore(m)*.9)); }); save(); toast(`⚡ Ton équipe a construit ${n} éléments d'un coup !`); after(); }; }
 
 /* ================= ✨ EXTENSIONS : Gogole, LLMMS Coin, Casino, Label, Défis, Rival, Prestige, Événements & cinématiques ================= */
-function X(){ if(!E.x) E.x={gog:null,coin:null,mus:null,ql:{},cw:0,cl:0,evOn:1,evF:45,luck:0,pres:0,rv:null,beat:0}; const x=E.x; if(!x.rv) x.rv={n:"Damien Kross",w:Math.max(5e4,netWorth()*1.6)}; return x; }
+function X(){ if(!E.x) E.x={gog:null,coin:null,mus:null,ql:{},cw:0,cl:0,evOn:1,evF:160,luck:0,pres:0,rv:null,beat:0}; const x=E.x; if(x.evF===45) x.evF=160; else if(x.evF===120) x.evF=400; if(!x.rv) x.rv={n:"Damien Kross",w:Math.max(5e4,netWorth()*1.6)}; return x; }
 const PMULT=()=>Math.pow(2,(E.x&&E.x.pres)||0);
 PEOPLE.rival=["😈","Damien Kross","Ton rival milliardaire"];
 
@@ -1177,13 +1178,13 @@ tick=function(silent){ const c0=E.cash; _tick(silent); const g=E.cash-c0; if(g>0
   const g2=x.gog; if(g2&&g2.top){ const s=(P().sites||[]).find(z=>z.id==g2.top); if(s) s.users=(s.users||0)+Math.round(g2.s*.003); }
   if(x.coin&&x.coin.q<1) x.coin.q=0;
   if(rivalDay()&&!silent){ const rw=Math.round(netWorth()*.01); E.cash+=rw; logEv(`🏆 Tu as dépassé ${x.rv.n} ! Bonus ${fmt(rw)}`); cine({ic:"🏆",t:"TU AS BATTU TON RIVAL",s:`${x.rv.n} est derrière toi. Bonus : ${fmt(rw)} !`,col:"or"}); }
-  else if(!silent&&x.evOn&&!$("cine")&&Math.random()<1/(x.evF||45)) runEv(pick(XEV)[0]); };
+  else if(!silent&&x.evOn&&!$("cine")&&Math.random()<1/(x.evF||160)) runEv(pick(XEV)[0]); };
 const _di=dailyIncome; dailyIncome=function(){ const x=E.x, d=_di()+(x?((x.gog&&x.gog.last)||0)+((x.mus&&x.mus.last)||0):0); return d>0?d*PMULT()*ECO():d; };
 
 /* ---------- 🛠️ Panel : événements, cinématiques et nouveautés ---------- */
 function xAdminHTML(){ const x=X(); return `<h2 style="margin-top:18px">🎬 Événements & cinématiques</h2>
   <div class="row" style="gap:6px;flex-wrap:wrap"><select class="in" id="xev" style="width:auto">${XEV.map(e=>`<option value="${e[0]}">${e[1]} ${e[2]}</option>`).join("")}</select><button class="btn" id="xevb">▶️ Lancer l'événement</button></div>
-  <div class="qty" style="margin-top:6px"><button id="xevr">🎲 Événement au hasard</button><button id="xevo">${x.evOn?"✅":"⬜"} Événements automatiques</button><select class="in" id="xevf" style="width:auto"><option value="120" ${x.evF==120?"selected":""}>Rares</option><option value="45" ${x.evF==45?"selected":""}>Normaux</option><option value="12" ${x.evF==12?"selected":""}>Souvent</option><option value="3" ${x.evF==3?"selected":""}>Tout le temps</option></select></div>
+  <div class="qty" style="margin-top:6px"><button id="xevr">🎲 Événement au hasard</button><button id="xevo">${x.evOn?"✅":"⬜"} Événements automatiques</button><select class="in" id="xevf" style="width:auto"><option value="400" ${x.evF==400?"selected":""}>Rares</option><option value="160" ${x.evF==160?"selected":""}>Normaux</option><option value="40" ${x.evF==40?"selected":""}>Souvent</option><option value="5" ${x.evF==5?"selected":""}>Tout le temps</option></select></div>
   <p class="hint" style="margin:10px 0 4px">🎬 Crée ta propre cinématique :</p><div class="row" style="gap:6px;flex-wrap:wrap"><input class="in" id="xci" placeholder="Emoji" value="👑" style="max-width:70px"><input class="in" id="xct" placeholder="Titre" value="LLMMS EST LE PLUS RICHE"></div>
   <div class="row" style="gap:6px;flex-wrap:wrap;margin-top:6px"><input class="in" id="xcs" placeholder="Texte en dessous" value="Personne ne peut l'arrêter."><select class="in" id="xcc" style="width:auto">${Object.keys(CSTY).map(k=>`<option>${k}</option>`).join("")}</select><input class="in" id="xcg" type="number" placeholder="€ à gagner (option)" style="max-width:150px"><button class="btn o" id="xcb">🎬 Jouer</button></div>
   <h2 style="margin-top:18px">✨ Nouveautés</h2>
@@ -1310,7 +1311,7 @@ const BOTS=["Zyro_77","Mila.Biz","KingSamy","Noa_Invest","TheoCash","Lyna💎","
 function seaRank(){ const y=Y(), s=y.sea, my=Math.max(0,netWorth()-s.start), el=Math.min(1,(Date.now()-s.t0)/(7*864e5)+.05);
   let seed=s.id; const rr=()=>{ seed=(seed*9301+49297)%233280; return seed/233280; };
   const L=BOTS.map(n=>[n,Math.round(Math.max(2000,s.start*.12)*Math.pow(rr()*3,2)*el)]).concat([["⭐ TOI",my]]).sort((a,b)=>b[1]-a[1]); return {L,rank:L.findIndex(r=>r[0]==="⭐ TOI")+1,my}; }
-function seaCheck(){ const y=Y(), w=weekId(); if(!y.sea){ y.sea={id:w,start:netWorth(),t0:Date.now()}; return; } if(y.sea.id!==w){ const {rank}=seaRank(), rw=Math.round(Math.max(5000,y.sea.start*.06)*[0,5,3,2,1.5,1.2,1,.8,.6,.5,.4,.3][Math.min(11,rank)]*ECO()); E.cash+=rw; y.lastSea={rank,rw}; y.sea={id:w,start:netWorth(),t0:Date.now()}; setTimeout(()=>cine({ic:rank<=3?["","🥇","🥈","🥉"][rank]:"📅",t:"FIN DE LA SAISON",s:`Tu finis ${rank}${rank===1?"er":"e"} · récompense ${fmt(rw)}`,col:rank===1?"or":"bleu",ms:4000}),1500); } }
+function seaCheck(){ const y=Y(), w=weekId(); if(!y.sea){ y.sea={id:w,start:netWorth(),t0:Date.now()}; return; } if(y.sea.id!==w){ const {rank}=seaRank(), rw=Math.round(Math.max(5000,y.sea.start*.06)*[0,5,3,2,1.5,1.2,1,.8,.6,.5,.4,.3][Math.min(11,rank)]*ECO()); E.cash+=rw; y.lastSea={rank,rw}; y.sea={id:w,start:netWorth(),t0:Date.now()}; setTimeout(()=>autoRun(()=>cine({ic:rank<=3?["","🥇","🥈","🥉"][rank]:"📅",t:"FIN DE LA SAISON",s:`Tu finis ${rank}${rank===1?"er":"e"} · récompense ${fmt(rw)}`,col:rank===1?"or":"bleu",ms:4000})),1500); } }
 function appSea(){ seaCheck(); const y=Y(), {L,rank,my}=seaRank(), left=Math.max(0,7*864e5-(Date.now()-y.sea.t0));
   $("main").innerHTML=back("Saison","📅")+`<div class="card" style="text-align:center"><div class="hint">Saison de la semaine · fin dans ${Math.floor(left/864e5)} j ${Math.floor(left%864e5/36e5)} h (temps réel)</div><div style="font-size:40px;font-weight:900">${rank}${rank===1?"er":"e"}</div><div class="hint">Ton score = l'argent gagné cette semaine : <b class="up">${fmt(my)}</b></div>${y.lastSea?`<p class="hint">Saison précédente : ${y.lastSea.rank}e · ${fmt(y.lastSea.rw)}</p>`:""}</div>
    <div class="card">${L.map((r,i)=>`<div class="row" style="padding:6px 0;border-bottom:1px solid var(--line);${r[0]==="⭐ TOI"?"color:#fbbf24;font-weight:900":""}"><span style="width:28px">${["🥇","🥈","🥉"][i]||i+1}</span><span class="grow">${esc(r[0])}</span><b>${fmt(r[1])}</b></div>`).join("")}</div><p class="hint">Chaque lundi, le classement repart à zéro et le top reçoit une récompense.</p>`; bindBack(); }
@@ -1327,7 +1328,7 @@ tick=function(silent){ const c0=E.cash; _tick2(silent); const y=Y(); const g=E.c
   E.cash+=(islDay()+polDay())*ECO()*PMULT()-starDay(silent);
   if(hasStar("hack")&&X().gog) X().gog.s=Math.round(X().gog.s*1.0015);
   if(hasStar("trd")&&X().coin) X().coin.hype+=.05;
-  if(E.biz.length&&Math.random()<1/90) newCase(silent);
+  if(E.biz.length&&Math.random()<1/300) newCase(silent);
   if(y.cty.chn&&Math.random()<1/400){ const v=Math.round(E.cash*.05); E.cash-=v; logEv(`🇨🇳 Le gouvernement a saisi ${fmt(v)} de tes actifs en Chine`); if(!silent) cine({ic:"🚨",t:"SAISIE EN CHINE",s:`Le gouvernement saisit ${fmt(v)}.`,col:"rouge",ms:3200}); }
   if(E.day%7===0) seaCheck(); };
 const _di2=dailyIncome; dailyIncome=function(){ const y=E.x&&E.x.y, d=_di2(); if(!y) return d; let st=0; for(const k in y.st){ const s=STARS.find(z=>z[0]===k); if(s) st+=s[5]*y.st[k].pay; } return d*(1+(d>0?ctyBonus()+(hasStar("dir")?.15:0):0))+(islDay()+POL[y.pol.lv][3])*ECO()*PMULT()-st; };
@@ -1576,7 +1577,7 @@ function handleInbox(m){ const w=W();
   else if(m.t==="attack"){ const def=m.kind==="espion"?(hasStar("hack")||(hasTech("sec")&&Math.random()<.5)):(w.home.guard>=2); if(def){ msg("amis",`🛡️ ${m.name} a essayé de t'attaquer (${m.kind}), mais tu t'es défendu !`); return; }
     if(m.kind==="espion"){ const v=Math.round(E.cash*.02); E.cash-=v; msg("amis",`🕵️ ${m.name} a espionné ton empire et t'a volé ${fmt(v)}.`); }
     else { w.att={until:E.day+5,f:m.kind==="pub"?.85:.8,by:m.name}; msg("amis",`⚔️ ${m.name} casse les prix contre toi : -${m.kind==="pub"?15:20} % de revenus pendant 5 jours.`); }
-    setTimeout(()=>cine({ic:"⚔️",t:"ATTAQUE DE "+m.name.toUpperCase(),s:m.kind==="espion"?"Un espion a volé une partie de ton argent !":"Il casse les prix pour te voler tes clients pendant 5 jours.",col:"rouge",ms:3200}),800); } }
+    setTimeout(()=>autoRun(()=>cine({ic:"⚔️",t:"ATTAQUE DE "+m.name.toUpperCase(),s:m.kind==="espion"?"Un espion a volé une partie de ton argent !":"Il casse les prix pour te voler tes clients pendant 5 jours.",col:"rouge",ms:3200})),800); } }
 function appOnline(){ const w=W();
   if(!w.name){ $("main").innerHTML=back("En ligne","🌐")+`<div class="card" style="text-align:center"><div style="font-size:54px">🌐</div><p>Joue avec les vrais joueurs du site : classement mondial, envoie de l'argent à tes potes, défie-les, attaque leur business…</p><input class="in" id="onm" maxlength="16" placeholder="Ton pseudo" style="width:100%"><p class="hint">Pas ton vrai nom : juste un pseudo de jeu.</p><button class="btn g" id="ong" style="width:100%">C'est parti</button></div>`; bindBack();
     $("ong").onclick=()=>{ const n=$("onm").value.replace(/[<>&"'`\\]/g,"").trim().slice(0,16); if(n.length<2) return toast("Pseudo trop court"); w.name=n; save(); mpSync().then(()=>appOnline()); }; return; }
@@ -1675,8 +1676,8 @@ const _tick5=tick; tick=function(silent){ const c0=E.cash; _tick5(silent); const
   const w=W(), fam=w.fam; E.cash-=fam.kids.filter(k=>E.age-k.b<18).length*60+(GRD[w.home.guard]||GRD[0])[2];
   fakeDay(silent); bankDay(silent); storyCheck(silent);
   if(!silent&&w.cat&&w.cat.until===E.day) toast("🌤️ La catastrophe est terminée : tout redevient normal");
-  if(!silent&&!$("cine")&&X().evOn){ if(Math.random()<1/500) startCat(); else if(Math.random()<1/160&&Object.values(S0()).some(s=>s.f>500)) drama();
-    else if(netWorth()>1e8&&Math.random()<1/120){ if(w.home.guard+(E.x.q&&E.x.q.pet&&E.x.q.pet.k===3?1:0)>=Math.min(3,1+Math.floor(Math.log10(netWorth())-8))){ logEv("🛡️ Tes gardes ont arrêté un cambrioleur !"); toast("🛡️ Tes gardes ont arrêté un cambrioleur !"); } else { const own=Object.keys(E.items); let t; if(own.length&&Math.random()<.6){ const id=pick(own), [gg,ii]=id.split("-").map(Number); delete E.items[id]; t=`Ils ont volé ton ${ITEMS[gg][1][ii][1]} !`; } else { const v=Math.round(E.cash*.02); E.cash-=v; t=`Ils ont volé ${fmt(v)} dans ton coffre !`; } logEv("🦹 Cambriolage : "+t); cine({ic:"🦹",t:"CAMBRIOLAGE !",s:t+" Engage un garde du corps (🏡 Ma maison).",col:"rouge",ms:3800}); } } } };
+  if(!silent&&!$("cine")&&X().evOn){ if(Math.random()<1/1500) startCat(); else if(cineMode()==="all"&&Math.random()<1/500&&Object.values(S0()).some(s=>s.f>500)) drama();
+    else if(netWorth()>1e8&&Math.random()<1/400){ if(w.home.guard+(E.x.q&&E.x.q.pet&&E.x.q.pet.k===3?1:0)>=Math.min(3,1+Math.floor(Math.log10(netWorth())-8))){ logEv("🛡️ Tes gardes ont arrêté un cambrioleur !"); toast("🛡️ Tes gardes ont arrêté un cambrioleur !"); } else { const own=Object.keys(E.items); let t; if(own.length&&Math.random()<.6){ const id=pick(own), [gg,ii]=id.split("-").map(Number); delete E.items[id]; t=`Ils ont volé ton ${ITEMS[gg][1][ii][1]} !`; } else { const v=Math.round(E.cash*.02); E.cash-=v; t=`Ils ont volé ${fmt(v)} dans ton coffre !`; } logEv("🦹 Cambriolage : "+t); cine({ic:"🦹",t:"CAMBRIOLAGE !",s:t+" Engage un garde du corps (🏡 Ma maison).",col:"rouge",ms:3800}); } } } };
 const _di5=dailyIncome; dailyIncome=function(){ const d=_di5(), w=E.x&&E.x.w; let c=0; if(w) c=w.fam.kids.filter(k=>E.age-k.b<18).length*60+(GRD[w.home.guard]||GRD[0])[2]; return (d>0?d*catF():d)-c; };
 const _home5=home; home=function(){ _home5(); const w=E.x&&E.x.w; let pre=storyCard(); if(w&&w.cat&&w.cat.until>E.day){ const c=CATS.find(z=>z[0]===w.cat.k); pre=`<div class="card" style="border-color:#ff5a5f66;background:linear-gradient(135deg,#3a0a0a,var(--card))"><b>${c[1]} ${c[2]}</b><div class="hint">${c[3]} Encore ${w.cat.until-E.day} jours.</div></div>`+pre; } if(w&&w.att&&w.att.until>E.day) pre=`<div class="card" style="border-color:#ff5a5f66"><b>⚔️ ${esc(w.att.by)} t'attaque</b><div class="hint">Revenus réduits encore ${w.att.until-E.day} jours.</div></div>`+pre; if(w&&w.bk>0) pre=`<div class="card" style="border-color:#ff5a5f"><b>⚠️ Découvert depuis ${w.bk} jours</b><div class="hint">À 15 jours, la banque saisit tes biens ! Remets ton argent au-dessus de 0 €.</div></div>`+pre; if(pre) $("main").insertAdjacentHTML("afterbegin",pre); };
 applySkin();
@@ -2064,7 +2065,7 @@ const _tick7=tick; tick=function(silent){ const c0=E.cash; _tick7(silent); const
   if(m.spec&&m.spec.end<=E.day){ const s=m.spec, up=X().rv.w>s.w0, win=up===s.up; if(win) E.cash+=s.amt*2; m.spec=null; if(!silent) toast(win?`📉 Spéculation gagnée : +${fmt(s.amt*2)}`:"📉 Spéculation perdue…"); }
   if(bfOn()&&E.ph&&E.ph.shop&&E.ph.shop.p.length){ const s=E.ph.shop; s.p.forEach(x=>{ if(x.o) addOrders(x.k,x.o*2,PRODS[x.k][3]*x.m*(s.brand?1.25:1)); }); }
   if(E.day%5===0) troCheck(silent);
-  if(!silent&&!$("cine")&&!document.querySelector("[data-ca]")&&X().evOn&&Math.random()<1/45) phoneCall(); };
+  if(!silent&&!$("cine")&&!document.querySelector("[data-ca]")&&X().evOn&&cineMode()==="all"&&Math.random()<1/250) phoneCall(); };
 const _di7=dailyIncome; dailyIncome=function(){ const d=_di7(), m=E.x&&E.x.m; if(!m) return d; const f=cbF()*lawF()*huntF()*(m.en<25?.75:1)*(bfOn()?1.2:1)*(curSeason()?1.1:1); return (d>0?d*f:d)+mentDaily()-m.hunt.hired.reduce((a,h)=>a+h.s,0); };
 function nAdminHTML(){ return `<h2 style="margin-top:18px">🆕 Les 50 nouveautés</h2><div class="qty"><button id="na1">🏢 Toutes les activités Business 2</button><button id="na2">📞 Appel surprise</button><button id="na3">🎄 Forcer Noël</button><button id="na4">🎃 Forcer Halloween</button><button id="na5">🛍️ Black Friday (5 jours)</button><button id="na6">🌦️ Changer la météo</button><button id="na7">🧠 Compétences max</button><button id="na8">💪 Énergie 100 %</button><button id="na9">❤️ Réputation 100</button><button id="na10">🏆 Tous les trophées</button><button id="na11">🪙 Album complet</button><button id="na12">⚡ Recharger tous les délais</button><button id="na13">🎉 Saison normale</button></div>`; }
 function nAdminBind(ok){ const m=NM();
@@ -2267,7 +2268,7 @@ const TRTAG=["#DéfiDuSiècle","#TrendDeOuf","#CaVaPasser","#PourToi","#LeVraiBo
 function trendNow(){ const w=weekId(), list=CTYPES.filter(c=>c[0]!=="none"), c=list[w%list.length]; return {k:c[0],ic:c[1],n:c[2],tag:TRTAG[w%TRTAG.length]}; }
 const MSL=[[1e5,"✔️ Certifié + 🥈 Bouton d'argent","🥈"],[1e6,"🥇 Bouton d'or","🥇"],[1e7,"💎 Bouton de diamant","💎"]];
 function msCheck(silent){ const w=W(); w.ms=w.ms||{}; const all=Object.assign({},...Object.keys(SOC).map(k=>({[k]:S0()[k].f})),{vid:P().vid.subs});
-  for(const k in all){ const lv=MSL.filter(m=>all[k]>=m[0]).length; if(lv>(w.ms[k]||0)){ w.ms[k]=lv; const m=MSL[lv-1], nm=k==="vid"?"VidTube":SOC[k][1]; logEv(`${m[2]} ${nm} : ${m[1]}`); if(!silent) setTimeout(()=>cine({ic:m[2],t:m[1].toUpperCase(),s:`${nm} te récompense pour tes ${fmtK(m[0])} !`,col:lv===3?"bleu":"or",ms:3400}),300); } } }
+  for(const k in all){ const lv=MSL.filter(m=>all[k]>=m[0]).length; if(lv>(w.ms[k]||0)){ w.ms[k]=lv; const m=MSL[lv-1], nm=k==="vid"?"VidTube":SOC[k][1]; logEv(`${m[2]} ${nm} : ${m[1]}`); if(!silent) setTimeout(()=>autoRun(()=>cine({ic:m[2],t:m[1].toUpperCase(),s:`${nm} te récompense pour tes ${fmtK(m[0])} !`,col:lv===3?"bleu":"or",ms:3400})),300); } } }
 const msBadge=k=>{ const l=(E.x&&E.x.w&&E.x.w.ms&&E.x.w.ms[k])||0; return (l?' <span style="color:#38bdf8">✔️</span>':"")+(l?" "+MSL.slice(0,l).map(m=>m[2]).join(""):""); };
 const CMT=[["😍","Gentil","T'es trop fort, continue comme ça !",[["❤️ Merci beaucoup !",2,1.2],["😎 Je sais.",-2,1],["🙏 Merci, ça me motive !",3,1.3]]],["🤬","Haineux","T'es nul, ton contenu est éclaté",[["😌 Ignorer",1,1],["🔥 Répondre sèchement",-4,1.6],["😂 Répondre avec humour",3,1.5]]],["❓","Question","Tu peux faire un tuto sur comment tu as commencé ?",[["✅ Oui, bientôt !",3,1.2],["🤐 C'est secret",-1,1],["📹 Je le fais demain !",4,1.4]]],["💰","Arnaqueur","Envoie-moi 50 € et je te donne 10 000 abonnés",[["🚫 Signaler",3,1],["💸 Envoyer 50 €",-2,0],["😂 Bien essayé",2,1.1]]]];
 function commentCard(so){ const p=so.posts[so.posts.length-1]; if(!p||p.rep) return ""; if(p.cm==null) p.cm=ri(0,CMT.length-1); const c=CMT[p.cm]; return `<div class="card"><b>💬 Nouveau commentaire sous ton dernier post</b><div class="item" style="margin:8px 0 6px"><div class="ic">${c[0]}</div><div class="grow"><div class="t">${pick(SNAMES)} <span class="tag">${c[1]}</span></div><div class="d">« ${c[2]} »</div></div></div><div class="qty">${c[3].map((a,i)=>`<button data-cmr="${i}">${a[0]}</button>`).join("")}</div></div>`; }
@@ -2281,12 +2282,12 @@ function appCrew(){ const w=W(); w.crew=w.crew||{m:[],cd:0}; const C=w.crew, tot
   $("crv").onclick=async()=>{ C.cd=E.day+7; const so=S0(), ks=Object.keys(so); let g=0; ks.forEach(k=>{ const n=Math.round(tot*rnd(.0005,.002)/ks.length+50); so[k].f+=n; g+=n; }); save(); await cine({ic:"🎬",t:"VIDÉO DE GROUPE",s:`Tous les fans de la maison découvrent ta chaîne : +${g.toLocaleString("fr-FR")} abonnés !`,col:"violet",ms:3200}); appCrew(); }; }
 function crewDay(){ const w=E.x&&E.x.w; if(!w||!w.crew||!w.crew.m.length) return; const tot=w.crew.m.reduce((a,n)=>a+(STREAMERS.find(z=>z[1]===n)||[0,0,0])[2],0), so=S0(), ks=Object.keys(so); const n=tot*.00002; ks.forEach(k=>so[k].f+=Math.round(n/ks.length*rnd(.5,1.5))); }
 // 🏆 Créateurs d'Or
-async function ceremony(){ const w=W(), tot=Object.values(S0()).reduce((a,s)=>a+s.f,0)+P().vid.subs, lives=(w.cnt&&w.cnt.live)||0; w.awd=w.awd||0;
+async function ceremony(quiet){ const cine2=quiet?()=>Promise.resolve():cine; const w=W(), tot=Object.values(S0()).reduce((a,s)=>a+s.f,0)+P().vid.subs, lives=(w.cnt&&w.cnt.live)||0; w.awd=w.awd||0;
   const cats=[["🎤","Streamer de l'année",Math.log10(tot+1)*1.2+lives/15],["📹","Meilleur contenu",Math.log10(tot+1)+(NM().rep/25)],["🌱","Révélation de l'année",Math.log10(tot+1)*.8+(E.day<400?3:0)],["❤️","Prix du public",NM().rep/15+Math.log10(tot+1)*.6]];
-  await cine({ic:"🏆",t:"LES CRÉATEURS D'OR",s:"La grande cérémonie commence. Tu es nommé !",col:"or",ms:3000}); let won=0, cash=0;
-  for(const c of cats){ const win=c[2]>rnd(5,9); if(win){ won++; w.awd++; const g=Math.round(Math.max(50000,netWorth()*.01)); cash+=g; E.cash+=g; } await cine({ic:win?c[0]:"👏",t:c[1].toUpperCase(),s:win?`ET LE GAGNANT EST… TOI ! (+${fmt(Math.max(50000,netWorth()*.01))})`:`Le prix va à ${pick(STREAMERS)[1]}… la prochaine fois !`,col:win?"or":"noir",ms:2600}); }
+  await cine2({ic:"🏆",t:"LES CRÉATEURS D'OR",s:"La grande cérémonie commence. Tu es nommé !",col:"or",ms:3000}); let won=0, cash=0;
+  for(const c of cats){ const win=c[2]>rnd(5,9); if(win){ won++; w.awd++; const g=Math.round(Math.max(50000,netWorth()*.01)); cash+=g; E.cash+=g; } await cine2({ic:win?c[0]:"👏",t:c[1].toUpperCase(),s:win?`ET LE GAGNANT EST… TOI ! (+${fmt(Math.max(50000,netWorth()*.01))})`:`Le prix va à ${pick(STREAMERS)[1]}… la prochaine fois !`,col:win?"or":"noir",ms:2600}); }
   if(won){ const so=S0(); for(const k in so) so[k].f+=Math.round(so[k].f*.05*won); } save(); head(); toast(won?`🏆 ${won} prix gagnés · +${fmt(cash)}`:"🏆 Pas de prix cette année…"); }
-const _tick8=tick; tick=function(silent){ _tick8(silent); crewDay(); msCheck(silent); if(!silent&&E.day%120===60&&E.day>0) setTimeout(ceremony,800); };
+const _tick8=tick; tick=function(silent){ _tick8(silent); crewDay(); msCheck(silent); if(!silent&&E.day%120===60&&E.day>0) setTimeout(()=>ceremony(cineMode()!=="all"),800); };
 TROS.push(["silv","🥈","Bouton d'argent",()=>Object.values((E.x.w&&E.x.w.ms)||{}).some(l=>l>=1)],["gold","🥇","Bouton d'or",()=>Object.values((E.x.w&&E.x.w.ms)||{}).some(l=>l>=2)],["diam","💎","Bouton de diamant",()=>Object.values((E.x.w&&E.x.w.ms)||{}).some(l=>l>=3)],["award","🏆","Créateur d'Or",()=>((E.x.w&&E.x.w.awd)||0)>=1]);
 
 /* ================= ⚽ CARRIÈRE DE FOOT (façon Club Legend) ================= */
@@ -2537,6 +2538,11 @@ let lkT=0; const _haS=heartAt; heartAt=function(host,x,y,big){ const n=performan
 function sndBtn(){ const b=$("snd"); if(b) b.textContent=sndOn()?"🔊":"🔇"; }
 (()=>{ const sp=$("spd"); if(sp&&!$("snd")){ const b=document.createElement("button"); b.className="chip"; b.id="snd"; b.title="Sons"; sp.parentNode.insertBefore(b,sp); b.onclick=()=>{ try{ localStorage.setItem("empire_snd",sndOn()?"0":"1"); }catch{} sndBtn(); if(sndOn()) sfx("gift"); toast(sndOn()?"🔊 Sons activés":"🔇 Sons coupés"); }; sndBtn(); } })();
 
+/* ---------- 🎬 Réglage des cinématiques ---------- */
+let AUTO=0; const cineMode=()=>{ try{ return localStorage.getItem("empire_cine")||"imp"; }catch{ return "imp"; } };
+const autoRun=fn=>{ AUTO++; try{ return fn(); } finally{ AUTO--; } };
+const _cineM=cine; cine=function(o){ const m=cineMode(); if(o&&(m==="off"||(m==="imp"&&AUTO>0))){ toast(`${o.ic||""} ${o.t||""}${o.s?" · "+String(o.s).slice(0,70):""}`); return Promise.resolve(); } return _cineM(o); };
+const _tickZ=tick; tick=function(silent){ AUTO++; try{ _tickZ(silent); } finally{ AUTO--; } };
 /* ---------- DÉMARRAGE ---------- */
 if(!E.market.length) refreshMarket();
 const away=Math.min(400,Math.floor((Date.now()-(E.ts||Date.now()))/4000));
