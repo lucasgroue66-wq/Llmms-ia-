@@ -1615,7 +1615,7 @@ async function agent(c){
       setStatus("Continue…");
     }
     // Relecture automatique du code (mode Développement / Roblox, hors construction directe dans Studio)
-    if(c.mode!=="image"&&!usedTools&&/```(lua|luau|js|javascript|ts|typescript|py|python|tsx|jsx)\b/i.test(lastMsg?.content||"")){
+    if(c.mode!=="image"&&!usedTools&&/```(lua|luau|js|javascript|ts|typescript|py|python|tsx|jsx|html)\b/i.test(lastMsg?.content||"")){
       const rounds=boosted(c)&&!isAnimReq(c)?2:1; let corrections=0;
       for(let k=1;k<=rounds;k++){
         setStatus(rounds>1?`Vérification ${k}/${rounds}…`:"Vérification du code…");

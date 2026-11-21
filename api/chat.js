@@ -57,10 +57,12 @@ const cleanTools = tools => tools.map(t => ({ type: "function", function: { name
 async function tryGemini(b, opts) {
   const key = process.env.GEMINI_API_KEY; if (!key) return null;
   const maxMode = (b.messages || []).some(m => m.role === "system" && typeof m.content === "string" && m.content.includes("EFFORT MAX"));
-  const effort = maxMode ? "high" : b.reasoning?.effort === "low" ? "low" : b.reasoning ? "medium" : "low";
+  const effort = maxMode ? "high" : b.reasoning?.effort === "low" ? "low" : b.reasoning?.effort === "high" ? "high" : b.reasoning ? "medium" : "low";
   let list = await gemModels(key);
   // réflexion courte demandée : on commence par les modèles « Flash » (les plus rapides), pas les Pro
   if (effort === "low") list = [...list.filter(m => /flash/.test(m) && !/lite/.test(m)), ...list.filter(m => !(/flash/.test(m) && !/lite/.test(m)))];
+  // réflexion poussée : les modèles « Pro » (les plus intelligents) passent en premier
+  if (effort === "high") list = [...list.filter(m => /pro/.test(m)), ...list.filter(m => !/pro/.test(m))];
   // 1er passage AVEC les outils sur tous les modèles ; sans outils seulement en tout dernier recours
   const passes = b.tools ? [true, false] : [false], ctools = b.tools ? cleanTools(b.tools) : null;
   for (const withTools of passes)
