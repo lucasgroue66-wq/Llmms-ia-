@@ -437,6 +437,41 @@ aside{background:linear-gradient(180deg,var(--deep1) 0%,var(--deep2) 100%);box-s
 *{scrollbar-width:thin;scrollbar-color:var(--line2) transparent}
 ::-webkit-scrollbar{width:9px;height:9px}::-webkit-scrollbar-thumb{background:#2b3548;border-radius:9px;border:2px solid transparent;background-clip:padding-box}
 @media (prefers-reduced-motion:reduce){.chatcol::before,.empty .big span,#thread>.row{animation:none}}
+/* ================= 🔴 Thème NÉON ROUGE (par défaut) ================= */
+body.th-neon{--side:#070203;--bg:#030001;--panel:#0d0405;--field:#0b0304;--hover:#1a0709;--active:#2a080d;--line:#2a0b10;--line2:#4a0f18;--fg:#fff4f5;--soft:#f0d6d9;--muted:#b38990;--dim:#7a4b52;--accent:#ff2d3d;--accent2:#e1001a;--accent-ink:#fff;--link:#ff5c69;--acc-rgb:255,45,61;--acc2-rgb:225,0,26;--acc-soft:#2a060b;--acc-line:#8a0f1c;--hi1:#fff;--hi2:#ffd0d4;--g1:#ff7380;--g2:#ff1f2d;--gbg1:#4a0610;--gbg2:#1f0207;--gbg3:#0a0002;--deep1:#080203;--deep2:#050102;--deep3:#020000;--ln3:#8a1a26;--code:#070102}
+body.th-neon .chatcol{background:url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 800' preserveAspectRatio='none'><defs><filter id='g' x='-50%' y='-50%' width='200%' height='200%'><feGaussianBlur stdDeviation='6'/></filter><linearGradient id='a' x1='0' y1='0' x2='1' y2='1'><stop offset='0' stop-color='%23ff1f2d' stop-opacity='0'/><stop offset='.5' stop-color='%23ff1f2d'/><stop offset='1' stop-color='%23ff1f2d' stop-opacity='0'/></linearGradient></defs><path d='M-40 260 C 60 140 120 60 260 -20' stroke='%23b3000e' stroke-width='60' fill='none' opacity='.35' filter='url(%23g)'/><path d='M-30 250 C 70 130 130 55 270 -25' stroke='url(%23a)' stroke-width='3' fill='none'/><path d='M0 520 C 40 420 70 330 60 250' stroke='url(%23a)' stroke-width='2' fill='none' opacity='.8'/><path d='M440 300 C 380 380 340 420 300 480' stroke='%23b3000e' stroke-width='50' fill='none' opacity='.3' filter='url(%23g)'/><path d='M430 290 C 380 360 330 420 290 470' stroke='url(%23a)' stroke-width='2.5' fill='none'/><path d='M440 640 C 330 680 260 740 230 820' stroke='%23b3000e' stroke-width='70' fill='none' opacity='.35' filter='url(%23g)'/><path d='M440 650 C 340 690 270 745 240 820' stroke='url(%23a)' stroke-width='3' fill='none'/><path d='M-20 760 C 40 700 120 690 180 720' stroke='url(%23a)' stroke-width='1.5' fill='none' opacity='.6'/></svg>") center/100% 100% no-repeat,radial-gradient(70% 50% at 50% 40%,#1a0205 0%,#030001 70%)}
+body.th-neon .chatcol::before{background:radial-gradient(40% 30% at 80% 10%,rgba(255,30,45,.18),transparent 70%),radial-gradient(35% 28% at 10% 85%,rgba(255,30,45,.14),transparent 70%);animation:neonPulse 6s ease-in-out infinite alternate}
+@keyframes neonPulse{from{opacity:.6}to{opacity:1}}
+body.th-neon aside{background:linear-gradient(180deg,#0a0203,#040001);box-shadow:inset -1px 0 0 rgba(255,45,61,.25)}
+body.th-neon .topbar{background:rgba(5,0,1,.8);border-bottom:1px solid rgba(255,45,61,.25)}
+body.th-neon .new{background:rgba(255,45,61,.06);border:1.5px solid #ff2d3d;box-shadow:0 0 18px rgba(255,45,61,.45),inset 0 0 14px rgba(255,45,61,.18);border-radius:16px}
+body.th-neon .new:hover{background:rgba(255,45,61,.14)}
+body.th-neon .search{border:1px solid #3a0a12;background:#090203;border-radius:14px}
+body.th-neon .sec{letter-spacing:.28em;color:#e9d2d5;font-weight:700}
+body.th-neon .recents .r{color:#f3dfe2}
+body.th-neon .recents .r::before{content:"";width:18px;height:16px;flex:none;margin-left:-22px;margin-right:6px;border:2px solid #ff2d3d;border-radius:50% 50% 50% 10%;opacity:.85}
+body.th-neon .recents .r.on{background:linear-gradient(90deg,#4a0710,#2a0409);color:#ff5c69;border:1.5px solid #ff2d3d;box-shadow:0 0 16px rgba(255,45,61,.45)}
+body.th-neon .nav button.on{background:#2a080d;box-shadow:inset 3px 0 0 #ff2d3d}
+body.th-neon .composer{background:rgba(8,1,2,.82);border:1.5px solid #ff2d3d;border-radius:28px;box-shadow:0 0 22px rgba(255,45,61,.35),inset 0 0 18px rgba(255,45,61,.08)}
+body.th-neon .composer:focus-within{border-color:#ff4d5b;box-shadow:0 0 30px rgba(255,45,61,.55),inset 0 0 18px rgba(255,45,61,.12)}
+body.th-neon #modelBtn{border:1.5px solid #ff2d3d;border-radius:999px;background:#0b0103;color:#fff;font-weight:700;box-shadow:0 0 12px rgba(255,45,61,.35);padding:0 16px}
+body.th-neon .composer .pill,body.th-neon .composer .sq{border-radius:999px;border:1px solid #3a0a12}
+body.th-neon .send{border-radius:50%;background:radial-gradient(circle at 35% 30%,#ff5c69,#c8001a);box-shadow:0 0 20px rgba(255,45,61,.7)}
+body.th-neon .sugg button,body.th-neon .ideas button{background:rgba(12,2,4,.78);border:1px solid #3a0a12}
+body.th-neon .sugg button:hover,body.th-neon .ideas button:hover{border-color:#ff2d3d;box-shadow:0 0 18px rgba(255,45,61,.35)}
+body.th-neon .av.b{background:#1a0207;border:1.5px solid #ff2d3d;color:#ff2d3d;box-shadow:0 0 14px rgba(255,45,61,.4)}
+body.th-neon .mmenu{background:#0a0203;border:1px solid #4a0f18;box-shadow:0 0 30px rgba(255,45,61,.25)}
+/* accueil « Yo LLMMS IA » */
+body.th-neon .empty{align-items:center;text-align:center;padding-top:14vh}
+body.th-neon .empty .big{justify-content:center;font-size:clamp(40px,9vw,72px);font-weight:900;letter-spacing:-.03em}
+body.th-neon .empty .big svg{display:none}
+body.th-neon .empty .big span{background:none;color:#fff;-webkit-text-fill-color:#fff;animation:none;text-shadow:0 4px 30px rgba(0,0,0,.8)}
+body.th-neon .empty .big span b{color:#ff2d3d;-webkit-text-fill-color:#ff2d3d;text-shadow:0 0 24px rgba(255,45,61,.55)}
+body.th-neon .empty .big span i{display:inline-block;width:.08em;height:.95em;background:#ff2d3d;margin-left:.06em;vertical-align:-.08em;animation:neonCaret 1s steps(1) infinite;box-shadow:0 0 12px #ff2d3d}
+@keyframes neonCaret{50%{opacity:0}}
+body.th-neon .empty p{color:#c9a5ab}
+body.th-neon .sugg{width:100%;text-align:left}
+
 
 .effmenu{width:270px}
 .effmenu .eo{display:flex;gap:12px;align-items:flex-start;width:100%;text-align:left;padding:10px 12px;border-radius:10px}
@@ -1115,7 +1150,7 @@ function render(){
   thread.innerHTML=""; const c=conv();
   if(!c||!c.messages.length){
     const M=modeTxt(mode);
-    thread.innerHTML=`<div class="empty"><div class="big">${SPARK}<span>${esc(M.title)}</span></div><p>${esc(M.sub)}</p><div class="sugg">${M.s.map(t=>`<button type="button" data-s="${esc(t)}">${esc(t)}</button>`).join("")}</div></div>`;
+    thread.innerHTML=`<div class="empty"><div class="big">${SPARK}<span>${store.get("llmms3-theme","neon")==="neon"?'Yo <b>LLMMS IA</b><i></i>':esc(M.title)}</span></div><p>${esc(M.sub)}</p><div class="sugg">${M.s.map(t=>`<button type="button" data-s="${esc(t)}">${esc(t)}</button>`).join("")}</div></div>`;
     thread.querySelectorAll("[data-s]").forEach(b=>b.onclick=()=>{ input.value=b.dataset.s; grow(); input.focus(); });
     if(mode==="chat"||mode==="dev"){ const box=document.createElement("div"); box.className="ideas";
       box.innerHTML=`<p class="ih">Pas d'idée ? Crée en un clic</p><div class="ig">${IDEAS.map((x,i)=>`<button type="button" data-idea="${i}"><span class="em">${x[0]}</span><span>${esc(x[1])}</span></button>`).join("")}</div>`;
@@ -2065,11 +2100,11 @@ const isAnimReq=c=>{ const u=[...c.messages].reverse().find(m=>m.role==="user"&&
 
 
 /* ---------------- Grosse update : thèmes, actions sous les réponses, export, nouveautés ---------------- */
-const THEMES=[["bleu","Bleu","linear-gradient(135deg,#8fd0ff,#2563eb)","#0e1118"],["rouge","Rouge","linear-gradient(135deg,#ff9aa4,#e11d48)","#110b0c"],["noir","Noir","linear-gradient(135deg,#fff,#3a3a3a)","#050505"],["violet","Violet","linear-gradient(135deg,#d0bfff,#7c3aed)","#0d0a17"],["vert","Vert","linear-gradient(135deg,#9ff0cd,#10b981)","#09110e"]];
-let theme=store.get("llmms3-theme","bleu");
+const THEMES=[["bleu","Bleu","linear-gradient(135deg,#8fd0ff,#2563eb)","#0e1118"],["rouge","Rouge","linear-gradient(135deg,#ff9aa4,#e11d48)","#110b0c"],["noir","Noir","linear-gradient(135deg,#fff,#3a3a3a)","#050505"],["violet","Violet","linear-gradient(135deg,#d0bfff,#7c3aed)","#0d0a17"],["vert","Vert","linear-gradient(135deg,#9ff0cd,#10b981)","#09110e"],["neon","Néon rouge","linear-gradient(135deg,#ff2d3d,#2a0004)","#030001"]];
+let theme=store.get("llmms3-theme","neon"); if(!store.get("llmms3-neon1",0)){ theme="neon"; try{ store.set("llmms3-theme","neon"); store.set("llmms3-neon1",1); }catch(e){} }
 function applyTheme(){ THEMES.forEach(([k])=>document.body.classList.toggle("th-"+k,k===theme&&k!=="bleu")); const m=document.querySelector('meta[name="theme-color"]'); const t0=THEMES.find(x=>x[0]===theme); if(m&&t0) m.content=t0[3];
   $("themes").innerHTML=THEMES.map(([k,n,g])=>`<button type="button" class="${k===theme?"on":""}" data-th="${k}"><span class="sw" style="background:${g}"></span>${n}</button>`).join("");
-  $("themes").querySelectorAll("[data-th]").forEach(b=>b.onclick=()=>{ theme=b.dataset.th; store.set("llmms3-theme",theme); applyTheme(); }); }
+  $("themes").querySelectorAll("[data-th]").forEach(b=>b.onclick=()=>{ theme=b.dataset.th; store.set("llmms3-theme",theme); applyTheme(); try{ render(); }catch(e){} }); }
 applyTheme();
 function speak(text,btn){ try{ const ss=window.speechSynthesis; if(!ss) return note("La lecture à voix haute n'est pas disponible ici.");
   if(ss.speaking){ ss.cancel(); document.querySelectorAll(".ansacts .on").forEach(x=>x.classList.remove("on")); if(btn.classList.contains("was")){ btn.classList.remove("was"); return; } }
