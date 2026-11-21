@@ -1,11 +1,43 @@
 {
   "functions": {
-    "api/chat.js": { "maxDuration": 300 },
-    "api/mcp.js": { "maxDuration": 60 },
-    "api/studio.js": { "maxDuration": 15 }
+    "api/chat.js": {
+      "maxDuration": 300
+    },
+    "api/mcp.js": {
+      "maxDuration": 60
+    },
+    "api/studio.js": {
+      "maxDuration": 15
+    }
   },
   "rewrites": [
-    { "source": "/robots.txt", "destination": "/api/seo?f=robots" },
-    { "source": "/sitemap.xml", "destination": "/api/seo?f=sitemap" }
+    {
+      "source": "/robots.txt",
+      "destination": "/api/seo?f=robots"
+    },
+    {
+      "source": "/sitemap.xml",
+      "destination": "/api/seo?f=sitemap"
+    }
+  ],
+  "headers": [
+    {
+      "source": "/(.*)\\.html",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "no-cache, must-revalidate"
+        }
+      ]
+    },
+    {
+      "source": "/",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "no-cache, must-revalidate"
+        }
+      ]
+    }
   ]
 }

@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate"><meta http-equiv="Pragma" content="no-cache"><meta http-equiv="Expires" content="0">
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
 <title>EMPIRE MILLIONNAIRE — jeu de business de llmms ia</title>
@@ -4991,6 +4992,7 @@ async function tkDo(t,a){ const d=DK2(); let res="";
   if(t.k==="question"){ res=a==="ok"?"💬 Réponse envoyée, le membre est content":"🔒 Fermé"; if(a==="ok") d.mem+=10; }
   if(t.k==="recrut"){ if(a==="ok"){ d.asg[t.n]="mod"; if(!d.mods.some(m=>m.n===t.n)&&d.mods.length<5) d.mods.push({n:t.n,lv:1}); res=`🛡️ ${t.n} devient modérateur`; } else res="Candidature refusée"; }
   t.m.push({f:"me",t:res.replace(/^[^\s]+\s/,"")}); t.st="done"; t.res=res; d.tdone++; d.tsat=Math.min(100,(d.tsat||50)+2); save(); head(); toast(res); }
+const _appsVER=apps; apps=function(){ const r=_appsVER.apply(this,arguments); try{ if(!app){ const m=$("main"); if(m&&!m.querySelector("#verTag")) m.insertAdjacentHTML("beforeend",'<p id="verTag" class="hint" style="text-align:center;margin:14px 0">Version Disko 2 · 21/11 17h50</p>'); } }catch(e){} return r; };
 /* ---------- ✨ Interface : transitions, effets, vibrations ---------- */
 const _goUI=go; go=function(p){ _goUI(p); const m=$("main"); m.classList.remove("pg"); void m.offsetWidth; m.classList.add("pg"); clearTimeout(go.t); go.t=setTimeout(()=>m.classList.remove("pg"),600); };
 let lastCashUI=E.cash; const _headUI=head; head=function(){ _headUI(); const c=$("cash"); if(c&&E.cash>lastCashUI+.5){ c.classList.add("bump"); clearTimeout(head.t); head.t=setTimeout(()=>c.classList.remove("bump"),140); } lastCashUI=E.cash; };
