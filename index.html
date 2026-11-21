@@ -1522,7 +1522,7 @@ async function agent(c){
       bot.txt.insertBefore(det,status);
       const pb=det.querySelector(".pb");
       const lastUser=[...c.messages].reverse().find(m=>m.role==="user"&&!m._auto);
-      try{ plan=await quickCall({mode:"plan",tier,messages:[{role:"user",content:(mcp.connected&&autoStudio?"(Roblox Studio est connecté : l'IA construira directement dans la place.)\n\n":"")+textOf(lastUser?.content||"").slice(0,12000)+(spec?"\n\n[Cahier des charges de la vidéo à reproduire]\n"+spec:"")}]},ctl.signal,t=>{ pb.innerHTML=md(t); toBottom(); })||""; }
+      try{ plan=await quickCall({mode:"plan",target:c.mode!=="roblox"&&isGameReq(c)?"game":undefined,tier,messages:[{role:"user",content:(mcp.connected&&autoStudio?"(Roblox Studio est connecté : l'IA construira directement dans la place.)\n\n":"")+textOf(lastUser?.content||"").slice(0,12000)+(spec?"\n\n[Cahier des charges de la vidéo à reproduire]\n"+spec:"")}]},ctl.signal,t=>{ pb.innerHTML=md(t); toBottom(); })||""; }
       catch(e){ if(e.name==="AbortError") throw e; plan=""; }
       if(!plan) det.remove(); else { pb.innerHTML=md(plan); c.messages.at(-1)._plan=plan; }
       Steps.end(curStep,!!plan);
@@ -1536,7 +1536,7 @@ async function agent(c){
       const lastIsAuto=c.messages.at(-1)?._auto;
       curStep=Steps.add(lastIsAuto?"Vérification dans Studio : console et explorateur":step===0?(c.mode==="image"?"Création de l'image":"Réflexion"):"Suite du travail"); Steps.trackReset(curStep);
       const rid=newRid();
-      try{ r=await apiFetch({method:"POST",headers:headers(),signal:ctl.signal,body:JSON.stringify({rid,messages:forApi(c),mode:c.mode,tier,effort,search:web,lang:replyLang(),plan,spec,light:(isAnimReq(c)||isGameReq(c))&&c.mode!=="roblox",tools:c.mode==="image"||!autoStudio?[]:mcp.tools()})}); }
+      try{ r=await apiFetch({method:"POST",headers:headers(),signal:ctl.signal,body:JSON.stringify({rid,messages:forApi(c),mode:c.mode,tier,effort,search:web,lang:replyLang(),plan,spec,light:isAnimReq(c)&&c.mode!=="roblox",tools:c.mode==="image"||!autoStudio?[]:mcp.tools()})}); }
       catch(e){ if(e.name==="AbortError"||LOCAL_MODE) throw e; r=await recoverRes(rid,setStatus,ctl.signal); if(!r) throw e; }
       ct=r.headers.get("content-type")||"";
       if(r.status===401){ let er=""; try{ er=(await r.clone().json()).error; }catch{} status?.remove(); status=null; bot.txt.closest(".row").remove(); if(er==="login"){ store.del("llmms3-session"); showLogin(); } else { $("gate").style.display="grid"; $("gateCode").focus(); } return; }
@@ -1616,20 +1616,21 @@ async function agent(c){
     }
     // Relecture automatique du code (mode Développement / Roblox, hors construction directe dans Studio)
     if(c.mode!=="image"&&!usedTools&&/```(lua|luau|js|javascript|ts|typescript|py|python|tsx|jsx|html)\b/i.test(lastMsg?.content||"")){
-      const isLua=/```(lua|luau)\b/i.test(lastMsg.content); const rounds=boosted(c)&&!isAnimReq(c)?3:isLua?2:1; let corrections=0, lintFixed=0;
+      const isLua=/```(lua|luau)\b/i.test(lastMsg.content), isGame=/```html\b/i.test(lastMsg.content)&&(isGameReq(c)||isGameCode((lastMsg.content.match(/```html\s*\n([\s\S]*?)```/i)||[])[1]||"")); const rounds=isGame?3:boosted(c)&&!isAnimReq(c)?3:isLua?2:1; let corrections=0, lintFixed=0, gameIssues=null;
       for(let k=1;k<=rounds;k++){
-        const lint=isLua?luauLint(lastMsg.content):[];
-        if(k>1&&!lint.length&&!boosted(c)) break;
+        if(isGame){ setStatus("🎮 Test automatique du jeu…"); const gst=Steps.add("Test automatique du jeu (clic JOUER, touches, écran)"); gameIssues=await gameTest(lastMsg.content); Steps.end(gst,!gameIssues.length,gameIssues.length?gameIssues.join("\n"):"Le jeu se lance sans erreur"); }
+        const lint=isLua?luauLint(lastMsg.content):isGame?gameIssues:[];
+        if(k>1&&!lint.length&&(!boosted(c)||isGame)) break;
         setStatus(rounds>1?`Vérification ${k}/${rounds}…`:"Vérification du code…");
         const rst=Steps.add((rounds>1?`Vérification du code ${k}/${rounds}`:"Vérification du code")+(lint.length?` · ${lint.length} alerte${lint.length>1?"s":""} Luau`:""));
         const fixed=await reviewCode(c,lastMsg.content,ctl.signal,lint);
         Steps.end(rst,true,fixed?"Erreurs trouvées et corrigées":"Aucune erreur trouvée");
         if(!fixed) break;
-        const after=isLua?luauLint(fixed).length:0; lintFixed+=Math.max(0,lint.length-after);
+        const after=isLua?luauLint(fixed).length:0; if(isLua) lintFixed+=Math.max(0,lint.length-after); else if(isGame) lintFixed+=lint.length;
         corrections++; lastMsg.content=fixed; lastSeg.innerHTML=md(fixed); save();
       }
-      const rest=isLua?luauLint(lastMsg.content).length:0;
-      const ch=document.createElement("div"); ch.className="chips"; ch.innerHTML=`<span class="chip ok">✓ ${corrections?`Code vérifié et corrigé (${corrections} correction${corrections>1?"s":""})`:"Code vérifié"}</span>${isLua?`<span class="chip ${rest?"err":"ok"}">${rest?`⚠ ${rest} alerte${rest>1?"s":""} Luau restante${rest>1?"s":""}`:`🛡 Analyse Luau : 0 erreur${lintFixed?` (${lintFixed} corrigée${lintFixed>1?"s":""})`:""}`}</span>`:""}`; bot.txt.insertBefore(ch,status);
+      const rest=isLua?luauLint(lastMsg.content).length:0; if(isGame&&corrections){ setStatus("🎮 Dernier test du jeu…"); gameIssues=await gameTest(lastMsg.content); }
+      const ch=document.createElement("div"); ch.className="chips"; ch.innerHTML=`<span class="chip ok">✓ ${corrections?`Code vérifié et corrigé (${corrections} correction${corrections>1?"s":""})`:"Code vérifié"}</span>${isGame&&gameIssues?`<span class="chip ${gameIssues.length?"err":"ok"}">${gameIssues.length?`⚠ Test du jeu : ${gameIssues.length} problème${gameIssues.length>1?"s":""}`:"🎮 Jeu testé : il se lance sans erreur"}</span>`:""}${isLua?`<span class="chip ${rest?"err":"ok"}">${rest?`⚠ ${rest} alerte${rest>1?"s":""} Luau restante${rest>1?"s":""}`:`🛡 Analyse Luau : 0 erreur${lintFixed?` (${lintFixed} corrigée${lintFixed>1?"s":""})`:""}`}</span>`:""}`; bot.txt.insertBefore(ch,status);
     }
     // Filet de sécurité : Studio connecté mais l'IA a seulement écrit du code → on l'installe nous-mêmes dans la place
     if((usedTools||applyRounds>0)&&mcp.connected&&c.mode!=="image"){ if(!testPhotoShown){ const rep=await testerStudio(bot,status,setStatus); } if(!testPhotoShown) await photoStudio(bot,status,setStatus); }
@@ -2167,9 +2168,22 @@ function effortUI(){ const e=EFFORTS.find(x=>x[0]===effort); $("effIc").textCont
 $("effBtn").onclick=e=>{ e.stopPropagation(); $("mmenu").classList.remove("open"); const o=$("effMenu").classList.toggle("open"); $("effBtn").setAttribute("aria-expanded",String(o)); };
 document.addEventListener("click",e=>{ if(!e.target.closest("#effPicker")) $("effMenu").classList.remove("open"); });
 effortUI();
-const boosted=c=>effort!=="fast"&&(effort==="max"||tier==="studio"||tier==="propria"||tier==="5"||c.mode==="roblox")&&(c.mode==="roblox"||(c.mode==="dev"&&!isAnimReq(c)));
+const boosted=c=>effort!=="fast"&&(((effort==="max"||tier==="studio"||tier==="propria"||tier==="5"||c.mode==="roblox")&&(c.mode==="roblox"||(c.mode==="dev"&&!isAnimReq(c))))||(c.mode!=="roblox"&&c.mode!=="image"&&isGameReq(c)));
 
 /* ---- Analyseur Luau : repère automatiquement les erreurs classiques avant la relecture ---- */
+/* ---- Testeur automatique des jeux HTML : lance le jeu en cachette, clique sur JOUER, appuie sur des touches, vérifie les erreurs et l'écran noir ---- */
+const GT_PROBE=`<script>(function(){function post(o){try{parent.postMessage({llmmsTest:o},"*")}catch(e){}}var errs=[];addEventListener("error",function(e){errs.push((e.message||"Erreur")+(e.lineno?" (ligne "+e.lineno+")":""))});addEventListener("unhandledrejection",function(e){errs.push("Promesse rejetée : "+(e.reason&&e.reason.message||e.reason))});
+function fire(el,x,y){["pointerdown","mousedown","touchstart","pointerup","mouseup","touchend","click"].forEach(function(t){try{var ev=t.indexOf("touch")===0?new Event(t,{bubbles:true}):new MouseEvent(t,{bubbles:true,clientX:x,clientY:y});(el||document.body).dispatchEvent(ev)}catch(e){}})}
+function key(k,c){["keydown","keyup"].forEach(function(t){try{dispatchEvent(new KeyboardEvent(t,{key:k,code:c,bubbles:true}));document.dispatchEvent(new KeyboardEvent(t,{key:k,code:c,bubbles:true}))}catch(e){}})}
+function blank(){var cs=document.querySelectorAll("canvas");if(!cs.length)return null;var cv=cs[0];var big=[].slice.call(cs).sort(function(a,b){return b.width*b.height-a.width*a.height})[0];cv=big;try{var g=cv.getContext("2d");if(!g)return null;var d=g.getImageData(0,0,cv.width,cv.height).data,f=-1,n=0,diff=0;for(var i=0;i<d.length;i+=4*97){var v=d[i]+d[i+1]*256+d[i+2]*65536;if(f<0)f=v;else if(v!==f)diff++;n++}return diff<=1}catch(e){return null}}
+setTimeout(function(){var b=[].slice.call(document.querySelectorAll("button,a,[onclick]")).find(function(x){return /jouer|play|start|commencer|lancer/i.test(x.textContent||"")});if(b)b.click();fire(document.elementFromPoint(innerWidth/2,innerHeight/2),innerWidth/2,innerHeight/2);key("Enter","Enter");key(" ","Space")},1200);
+setTimeout(function(){["ArrowRight","ArrowUp","ArrowLeft","d","z"," "].forEach(function(k,i){setTimeout(function(){key(k,k==" "?"Space":k)},i*120)})},2000);
+setTimeout(function(){var cv=document.querySelectorAll("canvas").length;post({errs:errs.slice(0,6),blank:blank(),canvas:cv,text:(document.body&&document.body.innerText||"").trim().length,w:innerWidth})},4300)})();<\/script>`;
+function gameTest(ans){ const m=ans.match(/```html\s*\n([\s\S]*?)```/i); if(!m) return Promise.resolve([]); const code=m[1]; if(!/<script/i.test(code)) return Promise.resolve([]);
+  return new Promise(done=>{ const fr=document.createElement("iframe"); fr.setAttribute("sandbox","allow-scripts"); fr.style.cssText="position:fixed;left:0;top:0;width:400px;height:700px;border:0;opacity:.01;pointer-events:none;z-index:-1"; const errs=[]; let fin=false;
+    const end=(res)=>{ if(fin) return; fin=true; removeEventListener("message",on); fr.remove(); const out=[]; const E=[...new Set([...errs,...((res&&res.errs)||[])])]; E.slice(0,6).forEach(e=>out.push(`Erreur JavaScript pendant le test : ${e}`)); if(!res) out.push("Le jeu n'a pas répondu au test (boucle infinie, blocage ou page qui ne se charge pas)."); else { if(res.canvas&&res.blank===true) out.push("Écran noir / vide : après avoir appuyé sur JOUER et sur des touches, le canvas reste d'une seule couleur (rien n'est dessiné)."); if(!res.canvas&&res.text<20) out.push("La page est presque vide : aucun canvas ni contenu visible."); } done(out); };
+    const on=e=>{ if(e.source!==fr.contentWindow||!e.data) return; if(typeof e.data.llmmsPv==="string") errs.push(e.data.llmmsPv); if(e.data.llmmsTest) end(e.data.llmmsTest); };
+    addEventListener("message",on); fr.srcdoc=/<head[^>]*>/i.test(code)?code.replace(/<head[^>]*>/i,x=>x+GT_PROBE):GT_PROBE+code; document.body.appendChild(fr); setTimeout(()=>end(null),9000); }); }
 function luauLint(ans){ const out=[]; const re=/```(lua|luau)\s*\n([\s\S]*?)```/gi; let m, n=0;
   while((m=re.exec(ans))){ n++; const before=ans.slice(Math.max(0,m.index-260),m.index); const kind=/LocalScript/i.test(before)?"local":/ModuleScript/i.test(before)?"module":/\bScript\b/.test(before)?"server":"?";
     const name=((before.trim().split("\n").pop()||"").replace(/[*`_:]/g," ").match(/([A-Za-zÀ-ÿ0-9_]+)\s*$/)||[])[1]||`bloc ${n}`; const tag=`[${name}]`;
