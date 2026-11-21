@@ -60,7 +60,8 @@ async function tryGemini(b, opts) {
   const effort = maxMode ? "high" : b.reasoning?.effort === "low" ? "low" : b.reasoning?.effort === "high" ? "high" : b.reasoning ? "medium" : "low";
   let list = await gemModels(key);
   // réflexion courte demandée : on commence par les modèles « Flash » (les plus rapides), pas les Pro
-  if (effort === "low") list = [...list.filter(m => /flash/.test(m) && !/lite/.test(m)), ...list.filter(m => !(/flash/.test(m) && !/lite/.test(m)))];
+  // tout sauf « réflexion poussée » : les modèles « Flash » (5 à 10× plus rapides) passent en premier
+  if (effort !== "high") list = [...list.filter(m => /flash/.test(m) && !/lite/.test(m)), ...list.filter(m => !(/flash/.test(m) && !/lite/.test(m)))];
   // réflexion poussée : les modèles « Pro » (les plus intelligents) passent en premier
   if (effort === "high") list = [...list.filter(m => /pro/.test(m)), ...list.filter(m => !/pro/.test(m))];
   // 1er passage AVEC les outils sur tous les modèles ; sans outils seulement en tout dernier recours
@@ -69,9 +70,9 @@ async function tryGemini(b, opts) {
   for (const model of list) {
     if ((gemDead.get(model) || 0) > Date.now()) continue;
     if (withTools && /gemma/i.test(model)) continue; // Gemma ne sait pas utiliser les outils
-    const g = { model, stream: !!b.stream, messages: boostSystem(b.messages || []), max_tokens: Math.min(Math.max(b.max_tokens || 32000, 32000), 60000) };
+    const g = { model, stream: !!b.stream, messages: effort === "high" ? boostSystem(b.messages || []) : (b.messages || []).map(cleanMsg), max_tokens: Math.min(Math.max(b.max_tokens || 32000, 16000), 60000) };
     // réflexion « low » demandée (devoirs, mode Rapide) : pas de réflexion du tout → réponse immédiate
-    if (!/gemma/i.test(model)) g.reasoning_effort = effort === "low" ? "none" : effort === "medium" ? "medium" : "high";
+    if (!/gemma/i.test(model)) g.reasoning_effort = effort === "low" ? "none" : effort === "medium" ? "low" : "high";
     if (withTools) { g.tools = ctools; g.tool_choice = "auto"; }
     for (let k = 0; k < 5; k++) {
       try {
