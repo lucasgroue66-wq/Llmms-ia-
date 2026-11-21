@@ -2178,6 +2178,45 @@ document.addEventListener("click",e=>{ const b=e.target.closest("button"); if(!b
   if(b.id==="work"&&E.x&&Math.random()<1/150){ const i=dropCoin(), m=NM(); m.coins[i]=(m.coins[i]||0)+1; toast(`🪙 Pièce trouvée : ${COINS[i][0]} ${COINS[i][1]} (${RAR[COINS[i][2]]})`); }
   if(b.id==="work"){ const r=b.getBoundingClientRect(), d=Math.max(r.width,r.height)*1.2, rp=document.createElement("span"); rp.className="rip"; rp.style.cssText=`width:${d}px;height:${d}px;left:${e.clientX-r.left-d/2}px;top:${e.clientY-r.top-d/2}px`; b.appendChild(rp); setTimeout(()=>rp.remove(),560);
     for(let i=0;i<4;i++){ const c=document.createElement("div"); c.className="coin"; c.textContent=pick(["🪙","💵","💰","🪙"]); c.style.left=e.clientX-10+"px"; c.style.top=e.clientY-10+"px"; c.style.setProperty("--dx",rnd(-90,90)+"px"); c.style.setProperty("--dy",rnd(-130,-40)+"px"); c.style.setProperty("--r",rnd(-200,200)+"deg"); document.body.appendChild(c); setTimeout(()=>c.remove(),820); } } },true);
+/* ================= 🔊 SONS (générés, sans fichiers) ================= */
+const SND={ ctx:null, vol:.5 };
+const sndOn=()=>{ try{ return localStorage.getItem("empire_snd")!=="0"; }catch{ return true; } };
+function ac(){ if(!sndOn()) return null; try{ if(!SND.ctx) SND.ctx=new (window.AudioContext||window.webkitAudioContext)(); if(SND.ctx.state==="suspended") SND.ctx.resume(); return SND.ctx; }catch{ return null; } }
+function tone(f,d,o={}){ const c=ac(); if(!c) return; const t=c.currentTime+(o.at||0), g=c.createGain(), s=c.createOscillator(); s.type=o.type||"sine"; s.frequency.setValueAtTime(f,t); if(o.to) s.frequency.exponentialRampToValueAtTime(o.to,t+d); const v=(o.v||.25)*SND.vol; g.gain.setValueAtTime(0.0001,t); g.gain.exponentialRampToValueAtTime(v,t+(o.a||.01)); g.gain.exponentialRampToValueAtTime(0.0001,t+d); s.connect(g).connect(c.destination); s.start(t); s.stop(t+d+.05); }
+function noise(d,o={}){ const c=ac(); if(!c) return; const t=c.currentTime+(o.at||0), n=c.sampleRate*d, b=c.createBuffer(1,n,c.sampleRate), x=b.getChannelData(0); for(let i=0;i<n;i++) x[i]=Math.random()*2-1; const s=c.createBufferSource(); s.buffer=b; const f=c.createBiquadFilter(); f.type=o.ft||"lowpass"; f.frequency.setValueAtTime(o.f||1200,t); if(o.fto) f.frequency.exponentialRampToValueAtTime(o.fto,t+d); const g=c.createGain(), v=(o.v||.2)*SND.vol; g.gain.setValueAtTime(0.0001,t); g.gain.exponentialRampToValueAtTime(v,t+(o.a||.02)); g.gain.exponentialRampToValueAtTime(0.0001,t+d); s.connect(f).connect(g).connect(c.destination); s.start(t); s.stop(t+d+.05); }
+const arp=(notes,step,o)=>notes.forEach((f,i)=>tone(f,o&&o.d||.25,{...o,at:(o&&o.at||0)+i*step}));
+const SFX={
+ click:()=>tone(1400,.05,{type:"triangle",v:.08,to:900}),
+ coin:()=>{ tone(1318,.08,{type:"square",v:.06}); tone(1976,.18,{type:"square",v:.06,at:.06}); },
+ pop:()=>tone(600,.09,{type:"sine",v:.12,to:1200}),
+ like:()=>tone(900+Math.random()*300,.06,{type:"sine",v:.05,to:1500}),
+ rose:()=>{ tone(1568,.12,{type:"triangle",v:.09}); tone(2093,.18,{type:"triangle",v:.07,at:.05}); },
+ gift:()=>arp([784,988,1175,1568],.06,{type:"triangle",v:.1,d:.2}),
+ toast:()=>{ tone(880,.12,{type:"sine",v:.08}); tone(1320,.2,{type:"sine",v:.07,at:.08}); },
+ cine:()=>{ noise(.8,{ft:"bandpass",f:400,fto:3000,v:.12}); arp([262,330,392,523],.09,{type:"sawtooth",v:.05,d:.6,at:.25}); },
+ bad:()=>{ tone(220,.35,{type:"sawtooth",v:.08,to:110}); tone(165,.45,{type:"sawtooth",v:.07,at:.15,to:80}); },
+ money:()=>{ arp([1047,1319,1568,2093],.05,{type:"square",v:.05,d:.12}); noise(.3,{ft:"highpass",f:6000,v:.05,at:.1}); },
+ rainbow:()=>arp([523,587,659,784,880,988,1047,1175],.1,{type:"sine",v:.1,d:.5}),
+ bear:()=>{ tone(200,.25,{type:"sine",v:.2,to:500}); tone(300,.25,{type:"sine",v:.18,at:.3,to:700}); arp([784,988,1175],.1,{type:"triangle",v:.08,at:.6}); },
+ car:()=>{ tone(70,1.6,{type:"sawtooth",v:.12,to:220}); noise(1.6,{ft:"lowpass",f:300,fto:1200,v:.1}); tone(110,.8,{type:"square",v:.05,at:.9,to:60}); },
+ galaxy:()=>{ [262,330,392,494].forEach((f,i)=>tone(f,2.8,{type:"sine",v:.06,a:.8,at:i*.15})); noise(2.5,{ft:"bandpass",f:800,fto:4000,v:.05,a:.8}); arp([1568,2093,2637],.35,{type:"triangle",v:.05,d:.6,at:.6}); },
+ rocket:()=>{ noise(2.4,{ft:"lowpass",f:200,fto:2500,v:.25,a:.3}); tone(60,2.2,{type:"sawtooth",v:.08,to:400}); },
+ castle:()=>{ arp([392,523,659,784],.16,{type:"square",v:.06,d:.35}); [0,.4,.8].forEach(t=>noise(.5,{ft:"highpass",f:1500,v:.12,at:1+t})); },
+ lion:()=>{ noise(1.4,{ft:"lowpass",f:500,fto:120,v:.35,a:.15}); tone(110,1.3,{type:"sawtooth",v:.18,to:55}); tone(165,1.1,{type:"sawtooth",v:.1,to:70,at:.05}); },
+ universe:()=>{ [131,196,262,330,392].forEach((f,i)=>tone(f,4,{type:"sine",v:.05,a:1.2,at:i*.1})); arp([1047,1319,1568,2093,2637],.4,{type:"triangle",v:.04,d:.8,at:.8}); },
+};
+function sfx(k){ try{ SFX[k]&&SFX[k](); }catch{} }
+const SCENE_SND={"Arc-en-ciel":"rainbow","Nounours":"bear","Voiture de sport":"car","Galaxie":"galaxy","Fusée":"rocket","Château":"castle","Lion":"lion","Univers":"universe"};
+// branchements
+document.addEventListener("click",e=>{ const b=e.target.closest("button"); if(!b||b.disabled) return; if(b.id==="work") sfx("coin"); else if(b.id!=="lrose"&&b.id!=="wrose"&&!b.dataset.gs) sfx("click"); },true);
+const _toastS=toast; toast=function(t){ _toastS(t); sfx("toast"); };
+const _cineS=cine; cine=function(o){ sfx(o&&(o.col==="rouge"||o.col==="noir")?"bad":"cine"); if(o&&o.col==="or") setTimeout(()=>sfx("money"),500); return _cineS(o); };
+const _gaS=giftAnim; giftAnim=function(host,g,from){ if(g[2]<500) sfx(g[1]==="Rose"?"rose":"gift"); _gaS(host,g,from); };
+const _gsS=giftScene; giftScene=function(host,g,from){ sfx(SCENE_SND[g[1]]||"gift"); return _gsS(host,g,from); };
+let lkT=0; const _haS=heartAt; heartAt=function(host,x,y,big){ const n=performance.now(); if(big||n-lkT>140){ lkT=n; sfx("like"); } _haS(host,x,y,big); };
+function sndBtn(){ const b=$("snd"); if(b) b.textContent=sndOn()?"🔊":"🔇"; }
+(()=>{ const sp=$("spd"); if(sp&&!$("snd")){ const b=document.createElement("button"); b.className="chip"; b.id="snd"; b.title="Sons"; sp.parentNode.insertBefore(b,sp); b.onclick=()=>{ try{ localStorage.setItem("empire_snd",sndOn()?"0":"1"); }catch{} sndBtn(); if(sndOn()) sfx("gift"); toast(sndOn()?"🔊 Sons activés":"🔇 Sons coupés"); }; sndBtn(); } })();
+
 /* ---------- DÉMARRAGE ---------- */
 if(!E.market.length) refreshMarket();
 const away=Math.min(400,Math.floor((Date.now()-(E.ts||Date.now()))/4000));
