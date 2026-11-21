@@ -62,7 +62,7 @@ export default async function handler(req, res) {
     const needTo = async () => { if (!okPid(to) || to === pid) throw new Error("code ami invalide"); if (!(await exists(to))) throw new Error("aucun joueur avec ce code"); };
     if (op === "who") { await needTo(); const [r] = await kv([["HMGET", P + "p:" + to, "n", "w", "s"]]); return res.json({ n: r?.[0], w: +r?.[1] || 0, s: r?.[2] || "🧑‍💼" }); }
     if (op === "send") { await needTo(); const amt = num(b.amt, 1e18); if (!amt) throw new Error("montant invalide"); await push(to, { t: "money", from: pid, name: await me(), amt, msg: String(b.msg || "").replace(/[<>]/g, "").slice(0, 80) }); return res.json({ ok: true }); }
-    if (op === "chal") { await needTo(); await push(to, { t: "chal", from: pid, name: await me(), speed: num(b.speed, 500), stake: num(b.stake, 1e15), id: Math.random().toString(36).slice(2, 10) }); return res.json({ ok: true }); }
+    if (op === "chal") { await needTo(); await push(to, { t: "chal", from: pid, name: await me(), speed: num(b.speed, 500), stake: num(b.stake, 1e15), game: String(b.game || "").replace(/\W/g, "").slice(0, 10), id: Math.random().toString(36).slice(2, 10) }); return res.json({ ok: true }); }
     if (op === "chalres") { await needTo(); await push(to, { t: "chalres", from: pid, name: await me(), win: !!b.win, stake: num(b.stake, 1e15) }); return res.json({ ok: true }); }
     if (op === "attack") { await needTo(); const kind = ["prix", "espion", "pub"].includes(b.kind) ? b.kind : "prix"; await push(to, { t: "attack", from: pid, name: await me(), kind }); return res.json({ ok: true }); }
     if (op === "ipo_open") { await kv([["HSETNX", P + "ipo:" + pid, "tot", "200000"], ["HSETNX", P + "ipo:" + pid, "sold", "0"], ["SADD", P + "ipos", pid]]); return res.json({ ok: true }); }
@@ -79,6 +79,29 @@ export default async function handler(req, res) {
       const [sold] = await kv([["HINCRBY", P + "ipo:" + tg, "sold", -n]]); if (sold < 0) await kv([["HSET", P + "ipo:" + tg, "sold", "0"]]);
       return res.json({ ok: true, price });
     }
+
+    const clean = (v, n) => String(v || "").replace(/[<>&"'`\\]/g, "").replace(/\s+/g, " ").trim().slice(0, n);
+    const BAD = /\b(con|conne|pute|merde|fdp|nique|salope|enculé)\b/gi;
+    const parse = x => { try { return JSON.parse(x); } catch { return null; } };
+    if (op === "pub") { await kv([["HSET", P + "p:" + pid, "pub", String(b.data || "").slice(0, 4000), "rg", clean(b.region, 12)]]); return res.json({ ok: true }); }
+    if (op === "view") { await needTo(); const [r] = await kv([["HMGET", P + "p:" + to, "n", "w", "s", "pub", "t", "l", "rg"]]); return res.json({ n: r?.[0], w: +r?.[1] || 0, s: r?.[2] || "🧑‍💼", pub: r?.[3] || "", t: +r?.[4] || 0, l: r?.[5] === "1", rg: r?.[6] || "" }); }
+    if (["msg", "gift", "trade", "tradeok", "coop", "coopok", "react", "ref"].includes(op)) { await needTo(); await push(to, { t: op, from: pid, name: await me(), text: clean(b.text, 200).replace(BAD, "***"), voice: !!b.voice, item: clean(b.item, 40), amt: num(b.amt, 1e15), kind: clean(b.kind, 20), emo: clean(b.emo, 8), id: clean(b.id, 12) }); return res.json({ ok: true }); }
+    if (op === "gsay") { const t = clean(b.text, 140).replace(BAD, "***"); if (!t) throw new Error("message vide"); await kv([["LPUSH", P + "gchat", JSON.stringify({ id: pid, n: await me(), t, ts: Date.now() })], ["LTRIM", P + "gchat", 0, 59]]); return res.json({ ok: true }); }
+    if (op === "gread") { const [l] = await kv([["LRANGE", P + "gchat", 0, 39]]); return res.json({ list: (l || []).map(parse).filter(Boolean) }); }
+    if (op === "report") { await kv([["RPUSH", P + "reports", JSON.stringify({ by: pid, who: clean(b.who, 10), why: clean(b.why, 80), ts: Date.now() })], ["LTRIM", P + "reports", -300, -1]]); return res.json({ ok: true }); }
+    const wk = Math.floor(Date.now() / (7 * DAY * 1000)), gk = g => P + "t:" + clean(g, 10).replace(/\W/g, "") + ":" + wk;
+    if (op === "tsub") { const k = gk(b.game), sc = num(b.score, 1e12); const [old] = await kv([["ZSCORE", k, pid]]); if (old == null || sc > +old) await kv([["ZADD", k, sc, pid], ["EXPIRE", k, 21 * DAY]]); return res.json({ ok: true }); }
+    if (op === "tlb") return res.json({ list: await list(gk(b.game), 20) });
+    if (op === "hv_put") { const it = { id: Math.random().toString(36).slice(2, 10), by: pid, n: await me(), item: clean(b.item, 40), price: num(b.price, 1e15), ts: Date.now() }; if (!it.item || !it.price) throw new Error("annonce invalide"); await kv([["LPUSH", P + "hv", JSON.stringify(it)], ["LTRIM", P + "hv", 0, 59]]); return res.json({ ok: true }); }
+    if (op === "hv_list") { const [l] = await kv([["LRANGE", P + "hv", 0, 59]]); return res.json({ list: (l || []).map(parse).filter(Boolean) }); }
+    if (op === "hv_buy") { const [l] = await kv([["LRANGE", P + "hv", 0, 59]]); const raw = (l || []).find(x => parse(x)?.id === clean(b.id, 12)); if (!raw) throw new Error("annonce déjà vendue"); const it = parse(raw); if (it.by === pid) throw new Error("c'est ton annonce"); const [rm] = await kv([["LREM", P + "hv", 1, raw]]); if (!rm) throw new Error("annonce déjà vendue"); await push(it.by, { t: "money", from: pid, name: await me(), amt: it.price, msg: "Achat de « " + it.item + " » à l'hôtel des ventes" }); return res.json({ ok: true, item: it.item, price: it.price }); }
+    if (op === "clan_new") { const id = Math.random().toString(36).slice(2, 7).toUpperCase(), n = cleanName(b.name); await kv([["HSET", P + "clan:" + id, "n", n, "chef", pid, "pts", "0", "priv", b.priv ? "1" : "0"], ["SADD", P + "clanm:" + id, pid], ["HSET", P + "p:" + pid, "clan", id], ...(b.priv ? [] : [["SADD", P + "clans", id]])]); return res.json({ ok: true, id }); }
+    if (op === "clan_list") { const ids = ((await kv([["SRANDMEMBER", P + "clans", 20]]))[0] || []); if (!ids.length) return res.json({ list: [] }); const r = await kv(ids.flatMap(id => [["HMGET", P + "clan:" + id, "n", "pts"], ["SCARD", P + "clanm:" + id]])); return res.json({ list: ids.map((id, i) => ({ id, n: r[2 * i]?.[0] || "Clan", pts: +r[2 * i]?.[1] || 0, m: r[2 * i + 1] || 0 })).sort((a, c) => c.pts - a.pts) }); }
+    const cid = clean(b.clan, 5).toUpperCase();
+    if (op === "clan_join") { const [e] = await kv([["EXISTS", P + "clan:" + cid]]); if (!e) throw new Error("clan introuvable"); await kv([["SADD", P + "clanm:" + cid, pid], ["HSET", P + "p:" + pid, "clan", cid]]); return res.json({ ok: true }); }
+    if (op === "clan_info") { const r = await kv([["HMGET", P + "clan:" + cid, "n", "pts", "chef"], ["SMEMBERS", P + "clanm:" + cid], ["LRANGE", P + "clanc:" + cid, 0, 29]]); const mem = (r[1] || []).slice(0, 50); const names = mem.length ? await kv(mem.map(m => ["HMGET", P + "p:" + m, "n", "w"])) : []; return res.json({ n: r[0]?.[0], pts: +r[0]?.[1] || 0, chef: r[0]?.[2], mem: mem.map((m, i) => ({ id: m, n: names[i]?.[0] || "Joueur", w: +names[i]?.[1] || 0 })), chat: (r[2] || []).map(parse).filter(Boolean) }); }
+    if (op === "clan_give") { await kv([["HINCRBY", P + "clan:" + cid, "pts", Math.floor(num(b.n, 1e6))]]); return res.json({ ok: true }); }
+    if (op === "clan_say") { const t = clean(b.text, 140).replace(BAD, "***"); if (!t) throw new Error("message vide"); await kv([["LPUSH", P + "clanc:" + cid, JSON.stringify({ n: await me(), t, ts: Date.now() })], ["LTRIM", P + "clanc:" + cid, 0, 49], ["EXPIRE", P + "clanc:" + cid, 60 * DAY]]); return res.json({ ok: true }); }
     res.status(400).json({ error: "opération inconnue" });
   } catch (e) { res.status(e.message?.startsWith("base") ? 500 : 400).json({ error: e.message }); }
 }
