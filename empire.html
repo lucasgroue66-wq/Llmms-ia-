@@ -2330,8 +2330,8 @@ function fcMoment(_ov,f,diff){ return new Promise(res=>{
   L.insertAdjacentHTML("beforeend",`<div id="mtm" style="position:absolute;top:14px;left:50%;transform:translateX(-50%);background:#000a;padding:6px 14px;border-radius:999px;font-weight:900;font-size:18px;color:#fff">⏱ 10</div>
    <div id="mjs" style="position:absolute;left:22px;bottom:30px;width:140px;height:140px;border-radius:50%;background:#ffffff22;border:2px solid #ffffff55"><div id="mjk" style="position:absolute;left:45px;top:45px;width:50px;height:50px;border-radius:50%;background:#ffffffcc;box-shadow:0 4px 10px #0008"></div></div>
    <button id="msh" style="touch-action:none;position:absolute;right:22px;bottom:40px;width:104px;height:104px;border-radius:50%;background:radial-gradient(circle at 40% 35%,#f87171,#b91c1c);color:#fff;font-weight:900;font-size:16px;box-shadow:0 6px 0 #7f1d1d,0 10px 24px #000a">⚽<br>TIRER</button>
-   <button id="mps" style="touch-action:none;position:absolute;right:136px;bottom:26px;width:78px;height:78px;border-radius:50%;background:radial-gradient(circle at 40% 35%,#60a5fa,#1d4ed8);color:#fff;font-weight:900;font-size:13px;box-shadow:0 5px 0 #1e3a8a,0 10px 24px #000a">👟<br>PASSE</button>
-   <div id="mhint" style="position:absolute;left:0;right:0;top:54px;text-align:center;color:#fff;font-size:13px;text-shadow:0 2px 4px #000">🕹️ Joystick à gauche pour avancer et dribbler · vise à droite ou à gauche puis TIRE</div>`);
+   <div id="mpw" style="position:absolute;right:22px;bottom:152px;width:104px;height:12px;border-radius:9px;background:#0008;overflow:hidden;display:none;box-shadow:0 0 0 2px #fff8"><div id="mpwi" style="height:100%;width:0;background:linear-gradient(90deg,#22c55e,#facc15,#ef4444)"></div></div><button id="mdr" style="touch-action:none;position:absolute;right:150px;bottom:118px;width:66px;height:66px;border-radius:50%;background:radial-gradient(circle at 40% 35%,#c084fc,#7e22ce);color:#fff;font-weight:900;font-size:11px;box-shadow:0 5px 0 #4c1d95,0 10px 24px #000a">🌀<br>DRIBBLE</button><button id="mps" style="touch-action:none;position:absolute;right:136px;bottom:26px;width:78px;height:78px;border-radius:50%;background:radial-gradient(circle at 40% 35%,#60a5fa,#1d4ed8);color:#fff;font-weight:900;font-size:13px;box-shadow:0 5px 0 #1e3a8a,0 10px 24px #000a">👟<br>PASSE</button>
+   <div id="mhint" style="position:absolute;left:0;right:0;top:54px;text-align:center;color:#fff;font-size:13px;text-shadow:0 2px 4px #000">🕹️ Joystick pour avancer · 🌀 DRIBBLE pour éliminer un défenseur · reste appuyé sur TIRER pour frapper plus fort</div>`);
   const d=Math.max(0,(diff-60)/40), st=f.st;
   const me={x:rnd(-9,9),y:rnd(16,24),vx:0,vy:0}, mates=[{x:me.x-13,y:me.y+9,n:9},{x:me.x+12,y:me.y+7,n:11}], defs=[], gk={x:0,y:51.3,dv:0};
   const nd=2+(d>.5?1:0); for(let i=0;i<nd;i++) defs.push({x:me.x+rnd(-14,14),y:me.y+rnd(9,17),s:4.1+d*1.4+rnd(0,.5)}); defs.push({x:me.x+rnd(-3,3),y:me.y-8,s:4.4+d*1.1});
@@ -2346,8 +2346,17 @@ function fcMoment(_ov,f,diff){ return new Promise(res=>{
   const jup=()=>{ jid=null; joy={x:0,y:0}; jk.style.left="45px"; jk.style.top="45px"; }; ["pointerup","pointercancel"].forEach(k=>js.addEventListener(k,jup));
   // tir
   const tap=(el,fn)=>el.addEventListener("pointerdown",e=>{ e.preventDefault(); e.stopPropagation(); el.style.transform="scale(.9)"; setTimeout(()=>el.style.transform="",120); fn(); });
-  tap(L.querySelector("#msh"),()=>{ if(over||ball||holder!=="me") return; const aim=Math.abs(joy.x)>.25?Math.sign(joy.x)*(.45+Math.abs(joy.x)*.55):(me.x>2.5?.6:me.x<-2.5?-.6:rnd(-.3,.3)); const dist=Math.hypot(me.x,52-me.y), noise=(1.6-st.tir/80)+dist*.045;
-    const tx=aim*3.1+rnd(-noise,noise), sp=21+st.tir/9; ball={x:me.x,y:me.y+.4,z:.2,tx,ty:52.2,sp,k:"shot",t0:performance.now(),dur:Math.hypot(tx-me.x,52-me.y)/sp*1000,peak:rnd(.4,1.6)}; gk.dv=Math.sign(tx-gk.x)*(5.5+d*2.5)*(Math.random()<.25?-1:1); sfx("pop"); });
+  let chg=null; const pw=L.querySelector("#mpw"), pwi=L.querySelector("#mpwi"), shB=L.querySelector("#msh");
+  const shootP=power=>{ if(over||ball||holder!=="me") return; const aim=Math.abs(joy.x)>.25?Math.sign(joy.x)*(.45+Math.abs(joy.x)*.55):(me.x>2.5?.6:me.x<-2.5?-.6:rnd(-.3,.3)); const dist=Math.hypot(me.x,52-me.y), noise=((1.6-st.tir/80)+dist*.045)*(.75+power*.6);
+    const tx=aim*3.1+rnd(-noise,noise), sp=(15+st.tir/10)*(.75+power*.75); const over2=power>.92&&Math.random()<.35; ball={x:me.x,y:me.y+.4,z:.2,tx,ty:52.2,sp,k:"shot",t0:performance.now(),peak:over2?rnd(2.8,3.6):rnd(.3,.8)+power*1.2,pow:power,over:over2}; ball.dur=Math.hypot(tx-me.x,52-me.y)/sp*1000; gk.dv=Math.sign(tx-gk.x)*(5.5+d*2.5)*(Math.random()<.25?-1:1); msg=power>.8?"💥 FRAPPE PUISSANTE !":power<.25?"🎯 Frappe placée":""; sfx(power>.8?"car":"pop"); };
+  shB.addEventListener("pointerdown",e=>{ e.preventDefault(); e.stopPropagation(); if(over||ball||holder!=="me") return; chg=performance.now(); pw.style.display="block"; shB.style.transform="scale(.9)"; });
+  const rel=e=>{ if(chg==null) return; const power=Math.min(1,(performance.now()-chg)/900); chg=null; pw.style.display="none"; pwi.style.width="0"; shB.style.transform=""; shootP(power); };
+  ["pointerup","pointercancel","pointerleave"].forEach(k=>shB.addEventListener(k,rel));
+  // dribble
+  let drCd=0; const DRN=["🌀 Crochet !","🔄 Roulette !","🦵 Passement de jambes !","😮 Petit pont !","🎩 Sombrero !","⚡ Elastico !"];
+  tap(L.querySelector("#mdr"),()=>{ const now=performance.now(); if(over||ball||holder!=="me"||now<drCd) return; drCd=now+1800; const near=defs.filter(df=>Math.hypot(df.x-me.x,df.y-me.y)<3.2).sort((a,b)=>Math.hypot(a.x-me.x,a.y-me.y)-Math.hypot(b.x-me.x,b.y-me.y))[0];
+    const side=Math.abs(joy.x)>.2?Math.sign(joy.x):(Math.random()<.5?-1:1); me.dash={vx:side*9,vy:5,until:now+260}; me.inv=now+700; const name=pick(DRN);
+    if(!near){ msg=name; sfx("click"); return; } if(Math.random()<.55+st.dri/220){ near.stun=now+1500; msg=name+" Défenseur éliminé"; sfx("gift"); } else if(Math.random()<.5){ msg="❌ Dribble raté, ballon perdu…"; fin("lost"); } else { msg="😬 Dribble raté… mais tu gardes le ballon"; me.inv=0; } });
   // passe
   tap(L.querySelector("#mps"),()=>{ if(over||ball||holder!=="me") return; let best=null,bs=-9; mates.forEach(m=>{ const vx=m.x-me.x, vy=m.y-me.y, len=Math.hypot(vx,vy)||1; const sc=(Math.abs(joy.x)+Math.abs(joy.y)>.3?(vx*joy.x-vy*joy.y)/len:vy/len)*2-len/30; if(sc>bs){ bs=sc; best=m; } });
     const segD=(p,a,b)=>{ const l=(b.x-a.x)**2+(b.y-a.y)**2, tt=Math.max(0,Math.min(1,((p.x-a.x)*(b.x-a.x)+(p.y-a.y)*(b.y-a.y))/l)); return Math.hypot(p.x-(a.x+tt*(b.x-a.x)),p.y-(a.y+tt*(b.y-a.y))); };
@@ -2362,17 +2371,18 @@ function fcMoment(_ov,f,diff){ return new Promise(res=>{
     if(ht>26){ c.fillStyle="#fff"; c.font=`900 ${Math.round(ht*.15)}px sans-serif`; c.textAlign="center"; c.fillText(isGk?"1":num,b.x,b.y-ht*.64); }
     if(isMe){ c.fillStyle="#fde047"; c.font=`900 ${Math.max(11,Math.round(ht*.13))}px sans-serif`; c.textAlign="center"; c.fillText("▼ "+f.name.toUpperCase(),b.x,h.y-ht*.12); } }
   const loop=now=>{ if(over&&!ball) {} const dt=Math.min(.05,(now-last)/1000); last=now;
+    if(chg!=null){ pwi.style.width=Math.min(100,(now-chg)/9)+"%"; }
     // joueur
-    const spd=5.6+st.vit/22; if(holder==="me"||holder===null){ me.vx=joy.x*spd; me.vy=-joy.y*spd; me.x=Math.max(-33,Math.min(33,me.x+me.vx*dt)); me.y=Math.max(2,Math.min(51,me.y+me.vy*dt)); }
+    const spd=5.6+st.vit/22; if(holder==="me"||holder===null){ me.vx=joy.x*spd; me.vy=-joy.y*spd; if(me.dash&&now<me.dash.until){ me.vx+=me.dash.vx; me.vy+=me.dash.vy; } me.x=Math.max(-33,Math.min(33,me.x+me.vx*dt)); me.y=Math.max(2,Math.min(51,me.y+me.vy*dt)); }
     mates.forEach((m,i)=>{ const ty=Math.min(46,me.y+8+i*2), tx=(i?1:-1)*Math.max(8,Math.abs(me.x)+9)+(i?me.x*.3:me.x*.3); m.x+=(tx-m.x)*dt*.7; m.y+=(ty-m.y)*dt*.6; });
     const carrier=holder==="me"?me:(ball?{x:ball.x,y:ball.y}:me);
-    defs.forEach((df,i)=>{ const tx=carrier.x+(i===0?0:rnd(-.3,.3)), ty=carrier.y+(holder==="me"?.6:0), dx=tx-df.x, dy=ty-df.y, dd=Math.hypot(dx,dy)||1; df.x+=dx/dd*df.s*dt; df.y+=dy/dd*df.s*dt*.95;
-      if(holder==="me"&&!over&&dd<1){ const dribble=Math.hypot(me.vx,me.vy)>3.5?.6:1; if(Math.random()<(1.1+d*.9)*(1.25-st.dri/95)*dribble*dt){ msg="❌ Le défenseur te prend le ballon !"; holder="def"; fin("lost"); } } });
+    defs.forEach((df,i)=>{ if(df.stun&&now<df.stun){ df.y-=1.5*dt; return; } const tx=carrier.x+(i===0?0:rnd(-.3,.3)), ty=carrier.y+(holder==="me"?.6:0), dx=tx-df.x, dy=ty-df.y, dd=Math.hypot(dx,dy)||1; df.x+=dx/dd*df.s*dt; df.y+=dy/dd*df.s*dt*.95;
+      if(holder==="me"&&!over&&dd<1&&!(me.inv&&now<me.inv)){ const dribble=Math.hypot(me.vx,me.vy)>3.5?.6:1; if(Math.random()<(1.1+d*.9)*(1.25-st.dri/95)*dribble*dt){ msg="❌ Le défenseur te prend le ballon !"; holder="def"; fin("lost"); } } });
     gk.x+=gk.dv*dt; if(!ball||ball.k!=="shot") gk.x+=((carrier.x*.35)-gk.x)*dt*2; gk.x=Math.max(-3.3,Math.min(3.3,gk.x));
     // ballon
     if(ball){ const p=Math.min(1,(now-ball.t0)/ball.dur); ball.x=ball.x0??(ball.x0=ball.x); const x0=ball.x0, y0=ball.y0??(ball.y0=ball.y); ball.cx=x0+(ball.tx-x0)*p; ball.cy=y0+(ball.ty-y0)*p; ball.cz=ball.k==="shot"?Math.sin(p*Math.PI)*ball.peak+.15:Math.sin(p*Math.PI)*.4;
       if(ball.k==="pass"&&ball.cut&&p>.45){ ball=null; msg="❌ Passe interceptée…"; fin("lost"); }
-      else if(p>=1){ if(ball.k==="shot"){ const inG=Math.abs(ball.tx)<3.55, saved=Math.abs(gk.x-ball.tx)<1+d*.35&&Math.random()<.85; msg=!inG?"😩 À côté !":saved?"🧤 Arrêt du gardien !":"⚽ BUUUT !"; const r=inG&&!saved?"goal":"miss"; ball.done=1; fin(r); }
+      else if(p>=1){ if(ball.k==="shot"){ const inG=Math.abs(ball.tx)<3.55&&!ball.over, saved=Math.abs(gk.x-ball.tx)<(1+d*.35)*(ball.pow>.8?.7:1)&&Math.random()<(ball.pow>.8?.7:.85); msg=ball.over?"🚀 Au-dessus de la barre !":!inG?"😩 À côté !":saved?"🧤 Arrêt du gardien !":(ball.pow>.8?"💥 QUELLE FRAPPE ! BUUUT !":"⚽ BUUUT !"); const r=inG&&!saved?"goal":"miss"; ball.done=1; fin(r); }
         else if(ball.k==="back"){ ball=null; holder="me"; msg=""; }
         else { const m=ball.to; ball=null; if(m.y>35&&Math.random()<.3+st.pas/250){ msg="🅰️ Ton coéquipier frappe… BUT !"; fin("assist"); } else if(m.y>35&&Math.random()<.5){ msg="😩 Ton coéquipier rate…"; fin("miss"); } else { msg="🔁 Une-deux ! Il te la redonne"; holder=null; const sp=16; ball={x:m.x,y:m.y,z:.1,tx:me.x+me.vx*.4,ty:me.y+me.vy*.4+1,sp,k:"back",t0:performance.now()}; ball.dur=Math.hypot(ball.tx-m.x,ball.ty-m.y)/sp*1000; t=Math.min(10,t+3); } } }
     }
@@ -2393,7 +2403,8 @@ function fcMoment(_ov,f,diff){ return new Promise(res=>{
     if(bp){ const sh=P3(ball&&!ball.done?(ball.cx??ball.x):me.x+.35,ball&&!ball.done?(ball.cy??ball.y):me.y+.5,0); if(sh){ c.fillStyle="#0007"; c.beginPath(); c.ellipse(sh.x,sh.y,bp.s*.14,bp.s*.05,0,0,7); c.fill(); } c.fillStyle="#fff"; c.strokeStyle="#111"; c.lineWidth=1; c.beginPath(); c.arc(bp.x,bp.y,Math.max(3,bp.s*.12),0,7); c.fill(); c.stroke(); }
     // viseur
     if(holder==="me"&&!ball){ const aim=Math.abs(joy.x)>.25?Math.sign(joy.x)*(.45+Math.abs(joy.x)*.55):(me.x>2.5?.6:me.x<-2.5?-.6:0); const a=P3(aim*3.1,52,1.1); if(a){ c.strokeStyle="#fde047"; c.lineWidth=3; c.beginPath(); c.arc(a.x,a.y,Math.max(6,a.s*.35),0,7); c.stroke(); c.beginPath(); c.moveTo(a.x-a.s*.5,a.y); c.lineTo(a.x+a.s*.5,a.y); c.moveTo(a.x,a.y-a.s*.5); c.lineTo(a.x,a.y+a.s*.5); c.stroke(); } }
-    if(msg){ c.fillStyle="#000a"; c.fillRect(0,H*.42,W,54); c.fillStyle="#fff"; c.font="900 22px sans-serif"; c.textAlign="center"; c.fillText(msg,W/2,H*.42+35); if(!over&&!msg.startsWith("🔁")){} }
+    if(msg!==loop.lm){ loop.lm=msg; loop.ma=now; }
+    if(msg&&(over||now-loop.ma<1400)){ c.fillStyle="#000a"; c.fillRect(0,H*.42,W,54); c.fillStyle="#fff"; c.font="900 22px sans-serif"; c.textAlign="center"; c.fillText(msg,W/2,H*.42+35); if(!over&&!msg.startsWith("🔁")){} }
     if(msg.startsWith("🔁")&&!ball) setTimeout(()=>{ if(msg.startsWith("🔁")) msg=""; },900);
     if(!(over&&!L.isConnected)) requestAnimationFrame(loop); };
   requestAnimationFrame(loop);
