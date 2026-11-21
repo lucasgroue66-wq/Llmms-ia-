@@ -542,7 +542,7 @@ function appsTick(silent){ const A=P(); let net=0;
     const target=Math.pow(m.q,2.4)*AIT[m.k][3]*.6*(m.mk>0?2:1); m.users=Math.max(0,Math.round(m.users+(target-m.users)*.06+gauss()*m.users*.02)); if(m.mk>0) m.mk--;
     const rv=m.users*AIT[m.k][3]/30*.8-m.users*.04; m.last=rv; net+=rv;
     if(!silent&&m.users>3000&&Math.random()<.03) msg("buy",`Bonjour ! Notre groupe veut racheter ton IA « ${m.n} » (${m.users.toLocaleString("fr-FR")} utilisateurs). On te propose ${fmt(Math.round(rv*rnd(250,500)))}.`,{k:"ai",id:m.id,price:Math.round(rv*rnd(250,500))}); });
-  const V=A.vid; let vr=0; V.vids.forEach(v=>{ if(v.age<8){ const vw=Math.round(v.v0*Math.pow(.55,v.age)); v.views+=vw; V.tot+=vw; vr+=vw/1000*VTH[v.th][2]; V.subs+=Math.round(vw*.005*(v.viral?2:1)); v.age++; } }); V.vids=V.vids.filter(v=>v.age<30); V.last=vr; net+=vr;
+  const V=A.vid; let vr=0; V.vids.forEach(v=>{ if(v.age<8){ const vw=Math.round(v.v0*Math.pow(.55,v.age)); v.views+=vw; V.tot+=vw; vr+=vw/1000*VTH[v.th][2]; V.subs+=Math.round(vw*.0075*(v.viral?2:1)); v.age++; } }); V.vids=V.vids.filter(v=>v.age<30); V.last=vr; net+=vr;
   if(!silent&&V.subs>8000&&Math.random()<.04){ const pr=Math.round(V.subs*rnd(.3,1.2)); msg("spon",`Salut ! On aimerait un placement de produit dans ta prochaine vidéo. Rémunération : ${fmt(pr)}. Ça te va ?`,{k:"spon",price:pr}); }
   A.form.forEach(f=>{ const s=Math.max(0,Math.round(V.subs*.00035*Math.pow(99/f.price,.8)*f.q*rnd(.5,1.5))); const ref=Math.round(s*(f.q<.8?.15:.03)); f.sales+=s-ref; const rv=(s-ref)*f.price*.92; f.last=rv; net+=rv; });
   A.blox.forEach(g=>{ if(g.dev>0){ g.dev--; if(g.dev===0&&!silent) logEv(`🧱 Ton jeu Bloxy « ${g.n} » est ${g.live?"mis à jour":"publié"} !`); g.live=1; return; }
@@ -757,7 +757,7 @@ function appSoc(){ const k=socApp, [ic,name,,col,mul]=SOC[k], so=S0()[k], A=P(),
   const fill=()=>{ const v=$("sp").value, t=v.split(":")[0], g=v.startsWith("g:")?A.blox.find(x=>x.id==v.slice(2)):null, m=v.startsWith("ai:")?A.ai.find(x=>x.id==v.slice(3)):null, w=v.startsWith("site:")?(A.sites||[]).find(x=>x.id==v.slice(5)):null; $("st").value=pick(TEMPL[t]).replace("%s",g?g.n:m?m.n:w?w.n:A.shop?A.shop.n:""); };
   $("sp").onchange=fill; fill(); $("slive").onclick=()=>startLive(k);
   $("spo").onclick=()=>{ const txt=$("st").value.trim(); if(!txt) return toast("Écris quelque chose"); const v=$("sp").value, viral=Math.random()<.035*SBOOST(); const pd=so.pdD===E.day?so.pd:0; so.pdD=E.day; so.pd=pd+1; const spam=pd>=3?.2:1;
-    const views=Math.round((so.f*rnd(.06,.2)+rnd(15,90)*Math.sqrt(vq()))*mul*(viral?rnd(6,20):1)*spam*SBOOST()), likes=Math.round(views*rnd(.03,.1)), nf=Math.round(views*rnd(.004,.014));
+    const views=Math.round((so.f*rnd(.06,.2)+rnd(15,90)*Math.sqrt(vq()))*mul*(viral?rnd(6,20):1)*spam*SBOOST()), likes=Math.round(views*rnd(.03,.1)), nf=Math.round(views*rnd(.004,.014)*1.5);
     if(spam<1) setTimeout(()=>toast("📉 Trop de posts aujourd'hui : l'algorithme te montre moins"),2400);
     const post={id:++so.n,txt,views,likes,com:Array.from({length:Math.min(4,1+Math.floor(likes/200))},()=>[pick(SNAMES),pick(SCOM)]),viral,d:E.day,tgt:v,res:""};
     so.f+=nf;
@@ -778,7 +778,7 @@ function animPost(p){ const el=document.querySelector(`[data-post="${p.id}"]`); 
 /* 🔴 LIVE VidTube */
 function startLive(src){ src=typeof src==="string"?src:"vid"; const A=P(), V=src==="vid"?A.vid:S0()[src], fol=()=>src==="vid"?V.subs:V.f, addF=n=>{ if(src==="vid") V.subs+=n; else V.f+=n; }; if(V.lcd===E.day) return toast("Tu as déjà fait un live aujourd'hui sur cette appli");
   const ov=document.createElement("div"); ov.style.cssText="position:fixed;inset:0;z-index:80;background:#05060a;display:flex;flex-direction:column";
-  ov.innerHTML=`<div style="flex:1;position:relative;overflow:hidden;background:radial-gradient(circle at 50% 35%,#3b0764,#05060a 70%)"><div style="position:absolute;top:14px;left:14px;display:flex;gap:8px;align-items:center"><span style="background:#ef4444;padding:4px 10px;border-radius:8px;font-weight:900">🔴 EN DIRECT</span><span class="chip">👁️ <b id="lv">0</b></span><span class="chip">⏱ <b id="lt">0:00</b></span></div><button class="btn r" id="lcut" style="position:absolute;top:12px;right:12px;padding:8px 12px">✂️ Couper</button>
+  ov.innerHTML=`<div style="flex:1;position:relative;overflow:hidden;background:radial-gradient(circle at 50% 35%,#3b0764,#05060a 70%)"><div style="position:absolute;top:14px;left:14px;display:flex;gap:8px;align-items:center"><span style="background:#ef4444;padding:4px 10px;border-radius:8px;font-weight:900">🔴 EN DIRECT</span><span class="chip">👁️ <b id="lv">0</b></span><span class="chip">⏱ <b id="lt">0:00</b></span><span class="chip">➕ <b id="lsub">0</b> abos</span></div><button class="btn r" id="lcut" style="position:absolute;top:12px;right:12px;padding:8px 12px">✂️ Couper</button>
   <div style="position:absolute;top:34%;left:0;right:0;text-align:center;font-size:90px" id="lav">🧑‍💻</div><div style="position:absolute;top:56%;left:0;right:0;text-align:center;font-weight:900;font-size:20px" id="ltt"></div>
   <div id="ldon" style="position:absolute;top:22%;left:0;right:0;text-align:center"></div>
   <div id="lchat" style="position:absolute;left:10px;right:10px;bottom:10px;height:34%;overflow:hidden;display:flex;flex-direction:column;justify-content:flex-end;gap:4px;font-size:14px"></div></div>
@@ -792,10 +792,10 @@ function startLive(src){ src=typeof src==="string"?src:"vid"; const A=P(), V=src
     ov.querySelector("#lv").textContent=viewers.toLocaleString("fr-FR"); ov.querySelector("#lt").textContent=`${Math.floor(sec/60)}:${String(sec%60).padStart(2,"0")}`;
     for(let i=0;i<Math.min(3,1+viewers/400);i++) if(Math.random()<Math.min(.8,viewers/15)) chat(pick(SNAMES),pick(LINES));
     if(viewers>0&&Math.random()<Math.min(.35,.01+viewers/4000)){ const amt=pick([2,5,5,10,20,50,100,500])*(viewers>2000?3:1); don+=amt; const u=pick(SNAMES); chat("💸 "+u,`a donné ${amt} € !`,"#facc15"); const dn=ov.querySelector("#ldon"); dn.innerHTML=`<span style="background:#facc15;color:#1a1100;padding:8px 14px;border-radius:12px;font-weight:900;font-size:18px">💸 ${esc(u)} : ${amt} €</span>`; setTimeout(()=>{ if(dn) dn.innerHTML=""; },1800); try{ beep && 0; }catch{} }
-    newSub+=Math.round(viewers*rnd(.002,.006)); if(sec>=180) end(); },1000);
+    newSub+=viewers*rnd(.004,.009)*1.5; const ls=ov.querySelector("#lsub"); if(ls) ls.textContent=Math.floor(newSub).toLocaleString("fr-FR"); if(sec>=180) end(); },1000);
   ov.querySelector("#lhi").onclick=()=>{ chat("⭐ TOI","Salut tout le monde ! 👋","#fbbf24"); if(sec-lastAct>8) hype*=1.06; lastAct=sec; };
   ov.querySelector("#lpr").onclick=()=>{ const g=A.blox.find(x=>x.live); chat("⭐ TOI",g?`Allez jouer à mon jeu « ${g.n} » sur Bloxy !`:"Abonnez-vous et activez la cloche 🔔","#fbbf24"); if(g){ g.pl+=Math.round(viewers*.03); g.vis+=Math.round(viewers*.3); } if(sec-lastAct>8) hype*=1.04; lastAct=sec; };
-  let done=false; function end(){ if(done) return; done=true; clearInterval(iv); const ads=peak*sec/60*.006*ECO(); addF(newSub); V.lcd=E.day; E.cash+=don+ads; save(); head(); ov.remove();
+  let done=false; function end(){ if(done) return; done=true; clearInterval(iv); const ads=peak*sec/60*.006*ECO(); newSub=Math.round(newSub); addF(newSub); V.lcd=E.day; E.cash+=don+ads; save(); head(); ov.remove();
     popup(`<h3>🔴 Live terminé</h3><div class="kpi" style="margin:10px 0"><div><span>Pic de spectateurs</span><b>${peak.toLocaleString("fr-FR")}</b></div><div><span>Durée</span><b>${Math.floor(sec/60)} min ${sec%60} s</b></div><div><span>💸 Dons</span><b class="up">${fmt(don)}</b></div><div><span>Pub</span><b class="up">${fmt(ads)}</b></div><div><span>Nouveaux abonnés</span><b>+${newSub.toLocaleString("fr-FR")}</b></div></div><button class="btn g" id="x" style="width:100%">Super !</button>`,()=>{ $("x").onclick=closePop; }); }
   ov.querySelector("#lend").onclick=end; ov.querySelector("#lcut").onclick=end; }
 
