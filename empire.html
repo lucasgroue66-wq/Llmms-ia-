@@ -508,7 +508,7 @@ function appsTick(silent){ const A=P(); let net=0;
     const target=Math.pow(m.q,2.4)*AIT[m.k][3]*.6*(m.mk>0?2:1); m.users=Math.max(0,Math.round(m.users+(target-m.users)*.06+gauss()*m.users*.02)); if(m.mk>0) m.mk--;
     const rv=m.users*AIT[m.k][3]/30*.8-m.users*.04; m.last=rv; net+=rv;
     if(!silent&&m.users>3000&&Math.random()<.03) msg("buy",`Bonjour ! Notre groupe veut racheter ton IA « ${m.n} » (${m.users.toLocaleString("fr-FR")} utilisateurs). On te propose ${fmt(Math.round(rv*rnd(250,500)))}.`,{k:"ai",id:m.id,price:Math.round(rv*rnd(250,500))}); });
-  const V=A.vid; let vr=0; V.vids.forEach(v=>{ if(v.age<8){ const vw=Math.round(v.v0*Math.pow(.55,v.age)); v.views+=vw; V.tot+=vw; vr+=vw/1000*VTH[v.th][2]; V.subs+=Math.round(vw*.003*(v.viral?2:1)); v.age++; } }); V.vids=V.vids.filter(v=>v.age<30); V.last=vr; net+=vr;
+  const V=A.vid; let vr=0; V.vids.forEach(v=>{ if(v.age<8){ const vw=Math.round(v.v0*Math.pow(.55,v.age)); v.views+=vw; V.tot+=vw; vr+=vw/1000*VTH[v.th][2]; V.subs+=Math.round(vw*.005*(v.viral?2:1)); v.age++; } }); V.vids=V.vids.filter(v=>v.age<30); V.last=vr; net+=vr;
   if(!silent&&V.subs>8000&&Math.random()<.04){ const pr=Math.round(V.subs*rnd(.3,1.2)); msg("spon",`Salut ! On aimerait un placement de produit dans ta prochaine vidéo. Rémunération : ${fmt(pr)}. Ça te va ?`,{k:"spon",price:pr}); }
   A.form.forEach(f=>{ const s=Math.max(0,Math.round(V.subs*.00035*Math.pow(99/f.price,.8)*f.q*rnd(.5,1.5))); const ref=Math.round(s*(f.q<.8?.15:.03)); f.sales+=s-ref; const rv=(s-ref)*f.price*.92; f.last=rv; net+=rv; });
   A.blox.forEach(g=>{ if(g.dev>0){ g.dev--; if(g.dev===0&&!silent) logEv(`🧱 Ton jeu Bloxy « ${g.n} » est ${g.live?"mis à jour":"publié"} !`); g.live=1; return; }
@@ -596,8 +596,8 @@ function appVid(){ const A=P(), V=A.vid, q=vq(), can=E.day>V.cd;
   <h2>Matériel</h2>${CAMS.map((c,i)=>`<div class="item"><div class="ic">${c[0]}</div><div class="grow"><div class="t">${c[1]}</div><div class="d">+${c[3]} qualité</div></div>${A.cams[i]?'<span class="tag b">✔</span>':`<button class="btn" data-cm="${i}">${fmt(c[2])}</button>`}</div>`).join("")}
   <p class="hint">Les vidéos Business et Tuto IA rapportent plus par vue. Un bon PC (PC Store) améliore aussi le montage.</p>`; bindBack();
   $("golive").onclick=startLive;
-  document.querySelectorAll("[data-vt]").forEach(b=>b.onclick=()=>{ const th=+b.dataset.vt, viral=Math.random()<.02+q*.003; const titles={0:["J'ai fini le jeu en 1 heure","Le pire bug de l'année"],1:["Comment j'ai gagné mon premier million","Mes 5 business à lancer"],2:["Je piège mon pote 😂","Les pires situations au collège"],3:["Je crée une IA en 24h","L'IA va remplacer ton job ?"],4:["Ma nouvelle supercar 🏎️","Une journée de millionnaire"],5:["Je crée un jeu Bloxy viral","Mon jeu a 1000 joueurs !"]};
-    const v0=Math.round((V.subs*rnd(.04,.15)+rnd(5,60)*q)*(viral?rnd(6,20):1)*SBOOST()); V.vids.push({t:pick(titles[th]),th,v0,views:0,age:0,viral}); V.cd=E.day; save(); toast(viral?"🔥 Ta vidéo part en VIRAL !":"🎬 Vidéo publiée"); appVid(); });
+  document.querySelectorAll("[data-vt]").forEach(b=>b.onclick=()=>{ const th=+b.dataset.vt, viral=Math.random()<.03+q*.004; const titles={0:["J'ai fini le jeu en 1 heure","Le pire bug de l'année"],1:["Comment j'ai gagné mon premier million","Mes 5 business à lancer"],2:["Je piège mon pote 😂","Les pires situations au collège"],3:["Je crée une IA en 24h","L'IA va remplacer ton job ?"],4:["Ma nouvelle supercar 🏎️","Une journée de millionnaire"],5:["Je crée un jeu Bloxy viral","Mon jeu a 1000 joueurs !"]};
+    const v0=Math.round((V.subs*rnd(.07,.22)+rnd(20,120)*q)*(viral?rnd(6,20):1)*SBOOST()); V.vids.push({t:pick(titles[th]),th,v0,views:0,age:0,viral}); V.cd=E.day; save(); toast(viral?"🔥 Ta vidéo part en VIRAL !":"🎬 Vidéo publiée"); appVid(); });
   document.querySelectorAll("[data-cm]").forEach(b=>b.onclick=()=>{ const i=+b.dataset.cm; if(!pay(CAMS[i][2])) return; A.cams[i]=1; save(); appVid(); }); }
 
 /* Academy — formations */
@@ -722,8 +722,8 @@ function appSoc(){ const k=socApp, [ic,name,,col,mul]=SOC[k], so=S0()[k], A=P(),
   <h2>Tes publications</h2><div id="sposts">${so.posts.slice().reverse().map(postHTML).join("")||'<p class="hint">Aucune publication pour l’instant.</p>'}</div>`; bindBack();
   const fill=()=>{ const v=$("sp").value, t=v.split(":")[0], g=v.startsWith("g:")?A.blox.find(x=>x.id==v.slice(2)):null, m=v.startsWith("ai:")?A.ai.find(x=>x.id==v.slice(3)):null, w=v.startsWith("site:")?(A.sites||[]).find(x=>x.id==v.slice(5)):null; $("st").value=pick(TEMPL[t]).replace("%s",g?g.n:m?m.n:w?w.n:A.shop?A.shop.n:""); };
   $("sp").onchange=fill; fill(); $("slive").onclick=()=>startLive(k);
-  $("spo").onclick=()=>{ const txt=$("st").value.trim(); if(!txt) return toast("Écris quelque chose"); const v=$("sp").value, viral=Math.random()<.02*SBOOST(); const pd=so.pdD===E.day?so.pd:0; so.pdD=E.day; so.pd=pd+1; const spam=pd>=3?.2:1;
-    const views=Math.round((so.f*rnd(.03,.12)+rnd(3,35)*Math.sqrt(vq()))*mul*(viral?rnd(6,20):1)*spam*SBOOST()), likes=Math.round(views*rnd(.03,.1)), nf=Math.round(views*rnd(.002,.008));
+  $("spo").onclick=()=>{ const txt=$("st").value.trim(); if(!txt) return toast("Écris quelque chose"); const v=$("sp").value, viral=Math.random()<.035*SBOOST(); const pd=so.pdD===E.day?so.pd:0; so.pdD=E.day; so.pd=pd+1; const spam=pd>=3?.2:1;
+    const views=Math.round((so.f*rnd(.06,.2)+rnd(15,90)*Math.sqrt(vq()))*mul*(viral?rnd(6,20):1)*spam*SBOOST()), likes=Math.round(views*rnd(.03,.1)), nf=Math.round(views*rnd(.004,.014));
     if(spam<1) setTimeout(()=>toast("📉 Trop de posts aujourd'hui : l'algorithme te montre moins"),2400);
     const post={id:++so.n,txt,views,likes,com:Array.from({length:Math.min(4,1+Math.floor(likes/200))},()=>[pick(SNAMES),pick(SCOM)]),viral,d:E.day,tgt:v,res:""};
     so.f+=nf;
@@ -751,14 +751,14 @@ function startLive(src){ src=typeof src==="string"?src:"vid"; const A=P(), V=src
   <div style="padding:10px 10px 16px;display:flex;flex-wrap:wrap;gap:8px;background:#0a0d14"><button class="btn gh" id="lhi" style="flex:1">👋 Dire bonjour</button><button class="btn gh" id="lpr" style="flex:1">📣 Mes projets</button><button class="btn r" id="lend" style="width:100%;font-size:18px;padding:14px">✂️ COUPER LE LIVE</button></div>`;
   document.body.appendChild(ov);
   const title=pick(["Je joue à mon jeu Bloxy en live 🔥","On parle business et argent 💸","Ouverture de packs en direct 🎁","Je code une IA en live 🤖","Q&R : comment je suis devenu riche"]); ov.querySelector("#ltt").textContent=title;
-  let viewers=0, peak=0, don=0, newSub=0, sec=0, hype=1; const base=Math.max(0,fol()*rnd(.004,.014)*(src==="tok"?1.6:src==="snap"?1.3:1)+rnd(0,5)*Math.sqrt(vq()))*SBOOST(); let lastAct=0;
+  let viewers=0, peak=0, don=0, newSub=0, sec=0, hype=1; const base=Math.max(0,fol()*rnd(.01,.03)*(src==="tok"?1.6:src==="snap"?1.3:1)+rnd(4,15)*Math.sqrt(vq()))*SBOOST(); let lastAct=0;
   const chat=(u,t,c)=>{ const d=document.createElement("div"); d.innerHTML=`<b style="color:${c||pick(["#f472b6","#60a5fa","#4ade80","#facc15","#c084fc"])}">${esc(u)}</b> ${esc(t)}`; const L=ov.querySelector("#lchat"); L.appendChild(d); while(L.children.length>12) L.firstChild.remove(); };
   const LINES=["salut 👋","premier !","t'es trop fort","c'est quoi ton jeu ?","GG","combien t'as gagné ce mois ?","je viens de m'abonner ✅","fais un giveaway 🙏","le boss","mdrrr","❤️❤️❤️","tu peux dire bonjour à moi ?","t'as quel PC ?"];
-  const iv=setInterval(()=>{ sec++; const target=base*hype*(1+Math.min(.6,sec/90))*(1-Math.min(.6,(sec-lastAct)/90)); viewers=Math.max(0,Math.round(viewers+(target-viewers)*.25+gauss()*Math.sqrt(viewers+1))); peak=Math.max(peak,viewers); hype=Math.max(1,hype*.97);
+  const iv=setInterval(()=>{ sec++; const target=base*hype*(1+Math.min(.6,sec/90))*(1-Math.min(.45,(sec-lastAct)/110)); viewers=Math.max(0,Math.round(viewers+(target-viewers)*.25+gauss()*Math.sqrt(viewers+1))); peak=Math.max(peak,viewers); hype=Math.max(1,hype*.97);
     ov.querySelector("#lv").textContent=viewers.toLocaleString("fr-FR"); ov.querySelector("#lt").textContent=`${Math.floor(sec/60)}:${String(sec%60).padStart(2,"0")}`;
     for(let i=0;i<Math.min(3,1+viewers/400);i++) if(Math.random()<Math.min(.8,viewers/15)) chat(pick(SNAMES),pick(LINES));
     if(viewers>0&&Math.random()<Math.min(.35,.01+viewers/4000)){ const amt=pick([2,5,5,10,20,50,100,500])*(viewers>2000?3:1); don+=amt; const u=pick(SNAMES); chat("💸 "+u,`a donné ${amt} € !`,"#facc15"); const dn=ov.querySelector("#ldon"); dn.innerHTML=`<span style="background:#facc15;color:#1a1100;padding:8px 14px;border-radius:12px;font-weight:900;font-size:18px">💸 ${esc(u)} : ${amt} €</span>`; setTimeout(()=>{ if(dn) dn.innerHTML=""; },1800); try{ beep && 0; }catch{} }
-    newSub+=Math.round(viewers*rnd(.0005,.003)); if(sec>=180) end(); },1000);
+    newSub+=Math.round(viewers*rnd(.002,.006)); if(sec>=180) end(); },1000);
   ov.querySelector("#lhi").onclick=()=>{ chat("⭐ TOI","Salut tout le monde ! 👋","#fbbf24"); if(sec-lastAct>8) hype*=1.06; lastAct=sec; };
   ov.querySelector("#lpr").onclick=()=>{ const g=A.blox.find(x=>x.live); chat("⭐ TOI",g?`Allez jouer à mon jeu « ${g.n} » sur Bloxy !`:"Abonnez-vous et activez la cloche 🔔","#fbbf24"); if(g){ g.pl+=Math.round(viewers*.03); g.vis+=Math.round(viewers*.3); } if(sec-lastAct>8) hype*=1.04; lastAct=sec; };
   let done=false; function end(){ if(done) return; done=true; clearInterval(iv); const ads=peak*sec/60*.006*ECO(); addF(newSub); V.lcd=E.day; E.cash+=don+ads; save(); head(); ov.remove();
