@@ -1616,16 +1616,20 @@ async function agent(c){
     }
     // Relecture automatique du code (mode Développement / Roblox, hors construction directe dans Studio)
     if(c.mode!=="image"&&!usedTools&&/```(lua|luau|js|javascript|ts|typescript|py|python|tsx|jsx|html)\b/i.test(lastMsg?.content||"")){
-      const rounds=boosted(c)&&!isAnimReq(c)?2:1; let corrections=0;
+      const isLua=/```(lua|luau)\b/i.test(lastMsg.content); const rounds=boosted(c)&&!isAnimReq(c)?3:isLua?2:1; let corrections=0, lintFixed=0;
       for(let k=1;k<=rounds;k++){
+        const lint=isLua?luauLint(lastMsg.content):[];
+        if(k>1&&!lint.length&&!boosted(c)) break;
         setStatus(rounds>1?`Vérification ${k}/${rounds}…`:"Vérification du code…");
-        const rst=Steps.add(rounds>1?`Vérification du code ${k}/${rounds}`:"Vérification du code");
-        const fixed=await reviewCode(c,lastMsg.content,ctl.signal);
+        const rst=Steps.add((rounds>1?`Vérification du code ${k}/${rounds}`:"Vérification du code")+(lint.length?` · ${lint.length} alerte${lint.length>1?"s":""} Luau`:""));
+        const fixed=await reviewCode(c,lastMsg.content,ctl.signal,lint);
         Steps.end(rst,true,fixed?"Erreurs trouvées et corrigées":"Aucune erreur trouvée");
         if(!fixed) break;
+        const after=isLua?luauLint(fixed).length:0; lintFixed+=Math.max(0,lint.length-after);
         corrections++; lastMsg.content=fixed; lastSeg.innerHTML=md(fixed); save();
       }
-      const ch=document.createElement("div"); ch.className="chips"; ch.innerHTML=`<span class="chip ok">✓ ${corrections?`Code vérifié et corrigé (${corrections} correction${corrections>1?"s":""})`:"Code vérifié"}</span>`; bot.txt.insertBefore(ch,status);
+      const rest=isLua?luauLint(lastMsg.content).length:0;
+      const ch=document.createElement("div"); ch.className="chips"; ch.innerHTML=`<span class="chip ok">✓ ${corrections?`Code vérifié et corrigé (${corrections} correction${corrections>1?"s":""})`:"Code vérifié"}</span>${isLua?`<span class="chip ${rest?"err":"ok"}">${rest?`⚠ ${rest} alerte${rest>1?"s":""} Luau restante${rest>1?"s":""}`:`🛡 Analyse Luau : 0 erreur${lintFixed?` (${lintFixed} corrigée${lintFixed>1?"s":""})`:""}`}</span>`:""}`; bot.txt.insertBefore(ch,status);
     }
     // Filet de sécurité : Studio connecté mais l'IA a seulement écrit du code → on l'installe nous-mêmes dans la place
     if((usedTools||applyRounds>0)&&mcp.connected&&c.mode!=="image"){ if(!testPhotoShown){ const rep=await testerStudio(bot,status,setStatus); } if(!testPhotoShown) await photoStudio(bot,status,setStatus); }
@@ -2163,13 +2167,45 @@ function effortUI(){ const e=EFFORTS.find(x=>x[0]===effort); $("effIc").textCont
 $("effBtn").onclick=e=>{ e.stopPropagation(); $("mmenu").classList.remove("open"); const o=$("effMenu").classList.toggle("open"); $("effBtn").setAttribute("aria-expanded",String(o)); };
 document.addEventListener("click",e=>{ if(!e.target.closest("#effPicker")) $("effMenu").classList.remove("open"); });
 effortUI();
-const boosted=c=>effort!=="fast"&&(effort==="max"||tier==="studio"||tier==="propria")&&(c.mode==="roblox"||(c.mode==="dev"&&!isAnimReq(c)));
+const boosted=c=>effort!=="fast"&&(effort==="max"||tier==="studio"||tier==="propria"||tier==="5"||c.mode==="roblox")&&(c.mode==="roblox"||(c.mode==="dev"&&!isAnimReq(c)));
 
-async function reviewCode(c,answer,signal){
+/* ---- Analyseur Luau : repère automatiquement les erreurs classiques avant la relecture ---- */
+function luauLint(ans){ const out=[]; const re=/```(lua|luau)\s*\n([\s\S]*?)```/gi; let m, n=0;
+  while((m=re.exec(ans))){ n++; const before=ans.slice(Math.max(0,m.index-260),m.index); const kind=/LocalScript/i.test(before)?"local":/ModuleScript/i.test(before)?"module":/\bScript\b/.test(before)?"server":"?";
+    const name=((before.trim().split("\n").pop()||"").replace(/[*`_:]/g," ").match(/([A-Za-zÀ-ÿ0-9_]+)\s*$/)||[])[1]||`bloc ${n}`; const tag=`[${name}]`;
+    let src=m[2].replace(/--\[(=*)\[[\s\S]*?\]\1\]/g,"").replace(/--[^\n]*/g,"").replace(/\[(=*)\[[\s\S]*?\]\1\]/g,'""').replace(/"(?:\\.|[^"\\\n])*"|'(?:\\.|[^'\\\n])*'|`(?:\\.|[^`\\])*`/g,'""');
+    const cnt=w=>(src.match(new RegExp("\\b"+w+"\\b","g"))||[]).length; const opens=cnt("function")+cnt("then")+cnt("do")-cnt("elseif"), closes=cnt("end");
+    if(opens!==closes) out.push(`${tag} blocs déséquilibrés : ${opens} ouvertures (function/then/do) pour ${closes} « end » → il manque ou il y a trop de « end ».`);
+    if(cnt("repeat")!==cnt("until")) out.push(`${tag} « repeat » sans « until » correspondant.`);
+    if(/(^|[^.\w])wait\s*\(/.test(src)) out.push(`${tag} wait() est déprécié → task.wait().`);
+    if(/(^|[^.\w])spawn\s*\(/.test(src)) out.push(`${tag} spawn() est déprécié → task.spawn().`);
+    if(/(^|[^.\w])delay\s*\(/.test(src)) out.push(`${tag} delay() est déprécié → task.delay().`);
+    if(/\bBody(Velocity|Gyro|Position|Force|AngularVelocity)\b/.test(src)) out.push(`${tag} Body${RegExp.$1} est déprécié → LinearVelocity / AlignPosition / AlignOrientation / VectorForce.`);
+    if(/:connect\s*\(/.test(src)) out.push(`${tag} :connect() en minuscule est déprécié → :Connect().`);
+    if(/Instance\.new\(\s*""\s*,/.test(src)) out.push(`${tag} Instance.new("X", parent) est lent → crée l'objet, règle ses propriétés, puis mets .Parent en dernier.`);
+    if(/while\s+true\s+do(?![\s\S]{0,600}?(task\.wait|wait\s*\(|Heartbeat:Wait|RenderStepped:Wait|Stepped:Wait|:Wait\s*\())/.test(src)) out.push(`${tag} boucle « while true do » sans attente → le jeu va geler (ajoute task.wait()).`);
+    if(/:(SetAsync|GetAsync|UpdateAsync|IncrementAsync|RemoveAsync)\s*\(/.test(src)&&!/pcall/.test(src)) out.push(`${tag} appel DataStore sans pcall → plantage si Roblox ne répond pas.`);
+    if(/:SetAsync\s*\(/.test(src)) out.push(`${tag} SetAsync peut écraser des données → préfère UpdateAsync.`);
+    if(kind==="server"&&/\bLocalPlayer\b/.test(src)) out.push(`${tag} Script serveur qui utilise LocalPlayer (nil côté serveur) → ce code doit être dans un LocalScript ou utiliser le joueur passé en argument.`);
+    if(kind==="server"&&/:FireServer\s*\(|:InvokeServer\s*\(/.test(src)) out.push(`${tag} FireServer/InvokeServer dans un Script serveur → c'est FireClient/FireAllClients côté serveur.`);
+    if(kind==="server"&&/\b(UserInputService|ContextActionService)\b|GetMouse\s*\(/.test(src)) out.push(`${tag} UserInputService / souris utilisés dans un Script serveur → uniquement côté client (LocalScript).`);
+    if(kind==="local"&&/:FireClient\s*\(|:FireAllClients\s*\(/.test(src)) out.push(`${tag} FireClient dans un LocalScript → côté client on utilise FireServer.`);
+    if(kind==="local"&&/DataStoreService|ServerStorage|ServerScriptService/.test(src)) out.push(`${tag} LocalScript qui accède à DataStoreService / ServerStorage / ServerScriptService (inaccessibles côté client).`);
+    if(kind==="local"&&/OnServerEvent/.test(src)) out.push(`${tag} OnServerEvent dans un LocalScript → côté client c'est OnClientEvent.`);
+    if(kind==="server"&&/OnClientEvent/.test(src)) out.push(`${tag} OnClientEvent dans un Script serveur → côté serveur c'est OnServerEvent.`);
+    if(/OnServerEvent:Connect\s*\(\s*function\s*\(\s*\)/.test(src)) out.push(`${tag} OnServerEvent:Connect(function() …) : le 1er argument reçu est toujours le joueur, il manque (player, …).`);
+    if(kind==="local"&&/ReplicatedStorage\.[A-Za-z_]+/.test(src)&&!/WaitForChild/.test(src)) out.push(`${tag} côté client, accès direct à ReplicatedStorage.X sans WaitForChild → peut être nil au chargement.`);
+    if(/^\s*\.\.\.\s*$/m.test(m[2])||/--\s*(TODO|à compléter|ton code ici|reste du code)/i.test(m[2])) out.push(`${tag} code incomplet (« ... » ou TODO) → écris tout le code.`);
+    if(/\bgame\.(Players|ReplicatedStorage|RunService|TweenService|UserInputService|DataStoreService)\b/.test(src)&&!/GetService/.test(src)) out.push(`${tag} utilise game:GetService("…") plutôt que game.Service.`);
+    if(/\bfont\s*=\s*Enum\.Font\./i.test(src)&&false) out.push("");
+    if(kind==="?"&&n<=6&&!/ModuleScript|LocalScript|Script/.test(ans.slice(0,m.index))) out.push(`${tag} le type (Script / LocalScript / ModuleScript) et l'emplacement exact dans l'Explorer ne sont pas indiqués.`);
+  }
+  return [...new Set(out)].slice(0,18); }
+async function reviewCode(c,answer,signal,lint){
   try{
     const lastUser=[...c.messages].reverse().find(m=>m.role==="user"&&!m._auto);
     const req=textOf(lastUser?.content||"").slice(0,12000)+(lastUser?._spec?"\n\n[Cahier des charges de la vidéo — vérifie aussi que la réponse le reproduit fidèlement]\n"+lastUser._spec.slice(0,20000):"");
-    const r=await apiFetch({method:"POST",headers:headers(),signal,body:JSON.stringify({mode:"review",tier:tier==="studio"?"studio":tier==="5"?"5":"5.5",messages:[{role:"user",content:`Demande de l'utilisateur :\n${req}\n\nRéponse proposée :\n${answer}`}]})});
+    const r=await apiFetch({method:"POST",headers:headers(),signal,body:JSON.stringify({mode:"review",tier:tier==="studio"?"studio":tier==="5"?"5":"5.5",messages:[{role:"user",content:`Demande de l'utilisateur :\n${req}\n\nRéponse proposée :\n${answer}`+(lint&&lint.length?`\n\n⚠️ Problèmes détectés automatiquement par l'analyseur Luau (corrige-les TOUS dans ta réponse réécrite, sauf faux positif évident) :\n- ${lint.join("\n- ")}`:"")}]})});
     if(!r.ok||!r.body) return null;
     let out=""; const d=await readLlmms(r,ev=>{ if(ev.t==="text") out+=ev.v; }); const ok=!!d&&!d.cut;
     out=out.trim();
