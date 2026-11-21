@@ -5292,7 +5292,18 @@ function fcHub(f,orig){ const cl=fcClub(f.club), ovr=fcOvr(f), nx=fcNext(f), res
   document.querySelectorAll("[data-fh]").forEach(b=>b.onclick=async()=>{ const k=b.dataset.fh; if(k==="save"){ save(); toast("💾 Partie sauvegardée avec succès"); return; } const w=document.getElementById("fchbar2"); if(w) w.parentElement.remove(); f.tab=k; appFoot(); });
   $("fhcard").onclick=()=>{ f.tab="stats"; appFoot(); };
   $("fhplay").onclick=()=>{ const w=document.getElementById("fchbar2"); if(w) w.parentElement.remove(); if(orig) orig.click(); else { const n=fcNext(f); if(n) fcMatch(n); else fcSeasonEnd(); } }; }
-const _appsVER=apps; apps=function(){ const r=_appsVER.apply(this,arguments); try{ if(!app){ const m=$("main"); if(m&&!m.querySelector("#verTag")) m.insertAdjacentHTML("beforeend",'<p id="verTag" class="hint" style="text-align:center;margin:14px 0">Version carrière pro · 21/11 22h</p>'); } }catch(e){} return r; };
+/* ---------- 📉 Percer est 10× plus dur : les gros gains d'abonnés sont freinés, les petits gains restent ---------- */
+(function(){ let snap=null, note=0, kept=0, lost=0;
+  const adminOpen=()=>{ const p=document.getElementById("pop"); return p&&p.classList.contains("on")&&/Panel admin/.test(p.textContent||""); };
+  const read=()=>{ try{ const o={vid:P().vid.subs}; const so=S0(); for(const k in so) o[k]=so[k].f; return o; }catch(e){ return null; } };
+  const setV=(k,v)=>{ if(k==="vid") P().vid.subs=v; else S0()[k].f=v; };
+  setInterval(()=>{ if(typeof E==="undefined"||!E.x) return; const cur=read(); if(!cur) return; if(!snap||adminOpen()||E.x.easyFans){ snap=cur; return; }
+    for(const k in cur){ const was=snap[k]; if(was==null){ continue; } const d=cur[k]-was; if(d<=0) continue;
+      const small=15+was*.0015; if(d<=small) continue; const keep=Math.round(small+(d-small)*.1); setV(k,was+keep); cur[k]=was+keep; kept+=keep; lost+=d-keep; }
+    snap=cur;
+    if(lost>500&&Date.now()-note>25000){ note=Date.now(); toast(`📉 Percer c'est dur : l'algorithme ne te montre pas à tout le monde. Tu gardes ${fmt(kept).replace(" €","").replace("€","")} nouveaux abonnés (et pas ${fmt(kept+lost).replace(" €","").replace("€","")}).`); kept=0; lost=0; } },400);
+})();
+const _appsVER=apps; apps=function(){ const r=_appsVER.apply(this,arguments); try{ if(!app){ const m=$("main"); if(m&&!m.querySelector("#verTag")) m.insertAdjacentHTML("beforeend",'<p id="verTag" class="hint" style="text-align:center;margin:14px 0">Version percer 10x plus dur · 21/11 22h10</p>'); } }catch(e){} return r; };
 /* ---------- ✨ Interface : transitions, effets, vibrations ---------- */
 const _goUI=go; go=function(p){ _goUI(p); const m=$("main"); m.classList.remove("pg"); void m.offsetWidth; m.classList.add("pg"); clearTimeout(go.t); go.t=setTimeout(()=>m.classList.remove("pg"),600); };
 let lastCashUI=E.cash; const _headUI=head; head=function(){ _headUI(); const c=$("cash"); if(c&&E.cash>lastCashUI+.5){ c.classList.add("bump"); clearTimeout(head.t); head.t=setTimeout(()=>c.classList.remove("bump"),140); } lastCashUI=E.cash; };
