@@ -56,6 +56,7 @@ h2{margin:0 0 10px;font-size:18px}h3{margin:0 0 8px;font-size:15px}
 .chip.on{background:var(--gold);color:#1a1200;border-color:var(--gold);font-weight:700}
 .toast{position:fixed;left:50%;top:14px;transform:translateX(-50%);z-index:80;background:#1c1830;border:1px solid var(--gold);padding:10px 16px;border-radius:12px;font-weight:600;font-size:14px;box-shadow:0 10px 30px #000;animation:tin .25s}
 @keyframes tin{from{opacity:0;transform:translate(-50%,-10px)}}
+.adm h3{margin:14px 0 6px;text-align:left;font-size:14px;color:var(--gold)}.adm .chips{justify-content:flex-start;margin:0}.adm .chip{font-size:12px;padding:7px 10px}
 .tbar{position:relative;height:42px;background:#221d36;border-radius:12px;overflow:hidden;margin:14px 0}
 .tbar .z{position:absolute;top:0;bottom:0;background:rgba(46,229,157,.35);border-left:2px solid var(--grn);border-right:2px solid var(--grn)}
 .tbar .z.p{background:rgba(255,200,61,.55);border-color:var(--gold)}
@@ -163,7 +164,7 @@ let S;
 try{S=JSON.parse(localStorage.getItem(KEY))||NEW()}catch(e){S=NEW()}
 S=Object.assign(NEW(),S);
 const save=()=>{try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}};
-const enMax=()=>100+S.up.studio*20;
+const enMax=()=>S.adm&&S.adm.infEn?9999:100+S.up.studio*20;
 const rank=()=>{let r=RANKS[0];for(const x of RANKS)if(S.fans>=x[0])r=x;return r};
 const nextRank=()=>RANKS.find(x=>x[0]>S.fans);
 const log=t=>{S.log.unshift("J"+S.day+" · "+t);S.log=S.log.slice(0,40)};
@@ -172,7 +173,7 @@ let toastT;
 function toast(t){document.querySelectorAll(".toast").forEach(e=>e.remove());const d=document.createElement("div");d.className="toast";d.innerHTML=t;document.body.appendChild(d);clearTimeout(toastT);toastT=setTimeout(()=>d.remove(),2200)}
 function popup(html,close=true){closePop();const o=document.createElement("div");o.className="ov";o.id="ov";o.innerHTML='<div class="pop">'+html+'</div>';if(close)o.addEventListener("click",e=>{if(e.target===o)closePop()});document.body.appendChild(o);return o}
 function closePop(){const o=$("#ov");if(o)o.remove()}
-function useEn(n){if(S.en<n){toast("😴 Pas assez d'énergie — va dormir");return false}S.en-=n;return true}
+function useEn(n){if(S.adm&&S.adm.infEn)return true;if(S.en<n){toast("😴 Pas assez d'énergie — va dormir");return false}S.en-=n;return true}
 function pay(n){if(S.money<n){toast("💸 Pas assez d'argent");return false}S.money-=n;return true}
 
 /* ---------- Audio (beat maker) ---------- */
@@ -217,10 +218,11 @@ function rhymeGame(onEnd){
 let TAB="home";
 const NAV=[["home","🏠","Accueil"],["studio","🎹","Studio"],["sons","💿","Mes sons"],["scene","🎤","Scène"],["charts","📈","Top"],["biz","💼","Business"]];
 function renderTop(){const r=rank(),n=nextRank();
- $("#top").innerHTML=`<div class="row"><div class="logo">RAP EMPIRE</div><div style="flex:1"></div><div class="rk">${r[2]} ${r[1]}</div></div>
+ $("#top").innerHTML=`<div class="row"><div class="logo">RAP EMPIRE</div><button id="adm" title="Panel admin" style="background:#1c1830;border:1px solid var(--line);border-radius:8px;padding:2px 8px;font-size:15px">🛠️</button><div style="flex:1"></div><div class="rk">${r[2]} ${r[1]}</div></div>
  <div class="stats"><div class="st"><span>Argent</span><b>${eur(S.money)}</b></div><div class="st"><span>Fans</span><b>${fmt(S.fans)}</b></div><div class="st"><span>Hype</span><b>${Math.round(S.hype)}🔥</b></div><div class="st"><span>Jour</span><b>${S.day}</b></div></div>
  <div class="en" title="Énergie"><i style="width:${S.en/enMax()*100}%"></i></div>`}
-function renderNav(){$("#nav").innerHTML=NAV.map(n=>`<button class="${TAB===n[0]?"on":""}" data-t="${n[0]}"><div>${n[1]}</div>${n[2]}</button>`).join("");
+function bindAdm(){const b=$("#adm");if(b)b.onclick=admin}
+function renderNav(){bindAdm();$("#nav").innerHTML=NAV.map(n=>`<button class="${TAB===n[0]?"on":""}" data-t="${n[0]}"><div>${n[1]}</div>${n[2]}</button>`).join("");
  document.querySelectorAll(".nav button").forEach(b=>b.onclick=()=>{stopSeq();TAB=b.dataset.t;render();window.scrollTo(0,0)})}
 function render(){save();renderTop();renderNav();const m=$("#main");
  if(!S.name){m.innerHTML=startHTML();bindStart();return}
@@ -329,7 +331,7 @@ function bindStudio(){
   const w=$("#dwrite");if(w)w.onclick=()=>{if(!useEn(20))return;rhymeGame(sc=>{S.draft.lyr=Math.round(clamp(sc*60+S.sk.ecr*.45,5,100));S.sk.ecr=clamp(S.sk.ecr+.8,0,100);toast(`✍️ Texte : ${S.draft.lyr}/100`);render()})};
   const r=$("#drec");if(r)r.onclick=()=>{if(!useEn(25))return;timingGame({title:"🎙️ Enregistrement",sub:"Pose chaque phase dans le temps",rounds:5,onEnd:(sc,p)=>{const d=S.draft;
    const flow=sc*55+S.sk.flow*.45;const gear=(S.up.mic*4+S.up.studio*4);
-   let q=d.beat*.25+d.lyr*.3+flow*.3+gear+rnd(-5,5);q=Math.round(clamp(q,1,100));
+   let q=d.beat*.25+d.lyr*.3+flow*.3+gear+rnd(-5,5);q=Math.round(clamp(q,1,100));if(S.adm&&S.adm.q100)q=100;
    d.q=q;d.rec=true;S.sk.flow=clamp(S.sk.flow+.6,0,100);S.songs.unshift({t:d.t,th:d.th,ic:d.ic,col:d.col,q,streams:0,daily:0,released:false,clip:false,day:S.day});S.draft=null;
    popup(`<div class="big">${q>=85?"🔥":q>=65?"🎧":"😐"}</div><h2>"${esc(S.songs[0].t)}" est prêt</h2><div style="font-size:34px;font-weight:900;color:var(--gold)">${q}/100</div><div class="mut">${p} phases parfaites · Va dans 💿 Mes sons pour le sortir</div><button class="btn g" id="gos" style="width:100%;margin-top:12px">💿 Voir mes sons</button>`);
    $("#gos").onclick=()=>{closePop();TAB="sons";render()};render()}})};
@@ -367,7 +369,7 @@ function bindSons(){
 }
 function release(s,mul){s.released=true;s.rday=S.day;
  const base=(S.fans*1.2+300)*(s.q/60)**2.2*mul*(.6+S.hype/100*.8);
- const hit=s.q>=78&&Math.random()<(s.q-70)/60*mul*.6;
+ const hit=(S.adm&&S.adm.hit)||s.q>=78&&Math.random()<(s.q-70)/60*mul*.6;
  s.hit=hit;s.daily=Math.round(base*(hit?4:1));
  const f=Math.round((S.fans*.03+20)*(s.q/60)*mul*(hit?3:1));S.fans+=f;S.hype=clamp(S.hype+(hit?30:8),0,100);
  S.stats.best=Math.max(S.stats.best,s.q);log(`🚀 Sortie "${s.t}" ${hit?"— HIT !":""} (+${fmt(f)} fans)`);
@@ -398,12 +400,42 @@ function clash(i){const r=RIVALS[i];if(!useEn(30))return;
    const dmgHim=Math.round(myPow*45),dmgMe=Math.round(hisPow*45);him=Math.max(0,him-dmgHim);me=Math.max(0,me-dmgMe);round++;
    const crowd=dmgHim>dmgMe?"🔥 Le public crie pour toi !":"😮 Il t'a bien répondu…";
    if(round>=3||me<=0||him<=0){end()}else{newOpts();draw(`${crowd} (toi −${dmgMe} · lui −${dmgHim})`)}}})};
- const end=()=>{const win=him<me;
+ const end=()=>{const win=(S.adm&&S.adm.winClash)||him<me;
   if(win){const f=Math.round(Math.min(r.fans,S.fans*2+r.fans*.02)*.06+50);S.fans+=f;S.hype=clamp(S.hype+25,0,100);S.stats.clashW++;if(!S.rivalsBeat.includes(i))S.rivalsBeat.push(i);S.sk.scene=clamp(S.sk.scene+2,0,100);log(`⚔️ Clash GAGNÉ contre ${r.n} (+${fmt(f)} fans)`);
    popup(`<div class="big">🏆</div><h2>TU L'AS DÉTRUIT</h2><div class="mut">${r.n} est KO · +${fmt(f)} fans · hype +25</div><button class="btn g" onclick="document.getElementById('ov').remove()" style="width:100%;margin-top:12px">GG</button>`)}
   else{const f=Math.round(S.fans*.04);S.fans-=f;S.hype=clamp(S.hype-10,0,100);S.stats.clashL++;log(`⚔️ Clash perdu contre ${r.n}`);
    popup(`<div class="big">💀</div><h2>Défaite…</h2><div class="mut">${r.n} t'a eu cette fois · −${fmt(f)} fans. Entraîne ton flow et reviens.</div><button class="btn s" onclick="document.getElementById('ov').remove()" style="width:100%;margin-top:12px">Je reviendrai</button>`)}render()};
  newOpts();draw(`${r.n} lâche sa première phase…`);
+}
+
+/* ---------- Panel admin ---------- */
+function admin(){S.adm=S.adm||{};const A=S.adm;const T=(k,l)=>`<button class="chip ${A[k]?"on":""}" data-tg="${k}">${A[k]?"✅":"⬜"} ${l}</button>`;
+ popup(`<div class="adm"><h2>🛠️ Panel admin</h2><div class="mut">Triche activée = c'est ta partie, fais-toi plaisir 😈</div>
+ <h3>💶 Argent</h3><div class="chips">${[1e3,1e5,1e6,1e9].map(v=>`<button class="chip" data-mo="${v}">+${fmt(v)} €</button>`).join("")}</div>
+ <h3>👥 Fans</h3><div class="chips">${[1e3,1e5,1e6,1e8].map(v=>`<button class="chip" data-fa="${v}">+${fmt(v)}</button>`).join("")}<button class="chip" data-fa="-1">🐐 Direct LÉGENDE</button></div>
+ <h3>⚡ Énergie & hype</h3><div class="chips"><button class="chip" id="aen">⚡ Énergie pleine</button>${T("infEn","Énergie infinie")}<button class="chip" id="ahy">🔥 Hype 100</button></div>
+ <h3>🎤 Skills & matos</h3><div class="chips"><button class="chip" id="ask">📊 Tous les skills à 100</button><button class="chip" id="aup">🛒 Tout le matos au max</button><button class="chip" id="ame">👕 Tout le merch</button><button class="chip" id="ala">🏷️ Tous les artistes au label</button></div>
+ <h3>💿 Musique</h3><div class="chips">${T("q100","Sons toujours 100/100")}${T("hit","Chaque sortie = HIT")}<button class="chip" id="asg">🎁 Me donner un son 100/100</button><button class="chip" id="acer">💿 +1M streams à tous mes sons</button></div>
+ <h3>⚔️ Clashs</h3><div class="chips">${T("winClash","Gagner tous les clashs")}<button class="chip" id="ariv">🏆 Tous les rivaux battus</button></div>
+ <h3>📅 Temps</h3><div class="chips"><button class="chip" id="ad1">⏩ +1 jour</button><button class="chip" id="ad7">⏩ +7 jours</button><button class="chip" id="aev">🎲 Événement maintenant</button></div>
+ <h3>✏️ Profil</h3><div class="chips"><button class="chip" id="anm">Changer de blaze</button>${AVS.map(a=>`<button class="chip" data-av="${a}">${a}</button>`).join("")}</div>
+ <button class="btn g" onclick="document.getElementById('ov').remove()" style="width:100%;margin-top:16px">Fermer</button></div>`);
+ const re=(m)=>{if(m)toast(m);render();admin()};
+ document.querySelectorAll("[data-mo]").forEach(b=>b.onclick=()=>{S.money+=+b.dataset.mo;re("💶 Argent ajouté")});
+ document.querySelectorAll("[data-fa]").forEach(b=>b.onclick=()=>{const v=+b.dataset.fa;if(v<0)S.fans=Math.max(S.fans,1.5e8);else S.fans+=v;re("👥 Fans ajoutés")});
+ document.querySelectorAll("[data-tg]").forEach(b=>b.onclick=()=>{A[b.dataset.tg]=!A[b.dataset.tg];if(b.dataset.tg==="infEn")S.en=enMax();re()});
+ document.querySelectorAll("[data-av]").forEach(b=>b.onclick=()=>{S.av=b.dataset.av;re("Style changé")});
+ $("#aen").onclick=()=>{S.en=enMax();re("⚡ Énergie pleine")};$("#ahy").onclick=()=>{S.hype=100;re("🔥 Hype au max")};
+ $("#ask").onclick=()=>{for(const k in S.sk)S.sk[k]=100;re("📊 Skills à 100")};
+ $("#aup").onclick=()=>{for(const s of SHOP)S.up[s.k]=s.cost.length-1;re("🛒 Matos au max")};
+ $("#ame").onclick=()=>{S.merch=MERCH.map((_,i)=>i);re("👕 Tout le merch en vente")};
+ $("#ala").onclick=()=>{for(const a of ARTISTS)if(!S.label.find(x=>x.n===a.n))S.label.push({n:a.n,ic:a.ic,tal:a.tal,inc:Math.round(a.cost*.006)});re("🏷️ Label complet")};
+ $("#asg").onclick=()=>{const th=pick(THEMES);S.songs.unshift({t:pick(TITLES[th[0]])+" (Admin)",th:th[0],ic:th[1],col:th[2],q:100,streams:0,daily:0,released:false,clip:false,day:S.day});re("🎁 Son 100/100 dans Mes sons")};
+ $("#acer").onclick=()=>{for(const s of S.songs)if(s.released)s.streams+=1e6;re("💿 Streams ajoutés (certifs à la prochaine nuit)")};
+ $("#ariv").onclick=()=>{S.rivalsBeat=RIVALS.map((_,i)=>i);re("🏆 Tous battus")};
+ $("#ad1").onclick=()=>{closePop();sleep()};$("#ad7").onclick=()=>{closePop();for(let i=0;i<7;i++)sleep();closePop()};
+ $("#aev").onclick=()=>{closePop();randomEvent()};
+ $("#anm").onclick=()=>{const n=prompt("Nouveau blaze :",S.name);if(n&&n.trim().length>=2){S.name=n.trim().replace(/[<>]/g,"").slice(0,18);re("✏️ Blaze changé")}};
 }
 
 /* Charts */
