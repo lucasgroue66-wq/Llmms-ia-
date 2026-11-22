@@ -156,8 +156,8 @@ function homeHTML(){const fm=fame();const ap=k=>`<button class="app" data-app="$
  <button class="wid" id="sleepB" style="width:100%;text-align:left"><b>😴 Dormir → jour ${S.day+1}</b><div class="mut" style="color:#ddd">Envoie tes snaps avant, sinon tu perds tes flammes 🔥</div></button></div>
  <div class="dock">${["msg","streamo","snapo","settings"].map(ap).join("")}</div>`}
 function shell(k,body){const a=APPS[k];return `<div class="appv"><div class="ah" style="background:${k==="snapo"?"#fde047;color:#000":"#0e0e14"}"><button class="bk" id="bk">‹</button><span>${a.ic} ${a.n}</span></div><div class="ab">${body}</div></div>`}
-function open(k,re){OPEN=k;S.notifs[k]=0;const el=document.createElement("div");el.id="appwrap";document.querySelectorAll("#appwrap").forEach(e=>e.remove());el.innerHTML=shell(k,VIEWS[k]());$("#scr").appendChild(el);$("#bk").onclick=goHome;(BIND[k]||(()=>{}))();save();sbar()}
-function goHome(){OPEN=null;document.querySelectorAll("#appwrap").forEach(e=>e.remove());render()}
+function open(k,re){if(k==="disko"||OPEN==="disko")syncDisko();OPEN=k;S.notifs[k]=0;const el=document.createElement("div");el.id="appwrap";document.querySelectorAll("#appwrap").forEach(e=>e.remove());el.innerHTML=shell(k,VIEWS[k]());$("#scr").appendChild(el);$("#bk").onclick=goHome;(BIND[k]||(()=>{}))();save();sbar()}
+function goHome(){if(OPEN==="disko")syncDisko();OPEN=null;document.querySelectorAll("#appwrap").forEach(e=>e.remove());render()}
 $("#hb").onclick=goHome;
 /* Démarrage */
 const AVS=["😎","🦊","🐼","👽","🥷","🐸","💀","🤖","🐺","👑"];
@@ -227,12 +227,11 @@ BIND.insta=()=>{let pl=0;document.querySelectorAll("#pl .chip").forEach(b=>b.onc
   log(`📸 Photo à ${p.n} : ${fmt(l)} likes`);toast(`📸 ${fmt(l)} ❤️ · +${fmt(g)} abonnés`);checkV();open("insta",true)}};
 /* ---------- DISKO ---------- */
 const DK=["salut tout le monde","quand le prochain live ?","GG pour hier","qui joue ?","le boss est là 👀","@everyone ???","trop bien ce serveur","on fait un event ?"];
-VIEWS.disko=()=>{const m=S.f.disko;return `<div class="card"><b>🏠 Serveur de ${esc(S.name)}</b><div class="mut">👥 ${fmt(m)} membres · 🟢 ${fmt(Math.round(m*.12)+ (m?1:0))} en ligne</div></div>
- <div class="card"><b># général</b>${m?Array.from({length:5},()=>`<div style="padding:4px 0;font-size:14px"><b style="color:${pick(["#60a5fa","#f472b6","#34d399","#fbbf24"])}">${user()}</b> ${esc(pick(DK))}</div>`).join(""):`<div class="mut">Personne… pour l'instant. Partage le lien !</div>`}</div>
- <div class="opts"><button id="dkl">🔗 Partager le lien partout (10 %)</button><button id="dka">📣 Annonce @everyone (5 %)</button><button id="dke">🎉 Lancer un event (20 %)</button></div>`};
-BIND.disko=()=>{$("#dkl").onclick=()=>{if(!useBat(10,.5))return;const g=Math.round(fame()*rnd(.01,.03)+ri(2,10));S.f.disko+=g;toast(`🔗 +${g} membres`);open("disko",true)};
- $("#dka").onclick=()=>{if(!useBat(5,.3))return;if(!S.f.disko){toast("Personne dans le serveur");return}const g=Math.round(S.f.disko*rnd(.01,.05));S.f.disko+=g;toast(`📣 +${g} membres`);open("disko",true)};
- $("#dke").onclick=()=>{if(!useBat(20,1))return;tapGame("🎉 Event Disko","Anime ton event !",sc=>{const g=Math.round((S.f.disko*.1+20)*(.5+sc));S.f.disko+=g;S.f.streamo+=Math.round(g*.3);log(`🎉 Event Disko : +${fmt(g)} membres`);toast(`🎉 +${fmt(g)} membres`);open("disko",true)})}};
+VIEWS.disko=()=>`<iframe id="dkf" src="/disko.html" style="position:absolute;inset:0;width:100%;height:100%;border:0;background:#313338"></iframe>`;
+BIND.disko=()=>{const ab=document.querySelector("#appwrap .ab");ab.style.padding="0";ab.style.position="relative";ab.style.overflow="hidden"};
+function syncDisko(){try{let d=JSON.parse(localStorage.getItem("disko1")||"null");
+ if(S.name&&(!d||!d.user)){d=Object.assign({v:1,money:150,turbo:false,turboB:0,servers:[],cur:0,adm:{},t:Date.now()},d||{},{user:S.name,av:S.av});localStorage.setItem("disko1",JSON.stringify(d))}if(!d)return;
+ const m=(d.servers||[]).reduce((a,x)=>a+(x.members||0),0);if(m)S.f.disko=m}catch(e){}}
 /* ---------- MESSAGES ---------- */
 VIEWS.msg=()=>S.dms.length?S.dms.map((d,i)=>`<div class="it" ${d.done?'style="opacity:.5"':""}><div class="av">${d.ic}</div><div class="inf"><b>${esc(d.from)}</b><small class="mut">${esc(d.t)}</small></div>${d.done?"":`<button class="btn" data-d="${i}" style="padding:8px 10px">Ouvrir</button>`}</div>`).join(""):`<div class="mut">Aucun message.</div>`;
 BIND.msg=()=>document.querySelectorAll("[data-d]").forEach(b=>b.onclick=()=>{const d=S.dms[+b.dataset.d];const fns=DMF[d.id];
@@ -286,7 +285,7 @@ setInterval(()=>{if(!S.name||$("#ov")||$("#live"))return;const r=Math.random();
  else if(r<.5&&S.f.disko>0)notify("disko","# général",`${user()} : ${pick(DK)}`);
  else if(r<.58)newDM();
  if(!OPEN)render()},22000);
-render();
+syncDisko();render();
 Object.defineProperty(window,"__T",{get:()=>S});
 })();
 </script>
