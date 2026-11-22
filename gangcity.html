@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<title>GANG CITY</title>
+<style>
+:root{--bg:#06060a;--card:#12121b;--card2:#1a1a26;--line:#2a2a3c;--txt:#f3f3fa;--mut:#9393ad;--y:#fbbf24;--r:#ef4444;--g:#22c55e;--p:#a855f7}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;background:var(--bg);color:var(--txt);font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif}
+body{min-height:100vh;padding-bottom:84px;background:radial-gradient(800px 500px at 100% -10%,#3b2405 0,transparent 60%),radial-gradient(700px 400px at -10% 0,#2a0a3a 0,transparent 55%),var(--bg)}
+button{font:inherit;color:inherit;border:0;cursor:pointer}
+.top{position:sticky;top:0;z-index:20;background:rgba(6,6,10,.9);backdrop-filter:blur(10px);border-bottom:1px solid var(--line);padding:10px 14px}
+.row{display:flex;align-items:center;gap:8px}
+.logo{font-weight:900;font-size:19px;letter-spacing:2px;color:var(--y);text-shadow:0 0 14px rgba(251,191,36,.5)}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-top:8px}
+.st{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:6px 8px}
+.st b{display:block;font-size:14px}.st span{font-size:10px;color:var(--mut);text-transform:uppercase}
+main{padding:14px;max-width:760px;margin:0 auto}
+.card{background:linear-gradient(180deg,var(--card),#0c0c13);border:1px solid var(--line);border-radius:16px;padding:14px;margin-bottom:12px}
+h2{margin:0 0 10px;font-size:18px}h3{margin:0 0 8px;font-size:15px}
+.mut{color:var(--mut);font-size:13px}
+.btn{background:linear-gradient(135deg,#f59e0b,var(--y));color:#1a1000;padding:11px 14px;border-radius:12px;font-weight:800}
+.btn.r{background:linear-gradient(135deg,#b91c1c,var(--r));color:#fff}
+.btn.s{background:var(--card2);border:1px solid var(--line);color:var(--txt)}
+.btn.p{background:linear-gradient(135deg,#7c3aed,var(--p));color:#fff}
+.btn:disabled{opacity:.4}
+.map{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.dis{border-radius:16px;padding:12px;text-align:left;border:2px solid var(--line);min-height:112px;position:relative;overflow:hidden}
+.dis .ic{font-size:30px}.dis b{display:block;margin-top:4px}.dis small{color:#ddd;font-size:12px}
+.dis .own{position:absolute;right:8px;top:8px;font-size:11px;padding:2px 7px;border-radius:8px;background:rgba(0,0,0,.45);font-weight:700}
+.dis.me{border-color:var(--y);box-shadow:0 0 18px -6px var(--y)}
+.nav{position:fixed;bottom:0;left:0;right:0;z-index:30;display:flex;background:rgba(5,5,9,.97);border-top:1px solid var(--line);padding:6px 4px calc(6px + env(safe-area-inset-bottom))}
+.nav button{flex:1;background:none;padding:6px 0;border-radius:10px;font-size:10px;color:var(--mut)}
+.nav button div{font-size:20px}.nav button.on{color:var(--y);background:#1a1a26}
+.ovl{position:fixed;inset:0;z-index:50;background:rgba(0,0,0,.8);display:grid;place-items:center;padding:14px}
+.pop{background:linear-gradient(180deg,#191924,#0d0d14);border:1px solid var(--line);border-radius:18px;padding:16px;width:100%;max-width:460px;max-height:90vh;overflow:auto;text-align:center}
+.pop .big{font-size:52px}
+.list .it{display:flex;align-items:center;gap:10px;padding:10px;border-radius:12px;background:var(--card2);margin-bottom:8px;border:1px solid var(--line);text-align:left}
+.list .ic2{width:42px;height:42px;border-radius:12px;display:grid;place-items:center;font-size:22px;flex:none;background:#24243a}
+.list .inf{flex:1;min-width:0}.list .inf b{display:block}
+.tag{display:inline-block;font-size:10px;padding:2px 6px;border-radius:6px;background:#2a2a40;color:var(--y);margin-left:4px}
+.bar2{height:8px;background:#1d1d2c;border-radius:5px;overflow:hidden;margin-top:4px}.bar2 i{display:block;height:100%;background:linear-gradient(90deg,var(--p),var(--y))}
+.chips{display:flex;flex-wrap:wrap;gap:6px;justify-content:center;margin:10px 0}
+.chip{background:var(--card2);border:1px solid var(--line);border-radius:999px;padding:8px 12px;font-size:13px}
+.chip.on{background:var(--y);color:#1a1000;border-color:var(--y);font-weight:800}
+.adm h3{margin:14px 0 6px;text-align:left;font-size:14px;color:var(--y)}.adm .chips{justify-content:flex-start;margin:0}.adm .chip{font-size:12px;padding:7px 10px}
+.toast{position:fixed;left:50%;top:14px;transform:translateX(-50%);z-index:90;background:#1a1a26;border:1px solid var(--y);padding:10px 16px;border-radius:12px;font-weight:700;font-size:14px;box-shadow:0 10px 30px #000;animation:tin .25s;max-width:92vw}
+@keyframes tin{from{opacity:0;transform:translate(-50%,-10px)}}
+input[type=text]{width:100%;background:#09090f;border:1px solid var(--line);color:var(--txt);border-radius:10px;padding:12px;font:inherit;font-size:16px}
+.log{font-size:13px;color:var(--mut);max-height:170px;overflow:auto}.log div{padding:4px 0;border-bottom:1px dashed #22223a}
+.up{color:var(--g)}.dn{color:var(--r)}
+.flex{display:flex;gap:8px;flex-wrap:wrap}
+</style>
+</head>
+<body>
+<div class="top" id="top"></div>
+<main id="main"></main>
+<nav class="nav" id="nav"></nav>
+<script>
+(()=>{
+"use strict";
+const KEY="gangcity1";
+const $=s=>document.querySelector(s);
+const rnd=(a,b)=>a+Math.random()*(b-a), ri=(a,b)=>Math.floor(rnd(a,b+1)), pick=a=>a[Math.floor(Math.random()*a.length)];
+const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const fmt=n=>{n=Math.floor(n);const a=Math.abs(n);if(a>=1e12)return(n/1e12).toFixed(1).replace(".0","")+"T";if(a>=1e9)return(n/1e9).toFixed(1).replace(".0","")+"Md";if(a>=1e6)return(n/1e6).toFixed(1).replace(".0","")+"M";if(a>=1e4)return(n/1e3).toFixed(1).replace(".0","")+"k";return n.toLocaleString("fr-FR")};
+const eur=n=>fmt(n)+" €";
+
+/* ---------- Monde ---------- */
+const CREWS={you:{n:"Toi",col:"#fbbf24"},neu:{n:"Libre",col:"#475569"},vip:{n:"Les Vipères",col:"#16a34a",ic:"🐍"},neo:{n:"Crew Néon",col:"#d946ef",ic:"💜"},lio:{n:"Black Lions",col:"#b45309",ic:"🦁"},hal:{n:"Los Halcones",col:"#dc2626",ic:"🦅"},roi:{n:"Les Rois",col:"#2563eb",ic:"👑"}};
+const DIST=[
+ {n:"Ta rue",ic:"🏚️",def:0,own:"you",m:1},
+ {n:"Vieux Marché",ic:"🧺",def:40,own:"neu",m:1.1},
+ {n:"Cité des Lilas",ic:"🏢",def:150,own:"vip",m:1.2},
+ {n:"Quartier Gare",ic:"🚉",def:450,own:"neu",m:1.35},
+ {n:"Port Néon",ic:"🌃",def:1400,own:"neo",m:1.5},
+ {n:"Centre-Ville",ic:"🏙️",def:4500,own:"lio",m:1.8},
+ {n:"Collines Dorées",ic:"🏞️",def:14000,own:"hal",m:2.2},
+ {n:"Quartier d'Affaires",ic:"💼",def:45000,own:"roi",m:3}
+];
+const BLD=[
+ {n:"Snack",ic:"🍔",c:60,i:1},{n:"Laverie",ic:"🧺",c:500,i:6},{n:"Garage",ic:"🔧",c:3500,i:30},{n:"Boîte de nuit",ic:"🪩",c:22000,i:160},
+ {n:"Salle de concert",ic:"🎤",c:140000,i:900},{n:"Hôtel",ic:"🏨",c:900000,i:5000},{n:"Centre commercial",ic:"🛍️",c:6e6,i:30000},{n:"Gratte-ciel",ic:"🌆",c:4e7,i:180000}
+];
+const CREW=[
+ {n:"Guetteur",ic:"👀",c:40,p:3},{n:"Gros bras",ic:"💪",c:350,p:15},{n:"Lieutenant",ic:"🕶️",c:3000,p:70},
+ {n:"Bras droit",ic:"🎩",c:25000,p:320},{n:"Stratège",ic:"🧠",c:200000,p:1500},{n:"Légende du quartier",ic:"👑",c:1.6e6,p:7000}
+];
+const CARS=[
+ {n:"Scooter",ic:"🛵",c:800,r:2},{n:"Citadine tunée",ic:"🚗",c:9000,r:8},{n:"Berline noire",ic:"🚙",c:60000,r:30},{n:"Muscle car",ic:"🏎️",c:350000,r:90},
+ {n:"SUV blindé",ic:"🚐",c:1.8e6,r:250},{n:"Supercar dorée",ic:"🏁",c:1.2e7,r:900},{n:"Hélico",ic:"🚁",c:8e7,r:3000},{n:"Jet privé",ic:"✈️",c:5e8,r:12000}
+];
+const ITEMS=[
+ {k:"snk",n:"Sneakers rares",ic:"👟",b:150},{k:"wat",n:"Montres",ic:"⌚",b:2500},{k:"con",n:"Consoles",ic:"🎮",b:500},
+ {k:"art",n:"Œuvres d'art",ic:"🖼️",b:40000},{k:"jew",n:"Bijoux",ic:"💍",b:9000}
+];
+const RANKS=[[0,"Petit nouveau","🧢"],[30,"Débrouillard","😎"],[150,"Boss de rue","🕶️"],[600,"Boss de quartier","🎩"],[2500,"Patron de la ville","💼"],[10000,"Roi de Gang City","👑"]];
+const LAWS=[{k:"tax",n:"Taxe business",ic:"💶",d:"+30% de revenus, −réputation chaque minute"},{k:"fete",n:"Fête de la ville",ic:"🎉",d:"+réputation chaque minute, −5% revenus"},{k:"police",n:"Plus de police",ic:"🚓",d:"Les rivaux attaquent 2× moins"}];
+
+/* ---------- État ---------- */
+const NEW=()=>({v:1,name:"",av:"🧢",money:50,rep:0,crew:[0,0,0,0,0,0],dist:DIST.map(d=>({own:d.own,b:[]})),cars:[],inv:{},px:{},mayor:false,camp:null,laws:{},log:[],t:Date.now(),tot:0,adm:{}});
+let S;try{S=JSON.parse(localStorage.getItem(KEY))||NEW()}catch(e){S=NEW()}S=Object.assign(NEW(),S);
+for(const it of ITEMS)if(!S.px[it.k])S.px[it.k]=it.b;
+const save=()=>{S.t=Date.now();try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}};
+const A=()=>S.adm||(S.adm={});
+const log=t=>{const d=new Date();S.log.unshift(`${String(d.getHours()).padStart(2,"0")}:${String(d.getMinutes()).padStart(2,"0")} · ${t}`);S.log=S.log.slice(0,40)};
+let toastT;function toast(t){document.querySelectorAll(".toast").forEach(e=>e.remove());const d=document.createElement("div");d.className="toast";d.innerHTML=t;document.body.appendChild(d);clearTimeout(toastT);toastT=setTimeout(()=>d.remove(),2300)}
+function popup(html,close=true){closePop();const o=document.createElement("div");o.className="ovl";o.id="ov";o.innerHTML='<div class="pop">'+html+'</div>';if(close)o.addEventListener("click",e=>{if(e.target===o)closePop()});document.body.appendChild(o);return o}
+function closePop(){const o=$("#ov");if(o)o.remove()}
+const okBtn=(t="OK",id="")=>`<button class="btn" ${id?`id="${id}"`:`onclick="document.getElementById('ov').remove()"`} style="width:100%;margin-top:12px">${t}</button>`;
+function pay(n){if(S.money<n){toast("💸 Pas assez d'argent");return false}S.money-=n;return true}
+
+/* ---------- Calculs ---------- */
+const bInc=(b,d)=>BLD[b.t].i*Math.pow(1.6,b.l-1)*DIST[d].m;
+const upCost=b=>Math.round(BLD[b.t].c*Math.pow(1.9,b.l));
+function income(){let s=0;S.dist.forEach((d,i)=>{if(d.own==="you")for(const b of d.b)s+=bInc(b,i)});
+ let m=1+S.rep/2000;if(S.mayor)m*=1.25;if(S.laws.tax)m*=1.3;if(S.laws.fete)m*=.95;if(A().x10)m*=10;return s*m}
+const power=()=>S.crew.reduce((a,n,i)=>a+n*CREW[i].p,0)+Math.round(S.rep*.5)+5;
+const crewCost=i=>Math.round(CREW[i].c*Math.pow(1.15,S.crew[i]));
+const owned=()=>S.dist.filter(d=>d.own==="you").length;
+const rank=()=>{let r=RANKS[0];for(const x of RANKS)if(S.rep>=x[0])r=x;if(S.mayor)r=[r[0],"Maire · "+r[1],"🏛️"];return r};
+
+/* ---------- Mini-jeu : tape vite ---------- */
+function tapGame({title,sub,goal=16,onEnd}){
+ if(A().autoWin){onEnd(1);return}
+ let n=0,t0=0,T=null,done=false;
+ popup(`<h2>${title}</h2><div class="mut">${sub}</div><div style="margin-top:8px"><b>Tape le plus vite possible pendant 3 secondes !</b></div><div style="font-size:46px;font-weight:900;margin:8px 0" id="tpn">0</div><div class="mut" id="tpt">Appuie pour commencer</div>
+ <div class="bar2" style="height:12px;margin:10px 0"><i id="tpb" style="width:0"></i></div><button id="tbt" style="width:100%;padding:34px 10px;border-radius:18px;font-size:22px;font-weight:900;background:linear-gradient(135deg,#f59e0b,#ef4444);color:#fff;user-select:none;touch-action:manipulation">👊 TAPE !</button>`,false);
+ const fin=()=>{if(done)return;done=true;clearInterval(T);const sc=Math.min(1,n/goal);$("#tpt").innerHTML=sc>=1?"🔥 PARFAIT":sc>=.6?"✅ Bien":"😅 Trop lent";setTimeout(()=>{closePop();onEnd(sc)},450)};
+ $("#tbt").onpointerdown=e=>{e.preventDefault();if(done)return;if(!t0){t0=performance.now();T=setInterval(()=>{const l=Math.max(0,3-(performance.now()-t0)/1000);const el=$("#tpt");if(el)el.textContent=l.toFixed(1)+" s";if(l<=0)fin()},100)}n++;$("#tpn").textContent=n;$("#tpb").style.width=Math.min(100,n/goal*100)+"%";if(n>=goal)fin()}}
+
+/* ---------- Boucle temps réel ---------- */
+let lastTick=Date.now(),attackT=Date.now()+90000,lawT=Date.now()+60000,mktT=0;
+function tick(){const now=Date.now(),dt=(now-lastTick)/1000;lastTick=now;if(!S.name)return;
+ const g=income()*dt;S.money+=g;S.tot+=g;
+ if(now>mktT){mktT=now+12000;for(const it of ITEMS){S.px[it.k]=Math.round(clamp(S.px[it.k]*rnd(.82,1.22),it.b*.35,it.b*3.2))}if(TAB==="mkt"&&!$("#ov"))render()}
+ if(now>lawT){lawT=now+60000;if(S.laws.tax)S.rep=Math.max(0,S.rep-2);if(S.laws.fete)S.rep+=4}
+ if(now>attackT){attackT=now+rnd(80000,150000)*(S.laws.police?2:1);if(!A().noAtk&&!$("#ov"))attack()}
+ renderTop()}
+setInterval(tick,1000);setInterval(save,5000);
+(function offline(){if(!S.name)return;const sec=Math.min(7200,(Date.now()-S.t)/1000);const g=income()*sec*.5;if(g>1){S.money+=g;S.tot+=g;setTimeout(()=>popup(`<div class="big">💤</div><h2>Pendant ton absence</h2><div class="mut">Tes business ont tourné (${Math.round(sec/60)} min)</div><div style="font-size:26px;font-weight:900;color:var(--y);margin:8px 0">+${eur(g)}</div>${okBtn()}`),300)}})();
+
+/* ---------- Attaques rivales ---------- */
+function attack(){const mine=S.dist.map((d,i)=>({d,i})).filter(x=>x.d.own==="you"&&x.i>0);if(!mine.length)return;
+ const {i}=pick(mine);const rivals=Object.keys(CREWS).filter(k=>!["you","neu"].includes(k));const rv=pick(rivals),R=CREWS[rv];
+ const str=Math.round(DIST[i].def*rnd(.8,1.5)+power()*rnd(.2,.5));
+ popup(`<div class="big">${R.ic}</div><h2>${R.n} veulent ${DIST[i].ic} ${DIST[i].n} !</h2><div class="mut">Leur force : <b class="dn">${fmt(str)}</b> · Ta force : <b class="up">${fmt(power())}</b></div>
+ <div class="list" style="margin-top:10px"><div class="it"><div class="inf"><b>🛡️ Défendre le quartier</b><small class="mut">Mini-jeu : ta force × ton score</small></div><button class="btn r" id="adf">Défendre</button></div>
+ <div class="it"><div class="inf"><b>🤝 Négocier</b><small class="mut">Payer ${eur(Math.max(50,S.money*.15))} pour qu'ils partent</small></div><button class="btn s" id="ang">Payer</button></div></div>`,false);
+ $("#adf").onclick=()=>{closePop();tapGame({title:"🛡️ Défends "+DIST[i].n,sub:`Contre ${R.n}`,onEnd:sc=>{const ok=power()*(.6+sc*.8)>=str;
+  if(ok){S.rep+=Math.round(5+DIST[i].def/40);log(`🛡️ ${DIST[i].n} défendu contre ${R.n}`);popup(`<div class="big">🛡️</div><h2>Quartier défendu !</h2><div class="mut">${R.n} repartent la tête basse · +réputation</div>${okBtn()}`)}
+  else{S.dist[i].own=rv;S.rep=Math.max(0,S.rep-10);log(`💔 ${DIST[i].n} perdu face à ${R.n}`);popup(`<div class="big">💔</div><h2>Quartier perdu…</h2><div class="mut">${R.n} contrôlent ${DIST[i].n}. Tes bâtiments sont toujours là : reprends-le !</div>${okBtn()}`)}render()}})};
+ $("#ang").onclick=()=>{S.money-=Math.max(50,S.money*.15);closePop();log(`🤝 Négociation avec ${R.n}`);toast("🤝 Ils sont partis");render()}}
+
+/* ---------- Rendu ---------- */
+let TAB="map";
+const NAV=[["map","🗺️","Ville"],["crew","👥","Crew"],["car","🚗","Garage"],["mkt","🌙","Marché"],["hall","🏛️","Mairie"]];
+function renderTop(){if(!S.name)return;const r=rank();
+ $("#top").innerHTML=`<div class="row"><div class="logo">GANG CITY</div><button id="adm" style="background:#1a1a26;border:1px solid var(--line);border-radius:8px;padding:2px 8px;font-size:15px">🛠️</button><div style="flex:1"></div><span class="mut">${r[2]} ${r[1]}</span></div>
+ <div class="stats"><div class="st"><span>Argent</span><b>${eur(S.money)}</b></div><div class="st"><span>Par sec</span><b class="up">+${fmt(income())}</b></div><div class="st"><span>Force</span><b>💪 ${fmt(power())}</b></div><div class="st"><span>Réput.</span><b>⭐ ${fmt(S.rep)}</b></div></div>`;
+ $("#adm").onclick=admin}
+function renderNav(){$("#nav").innerHTML=NAV.map(n=>`<button class="${TAB===n[0]?"on":""}" data-t="${n[0]}"><div>${n[1]}</div>${n[2]}</button>`).join("");
+ document.querySelectorAll(".nav button").forEach(b=>b.onclick=()=>{TAB=b.dataset.t;render();window.scrollTo(0,0)})}
+function render(){save();const m=$("#main");
+ if(!S.name){$("#top").innerHTML=`<div class="logo" style="text-align:center">GANG CITY</div>`;$("#nav").innerHTML="";m.innerHTML=startHTML();bindStart();return}
+ renderTop();renderNav();m.innerHTML=({map:mapHTML,crew:crewHTML,car:carHTML,mkt:mktHTML,hall:hallHTML})[TAB]();({map:bindMap,crew:bindCrew,car:bindCar,mkt:bindMkt,hall:bindHall})[TAB]()}
+
+const AVS=["🧢","🕶️","😈","🥷","🦊","🐺","💀","🎩"];
+function startHTML(){return `<div class="card" style="text-align:center"><div style="font-size:60px">🌆</div><h2>GANG CITY</h2><div class="mut">Tu arrives en ville avec 50 € et un petit snack dans ta rue.<br>Monte ton crew, prends les quartiers, deviens <b style="color:var(--y)">maire</b> et le <b style="color:var(--y)">Roi de Gang City</b>.</div></div>
+ <div class="card"><h3>Ton blaze</h3><input type="text" id="nm" maxlength="16" placeholder="Ex : Kaelith"><h3 style="margin-top:12px">Ton style</h3><div class="chips" id="avs">${AVS.map((a,i)=>`<button class="chip ${i?"":"on"}" data-a="${a}" style="font-size:22px">${a}</button>`).join("")}</div>
+ <button class="btn" id="go" style="width:100%;padding:16px;margin-top:8px">🌆 Entrer dans la ville</button></div>`}
+function bindStart(){let av=AVS[0];document.querySelectorAll("#avs .chip").forEach(b=>b.onclick=()=>{document.querySelectorAll("#avs .chip").forEach(x=>x.classList.remove("on"));b.classList.add("on");av=b.dataset.a});
+ $("#go").onclick=()=>{const n=$("#nm").value.trim().replace(/[<>]/g,"");if(n.length<2){toast("Choisis un blaze");return}S.name=n;S.av=av;S.dist[0].b=[{t:0,l:1}];log("Arrivée à Gang City");lastTick=Date.now();render();
+  popup(`<div class="big">🌆</div><h2>Bienvenue ${esc(n)}</h2><div class="mut" style="text-align:left;line-height:1.6">• 🏗️ Construis des business dans tes quartiers : ils rapportent <b>chaque seconde</b>, même quand tu n'es pas là<br>• 👥 Recrute ton <b>crew</b> pour avoir de la force<br>• 🗺️ <b>Prends</b> les quartiers libres ou ceux des rivaux<br>• 🛡️ Défends-toi quand ils attaquent<br>• 🌙 Fais du business au <b>marché de nuit</b><br>• 🏛️ Deviens <b>maire</b></div>${okBtn("Let's go")}`)}}
+
+/* Ville */
+function mapHTML(){return `<div class="card"><div class="row"><div style="font-size:34px">${S.av}</div><div style="flex:1"><b>${esc(S.name)}</b><div class="mut">${rank()[2]} ${rank()[1]} · ${owned()}/8 quartiers</div></div></div></div>
+ <div class="map">${DIST.map((d,i)=>{const s=S.dist[i],c=CREWS[s.own];const me=s.own==="you";return `<button class="dis ${me?"me":""}" data-d="${i}" style="background:linear-gradient(160deg,${c.col}55,#0d0d14 75%)"><span class="own" style="color:${me?"var(--y)":"#fff"}">${me?"⭐ À toi":(c.ic||"")+" "+c.n}</span><div class="ic">${d.ic}</div><b>${d.n}</b><small>${me?`${s.b.length}/4 business · +${fmt(s.b.reduce((a,b)=>a+bInc(b,i),0))}/s`:`🛡️ Défense ${fmt(d.def)}`}</small></button>`}).join("")}</div>
+ <div class="card" style="margin-top:12px"><h3>📰 Journal</h3><div class="log">${S.log.map(l=>`<div>${esc(l)}</div>`).join("")}</div></div>`}
+function bindMap(){document.querySelectorAll("[data-d]").forEach(b=>b.onclick=()=>district(+b.dataset.d))}
+function district(i){const d=DIST[i],s=S.dist[i],c=CREWS[s.own];
+ if(s.own!=="you"){const ok=power()>=d.def*.5;
+  popup(`<div class="big">${d.ic}</div><h2>${d.n}</h2><div class="mut">${s.own==="neu"?"Quartier libre":"Contrôlé par "+c.ic+" "+c.n} · Bonus revenus ×${d.m}</div>
+  <div style="margin:12px 0">🛡️ Défense <b class="dn">${fmt(d.def)}</b> · 💪 Ta force <b class="up">${fmt(power())}</b></div>${s.b.length?`<div class="mut">🏗️ Tes anciens business (${s.b.length}) sont toujours là</div>`:""}
+  ${ok?`<button class="btn r" id="take" style="width:100%;margin-top:8px;padding:14px">👊 Prendre le quartier</button>`:`<div class="mut">🔒 Il te faut au moins ${fmt(d.def*.5)} de force (recrute ton crew)</div>`}${okBtn("Fermer")}`);
+  const t=$("#take");if(t)t.onclick=()=>{closePop();tapGame({title:`👊 ${d.n}`,sub:s.own==="neu"?"Installe-toi dans le quartier":`Fais partir ${c.n}`,onEnd:sc=>{const win=power()*(.5+sc)>=d.def;
+   if(win){s.own="you";S.rep+=Math.round(10+d.def/20);log(`🏴 Tu prends ${d.n}`);popup(`<div class="big">🏴</div><h2>${d.n} est à toi !</h2><div class="mut">Construis des business pour encaisser ×${d.m}</div>${okBtn("Construire","gob")}`,false);$("#gob").onclick=()=>{closePop();district(i)}}
+   else{S.rep=Math.max(0,S.rep-3);popup(`<div class="big">😤</div><h2>Raté</h2><div class="mut">Pas assez de force. Recrute et reviens.</div>${okBtn()}`)}render()}})};return}
+ popup(`<div class="big">${d.ic}</div><h2>${d.n}</h2><div class="mut">⭐ À toi · Bonus ×${d.m}</div><div class="list" style="margin-top:10px">
+  ${s.b.map((b,k)=>`<div class="it"><div class="ic2">${BLD[b.t].ic}</div><div class="inf"><b>${BLD[b.t].n} <span class="tag">niv ${b.l}</span></b><small class="mut">+${fmt(bInc(b,i))}/s</small></div><button class="btn" data-u="${k}" style="padding:8px 10px;font-size:12px">⬆️ ${eur(upCost(b))}</button></div>`).join("")}
+  ${s.b.length<4?`<div class="mut" style="text-align:left;margin:8px 0 4px">🏗️ Construire (${4-s.b.length} place${4-s.b.length>1?"s":""} libre${4-s.b.length>1?"s":""}) :</div>${BLD.map((b,k)=>`<div class="it"><div class="ic2">${b.ic}</div><div class="inf"><b>${b.n}</b><small class="mut">+${fmt(b.i*d.m)}/s</small></div><button class="btn" data-b="${k}" style="padding:8px 10px;font-size:12px">${eur(b.c)}</button></div>`).join("")}`:""}</div>${okBtn("Fermer")}`);
+ document.querySelectorAll("#ov [data-u]").forEach(x=>x.onclick=()=>{const b=s.b[+x.dataset.u];if(!pay(upCost(b)))return;b.l++;S.rep+=1;toast(`⬆️ ${BLD[b.t].n} niveau ${b.l}`);render();district(i)});
+ document.querySelectorAll("#ov [data-b]").forEach(x=>x.onclick=()=>{const k=+x.dataset.b;if(!pay(BLD[k].c))return;s.b.push({t:k,l:1});S.rep+=2+k;log(`🏗️ ${BLD[k].ic} ${BLD[k].n} à ${d.n}`);toast(`🏗️ ${BLD[k].n} construit !`);render();district(i)})}
+
+/* Crew */
+function crewHTML(){return `<div class="card"><h2>👥 Ton crew</h2><div class="mut">Force totale : <b style="color:var(--y)">💪 ${fmt(power())}</b> (crew + réputation)</div>
+ <div class="list" style="margin-top:10px">${CREW.map((c,i)=>`<div class="it"><div class="ic2">${c.ic}</div><div class="inf"><b>${c.n} <span class="tag">×${S.crew[i]}</span></b><small class="mut">+${fmt(c.p)} force chacun</small></div><button class="btn" data-c="${i}" style="padding:8px 10px;font-size:12px">${eur(crewCost(i))}</button></div>`).join("")}</div>
+ <div class="flex"><button class="btn s" id="c10" style="flex:1">Recruter le max possible</button></div></div>`}
+function bindCrew(){document.querySelectorAll("[data-c]").forEach(b=>b.onclick=()=>{const i=+b.dataset.c;if(!pay(crewCost(i)))return;S.crew[i]++;toast(`${CREW[i].ic} +1 ${CREW[i].n}`);render()});
+ $("#c10").onclick=()=>{let n=0;for(let i=CREW.length-1;i>=0;i--){while(S.money>=crewCost(i)&&n<500){S.money-=crewCost(i);S.crew[i]++;n++}}toast(n?`👥 +${n} recrues`:"💸 Pas assez d'argent");render()}}
+
+/* Garage */
+function carHTML(){return `<div class="card"><h2>🚗 Garage</h2><div class="mut">Chaque véhicule donne de la réputation (et la réputation booste tes revenus).</div><div class="list" style="margin-top:10px">${CARS.map((c,i)=>{const own=S.cars.includes(i);return `<div class="it"><div class="ic2">${c.ic}</div><div class="inf"><b>${c.n}${own?'<span class="tag">✔ à toi</span>':""}</b><small class="mut">+${fmt(c.r)} ⭐ réputation</small></div>${own?"":`<button class="btn" data-k="${i}" style="padding:8px 10px;font-size:12px">${eur(c.c)}</button>`}</div>`}).join("")}</div></div>`}
+function bindCar(){document.querySelectorAll("[data-k]").forEach(b=>b.onclick=()=>{const c=CARS[+b.dataset.k];if(!pay(c.c))return;S.cars.push(+b.dataset.k);S.rep+=c.r;log(`${c.ic} Achat : ${c.n}`);popup(`<div class="big">${c.ic}</div><h2>${c.n}</h2><div class="mut">Tout le quartier te regarde passer · +${c.r} ⭐</div>${okBtn("Vroum")}`);render()})}
+
+/* Marché de nuit */
+function mktHTML(){return `<div class="card"><h2>🌙 Marché de nuit</h2><div class="mut">Les prix changent toutes les 12 secondes. Achète bas, revends haut.</div>
+ <div class="list" style="margin-top:10px">${ITEMS.map(it=>{const p=S.px[it.k],q=S.inv[it.k]||0,r=p/it.b;return `<div class="it"><div class="ic2">${it.ic}</div><div class="inf"><b>${it.n} <span class="tag">×${q}</span></b><small class="${r<.8?"up":r>1.3?"dn":"mut"}">${eur(p)} ${r<.8?"· 🟢 pas cher !":r>1.3?"· 🔴 cher : vends !":""}</small></div><div class="flex"><button class="btn" data-by="${it.k}" style="padding:7px 9px;font-size:12px">Acheter</button><button class="btn s" data-sl="${it.k}" style="padding:7px 9px;font-size:12px" ${q?"":"disabled"}>Vendre</button></div></div>`}).join("")}</div>
+ <div class="mut">Astuce : "Acheter" prend 10 % de ton argent, "Vendre" vend tout.</div></div>`}
+function bindMkt(){document.querySelectorAll("[data-by]").forEach(b=>b.onclick=()=>{const k=b.dataset.by,p=S.px[k];const q=Math.max(1,Math.floor(S.money*.1/p));if(!pay(q*p))return;S.inv[k]=(S.inv[k]||0)+q;toast(`🛒 +${q}`);render()});
+ document.querySelectorAll("[data-sl]").forEach(b=>b.onclick=()=>{const k=b.dataset.sl,q=S.inv[k]||0;if(!q)return;const g=q*S.px[k];S.money+=g;S.inv[k]=0;toast(`💶 Vendu : +${eur(g)}`);render()})}
+
+/* Mairie */
+function hallHTML(){const can=owned()>=4&&S.rep>=400;const C=S.camp;
+ if(S.mayor)return `<div class="card" style="text-align:center"><div style="font-size:56px">🏛️</div><h2>Maire ${esc(S.name)}</h2><div class="mut">Toute la ville gagne +25 % grâce à toi.</div></div>
+  <div class="card"><h2>📜 Tes lois</h2><div class="list">${LAWS.map(l=>`<div class="it"><div class="ic2">${l.ic}</div><div class="inf"><b>${l.n}</b><small class="mut">${l.d}</small></div><button class="btn ${S.laws[l.k]?"":"s"}" data-l="${l.k}" style="padding:8px 10px;font-size:12px">${S.laws[l.k]?"✅ Active":"Activer"}</button></div>`).join("")}</div></div>`;
+ return `<div class="card"><h2>🏛️ Élections municipales</h2><div class="mut">Pour te présenter : 4 quartiers et 400 ⭐ réputation.</div>
+ <div style="margin:10px 0">🗺️ ${owned()}/4 quartiers · ⭐ ${fmt(S.rep)}/400</div>
+ ${!can?`<div class="mut">🔒 Pas encore…</div>`:!C?`<button class="btn p" id="run" style="width:100%;padding:14px">🗳️ Lancer ma campagne</button>`:
+ `<div>📊 Sondage : <b style="color:var(--y)">${Math.round(C.poll)}%</b> (il faut 50 % le jour du vote)</div><div class="bar2"><i style="width:${C.poll}%"></i></div>
+  <div class="list" style="margin-top:10px"><div class="it"><div class="ic2">🎤</div><div class="inf"><b>Meeting</b><small class="mut">Mini-jeu · +sondage</small></div><button class="btn" id="mt" style="padding:8px 10px;font-size:12px">Go</button></div>
+  <div class="it"><div class="ic2">🪧</div><div class="inf"><b>Affiches dans toute la ville</b><small class="mut">+${3+owned()}%</small></div><button class="btn" id="af" style="padding:8px 10px;font-size:12px">${eur(campCost())}</button></div>
+  <div class="it"><div class="ic2">📺</div><div class="inf"><b>Débat à la télé</b><small class="mut">Risqué : ±15 %</small></div><button class="btn" id="db" style="padding:8px 10px;font-size:12px">Débattre</button></div></div>
+  <button class="btn p" id="vote" style="width:100%;margin-top:6px;padding:14px">🗳️ Jour du vote</button>`}</div>`}
+const campCost=()=>Math.round(1000+income()*60);
+function bindHall(){document.querySelectorAll("[data-l]").forEach(b=>b.onclick=()=>{const k=b.dataset.l;S.laws[k]=!S.laws[k];toast(S.laws[k]?"📜 Loi activée":"Loi désactivée");render()});
+ const r=$("#run");if(r)r.onclick=()=>{S.camp={poll:20+owned()*3+Math.min(15,S.rep/100)};log("🗳️ Campagne lancée");render()};
+ const mt=$("#mt");if(mt)mt.onclick=()=>tapGame({title:"🎤 Meeting",sub:"Chauffe la foule !",onEnd:sc=>{S.camp.poll=clamp(S.camp.poll+2+sc*7,0,99);toast(`📊 Sondage ${Math.round(S.camp.poll)}%`);render()}});
+ const af=$("#af");if(af)af.onclick=()=>{if(!pay(campCost()))return;S.camp.poll=clamp(S.camp.poll+3+owned(),0,99);toast(`🪧 Sondage ${Math.round(S.camp.poll)}%`);render()};
+ const db=$("#db");if(db)db.onclick=()=>{const g=rnd(-6,15)+S.rep/1000;S.camp.poll=clamp(S.camp.poll+g,0,99);toast(g>=0?`📺 Débat gagné ! +${g.toFixed(0)}%`:`📺 Débat raté… ${g.toFixed(0)}%`);render()};
+ const v=$("#vote");if(v)v.onclick=()=>{const res=clamp(S.camp.poll+rnd(-5,5),1,99);const win=res>=50||A().mayorWin;S.camp=null;
+  if(win){S.mayor=true;S.rep+=300;log(`🏛️ ÉLU MAIRE avec ${Math.round(res)}%`);popup(`<div class="big">🏛️🎉</div><h2>TU ES ÉLU MAIRE !</h2><div class="mut">${Math.round(Math.max(res,50))}% des voix · +25% de revenus pour toujours · tu peux voter des lois</div>${okBtn("Discours de victoire")}`)}
+  else{S.rep=Math.max(0,S.rep-50);log(`🗳️ Battu aux élections (${Math.round(res)}%)`);popup(`<div class="big">📉</div><h2>Battu…</h2><div class="mut">${Math.round(res)}% seulement. Tu pourras retenter.</div>${okBtn()}`)}render()}}
+
+/* ---------- Panel admin ---------- */
+function admin(){const a=A();const T=(k,l)=>`<button class="chip ${a[k]?"on":""}" data-tg="${k}">${a[k]?"✅":"⬜"} ${l}</button>`;
+ popup(`<div class="adm"><h2>🛠️ Panel admin</h2><div class="mut">La ville est à toi 😈</div>
+ <h3>💶 Argent</h3><div class="chips">${[1e3,1e6,1e9,1e12].map(v=>`<button class="chip" data-mo="${v}">+${fmt(v)} €</button>`).join("")}${T("x10","Revenus ×10")}</div>
+ <h3>💪 Force & réputation</h3><div class="chips"><button class="chip" id="acr">👥 +100 de chaque recrue</button><button class="chip" id="arp">⭐ +1000 réputation</button>${T("autoWin","Gagner tous les mini-jeux")}</div>
+ <h3>🗺️ Quartiers</h3><div class="chips"><button class="chip" id="aal">🏴 Prendre toute la ville</button><button class="chip" id="abl">🏗️ Remplir tous mes quartiers</button><button class="chip" id="aup">⬆️ Tous les business +10 niveaux</button></div>
+ <h3>⚔️ Rivaux</h3><div class="chips">${T("noAtk","Plus aucune attaque")}<button class="chip" id="aat">⚔️ Attaque maintenant</button><button class="chip" id="arv">🔄 Rendre les quartiers aux rivaux</button></div>
+ <h3>🚗 Garage & marché</h3><div class="chips"><button class="chip" id="aca">🚗 Tous les véhicules</button><button class="chip" id="alo">📉 Prix au plus bas</button><button class="chip" id="ahi">📈 Prix au plus haut</button></div>
+ <h3>🏛️ Mairie</h3><div class="chips"><button class="chip" id="amy">🏛️ Devenir maire</button>${T("mayorWin","Gagner toutes les élections")}</div>
+ <h3>✏️ Profil</h3><div class="chips"><button class="chip" id="anm">Changer de blaze</button>${AVS.map(x=>`<button class="chip" data-av="${x}">${x}</button>`).join("")}<button class="chip" id="arz" style="color:var(--r)">🗑️ Recommencer à zéro</button></div>
+ <button class="btn" onclick="document.getElementById('ov').remove()" style="width:100%;margin-top:16px">Fermer</button></div>`);
+ const re=m=>{if(m)toast(m);render();admin()};
+ document.querySelectorAll("[data-mo]").forEach(b=>b.onclick=()=>{S.money+=+b.dataset.mo;re("💶 Ajouté")});
+ document.querySelectorAll("[data-tg]").forEach(b=>b.onclick=()=>{a[b.dataset.tg]=!a[b.dataset.tg];re()});
+ document.querySelectorAll("[data-av]").forEach(b=>b.onclick=()=>{S.av=b.dataset.av;re("Style changé")});
+ $("#acr").onclick=()=>{S.crew=S.crew.map(n=>n+100);re("👥 Crew renforcé")};$("#arp").onclick=()=>{S.rep+=1000;re("⭐ +1000")};
+ $("#aal").onclick=()=>{S.dist.forEach(d=>d.own="you");re("🏴 Toute la ville est à toi")};
+ $("#abl").onclick=()=>{S.dist.forEach(d=>{if(d.own==="you")while(d.b.length<4)d.b.push({t:Math.min(7,d.b.length+3),l:1})});re("🏗️ Quartiers remplis")};
+ $("#aup").onclick=()=>{S.dist.forEach(d=>d.b.forEach(b=>b.l+=10));re("⬆️ +10 niveaux")};
+ $("#aat").onclick=()=>{closePop();attack()};$("#arv").onclick=()=>{S.dist.forEach((d,i)=>d.own=DIST[i].own);re("🔄 Ville remise à zéro")};
+ $("#aca").onclick=()=>{CARS.forEach((c,i)=>{if(!S.cars.includes(i)){S.cars.push(i);S.rep+=c.r}});re("🚗 Garage complet")};
+ $("#alo").onclick=()=>{ITEMS.forEach(it=>S.px[it.k]=Math.round(it.b*.35));re("📉 Prix au plus bas")};$("#ahi").onclick=()=>{ITEMS.forEach(it=>S.px[it.k]=Math.round(it.b*3.2));re("📈 Prix au plus haut")};
+ $("#amy").onclick=()=>{S.mayor=true;S.camp=null;re("🏛️ Tu es maire")};
+ $("#anm").onclick=()=>{const n=prompt("Nouveau blaze :",S.name);if(n&&n.trim().length>=2){S.name=n.trim().replace(/[<>]/g,"").slice(0,16);re("✏️ Changé")}};
+ $("#arz").onclick=()=>{if(confirm("Tout effacer ?")){S=NEW();for(const it of ITEMS)S.px[it.k]=it.b;closePop();TAB="map";render()}}}
+
+render();
+Object.defineProperty(window,"__GC",{get:()=>S});
+})();
+</script>
+</body>
+</html>
