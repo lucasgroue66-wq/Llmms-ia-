@@ -165,16 +165,16 @@ function pay(n){if(S.money<n){toast("💸 Pas assez d'argent");return false}S.mo
 const blue=()=>S.verified?' <span class="badge">✓</span>':"";
 
 /* ---------- Mini-jeux ---------- */
-function timingGame({title,sub,rounds=4,speed=1,zone=.22,onEnd}){
- let r=0,score=0,perfect=0,pos=0,dir=1,raf,last=performance.now(),z=0,zw=zone;
- popup(`<h2>${title}</h2><div class="mut">${sub}</div><div class="tbar"><div class="z" id="tz"></div><div class="z p" id="tp"></div><div class="k" id="tk"></div></div><div id="tr" class="mut">Tape dans la zone bleue — rose = parfait</div><button class="btn g" id="tbt" style="width:100%;margin-top:10px;padding:18px">🎬 ACTION</button>`,false);
- const place=()=>{zw=Math.max(.08,zone-r*.015);z=rnd(.05,.95-zw);$("#tz").style.left=z*100+"%";$("#tz").style.width=zw*100+"%";$("#tp").style.left=(z+zw*.35)*100+"%";$("#tp").style.width=zw*.3*100+"%"};
- place();
- const loop=t=>{const dt=(t-last)/1000;last=t;pos+=dir*dt*(.8+r*.12)*speed;if(pos>1){pos=1;dir=-1}if(pos<0){pos=0;dir=1}const k=$("#tk");if(k)k.style.left=pos*100+"%";raf=requestAnimationFrame(loop)};
- raf=requestAnimationFrame(loop);
- $("#tbt").onclick=()=>{const inZ=pos>=z&&pos<=z+zw,pf=pos>=z+zw*.35&&pos<=z+zw*.65;
-  if(pf){score+=1;perfect++;$("#tr").innerHTML="🔥 PARFAIT"}else if(inZ){score+=.65;$("#tr").innerHTML="✅ Bien"}else $("#tr").innerHTML="❌ Raté";
-  r++;if(r>=rounds){cancelAnimationFrame(raf);setTimeout(()=>{closePop();onEnd(score/rounds,perfect)},350)}else place()}}
+function timingGame(o){
+ const {title,sub,rounds=4,onEnd}=o;if(typeof A==="function"&&A().auto){onEnd(1,rounds);return}
+ const GOAL=14+Math.round((o.speed||1)*2);let n=0,t0=0,T=null,done=false;
+ popup(`<h2>${title}</h2><div class="mut">${sub||""}</div><div style="font-size:15px;margin-top:8px"><b>Tape le plus vite possible pendant 3 secondes !</b></div>
+ <div style="font-size:46px;font-weight:900;margin:8px 0" id="tpn">0</div><div class="mut" id="tpt">Appuie pour commencer</div>
+ <div style="height:12px;background:rgba(255,255,255,.08);border-radius:8px;overflow:hidden;margin:10px 0"><i id="tpb" style="display:block;height:100%;width:0;background:linear-gradient(90deg,#22c55e,#facc15);transition:width .1s"></i></div>
+ <button id="tbt" style="width:100%;padding:34px 10px;border-radius:18px;font-size:22px;font-weight:900;background:linear-gradient(135deg,#ff2e55,#8b5cff);color:#fff;user-select:none;touch-action:manipulation">👆 TAPE !</button>`,false);
+ const fin=()=>{if(done)return;done=true;clearInterval(T);const sc=Math.min(1,n/GOAL);setTimeout(()=>{closePop();onEnd(sc>=1?1:sc>=.6?.7+(sc-.6)*.75:sc,Math.round(sc*rounds))},450);$("#tpt").innerHTML=sc>=1?"🔥 PARFAIT":sc>=.6?"✅ Bien joué":"😅 Un peu lent"};
+ $("#tbt").onpointerdown=e=>{e.preventDefault();if(done)return;if(!t0){t0=performance.now();T=setInterval(()=>{const l=Math.max(0,3-(performance.now()-t0)/1000);const el=$("#tpt");if(el)el.textContent=l.toFixed(1)+" s";if(l<=0)fin()},100)}n++;$("#tpn").textContent=n;$("#tpb").style.width=Math.min(100,n/GOAL*100)+"%";if(n>=GOAL)fin()};
+}
 function editGame(onEnd){ // montage : touche les bons plans quand ils s'allument
  const icons=["🎥","✨","😂","🔥","💥","🎵","👀","⚡"];let hits=0,miss=0,n=0,lit=-1,T;const total=10;
  popup(`<h2>✂️ Montage</h2><div class="mut">Touche le plan qui s'allume — vite !</div><div style="font-weight:900;font-size:22px;margin-top:6px" id="ec">0/${total}</div><div class="clips">${icons.map((c,i)=>`<button data-i="${i}">${c}</button>`).join("")}</div>`,false);
