@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<title>Mes jeux — LLMMS</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;background:#07070c;color:#f3f3fa;font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;min-height:100vh;background:radial-gradient(900px 500px at 10% -10%,#4c1d95 0,transparent 60%),radial-gradient(800px 500px at 110% 20%,#9f1239 0,transparent 55%),#07070c}
+main{max-width:980px;margin:0 auto;padding:28px 16px 60px}
+h1{font-size:34px;margin:0;font-weight:900;letter-spacing:1px;background:linear-gradient(90deg,#facc15,#f472b6,#818cf8);-webkit-background-clip:text;color:transparent}
+.sub{color:#a1a1bd;margin:6px 0 22px}
+.wallet{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:22px}
+.wallet div{background:#12121c;border:1px solid #26263a;border-radius:12px;padding:8px 12px;font-size:13px;color:#c7c7dd}
+.wallet b{color:#fff}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(270px,1fr));gap:14px}
+a.g{display:block;text-decoration:none;color:inherit;border-radius:20px;overflow:hidden;background:#12121c;border:1px solid #26263a;transition:transform .15s,box-shadow .15s}
+a.g:hover{transform:translateY(-4px);box-shadow:0 16px 40px -14px rgba(0,0,0,.8)}
+.cov{height:120px;display:grid;place-items:center;font-size:62px;position:relative}
+.cov .nw{position:absolute;top:10px;right:10px;background:#ef4444;color:#fff;font-size:11px;font-weight:900;padding:3px 8px;border-radius:999px}
+.bd{padding:12px 14px 16px}
+.bd b{font-size:17px;display:block}
+.bd p{margin:5px 0 10px;color:#a1a1bd;font-size:13.5px;line-height:1.4}
+.tags{display:flex;gap:6px;flex-wrap:wrap}.tags span{font-size:11px;background:#1e1e2c;color:#c4b5fd;border-radius:6px;padding:3px 7px}
+.prog{font-size:12px;color:#7ee2a4;margin-top:8px;min-height:15px}
+</style>
+</head>
+<body>
+<main>
+<h1>🎮 MES JEUX</h1>
+<div class="sub">Tous les jeux créés sur LLMMS. Chaque jeu se sauvegarde tout seul sur ton appareil, et tous ont un 🛠️ panel admin.</div>
+<div class="wallet" id="wallet"></div>
+<div class="grid" id="grid"></div>
+</main>
+<script>
+const G=[
+ {u:"/empire.html",k:null,t:"EMPIRE MILLIONNAIRE",ic:"💰",bg:"linear-gradient(135deg,#854d0e,#facc15)",d:"Le jeu géant : business, carrière foot, lives, réseaux, Disko, Sonify… deviens milliardaire.",tags:["Idle","Multijoueur","1000 idées"]},
+ {u:"/telephone.html",k:"telephone1",t:"LE TÉLÉPHONE ULTIME",ic:"📱",bg:"linear-gradient(135deg,#6d28d9,#db2777)",d:"Un vrai faux téléphone : Streamo, Snapo, TokTok, Instaflo, Disko, appels, Bourse…",tags:["Simulation","Réseaux"],nw:1},
+ {u:"/disko.html",k:"disko1",t:"DISKO",ic:"💬",bg:"linear-gradient(135deg,#3730a3,#5865f2)",d:"Crée ton serveur : tickets, modos, raids, boosts, Turbo, sondages, events…",tags:["Serveur","Gestion"],nw:1},
+ {u:"/vie.html",k:"vie1",t:"DE ZÉRO À MILLIARDAIRE",ic:"👶",bg:"linear-gradient(135deg,#0891b2,#6366f1)",d:"Une vie entière : école, métier, amour, enfants, président, footballeur… et héritage.",tags:["Life sim"]},
+ {u:"/gangcity.html",k:"gangcity1",t:"GANG CITY",ic:"🌆",bg:"linear-gradient(135deg,#78350f,#f59e0b)",d:"Prends les quartiers, monte ton crew, défends-toi et deviens maire de la ville.",tags:["Tycoon","Temps réel"]},
+ {u:"/footlegende.html",k:"footlegende1",t:"FOOT LÉGENDE",ic:"⚽",bg:"linear-gradient(135deg,#14532d,#22c55e)",d:"Carrière complète : frappes en 3D, mercato, Ballon d'Or, Coupe du monde, entraîneur.",tags:["Sport","Carrière"]},
+ {u:"/rap.html",k:"rapempire1",t:"RAP EMPIRE",ic:"🎤",bg:"linear-gradient(135deg,#581c87,#e11d48)",d:"Beat maker, écriture, studio, clips, concerts, clashs et ton propre label.",tags:["Musique"]},
+ {u:"/viral.html",k:"viral1",t:"VIRAL",ic:"🚀",bg:"linear-gradient(135deg,#0e7490,#fe2c55)",d:"Deviens le n°1 des réseaux : vidéos, tendances, lives, collabs, sponsors.",tags:["Réseaux"]},
+ {u:"/foot.html",k:null,t:"ULTRA CLUB",ic:"🏟️",bg:"linear-gradient(135deg,#065f46,#facc15)",d:"Gère ton club, ouvre des packs de joueurs et gagne la ligue.",tags:["Foot","Packs"]},
+ {u:"/voix.html",k:null,t:"HISTOIRES FLIPPANTES",ic:"👻",bg:"linear-gradient(135deg,#111827,#7f1d1d)",d:"Tes vidéos « règles du numéro inconnu » avec les voix françaises de ton téléphone.",tags:["Vidéos"]}
+];
+const fmt=n=>{n=Math.floor(n||0);const a=Math.abs(n);if(a>=1e9)return(n/1e9).toFixed(1).replace(".0","")+" Md";if(a>=1e6)return(n/1e6).toFixed(1).replace(".0","")+" M";if(a>=1e4)return(n/1e3).toFixed(1).replace(".0","")+"k";return n.toLocaleString("fr-FR")};
+const read=k=>{try{return JSON.parse(localStorage.getItem(k)||"null")}catch(e){return null}};
+function prog(g){const d=g.k&&read(g.k);if(!d)return "";
+ if(g.k==="telephone1"&&d.name)return `@${d.name} · ${fmt(Object.values(d.f||{}).reduce((a,b)=>a+b,0))} followers · ${fmt(d.money)} €`;
+ if(g.k==="disko1"&&d.servers&&d.servers.length)return `${d.servers.length} serveur(s) · ${fmt(d.servers.reduce((a,s)=>a+s.members,0))} membres`;
+ if(g.k==="vie1"&&d.first)return `${d.first} · ${d.age} ans · génération ${d.gen}`;
+ if(g.k==="gangcity1"&&d.name)return `${d.name} · ${fmt(d.money)} €${d.mayor?" · 🏛️ maire":""}`;
+ if(g.k==="footlegende1"&&d.name)return `${d.name} · ${d.age} ans · ${(d.car&&d.car.tro||[]).length} trophées`;
+ if(g.k==="rapempire1"&&d.name)return `${d.name} · ${fmt(d.fans)} fans`;
+ if(g.k==="viral1"&&d.name)return `@${d.name} · ${fmt(d.fol)} abonnés`;
+ return ""}
+document.getElementById("grid").innerHTML=G.map(g=>`<a class="g" href="${g.u}"><div class="cov" style="background:${g.bg}">${g.ic}${g.nw?'<span class="nw">NOUVEAU</span>':""}</div><div class="bd"><b>${g.t}</b><p>${g.d}</p><div class="tags">${g.tags.map(t=>`<span>${t}</span>`).join("")}</div><div class="prog">${prog(g)?"▶ "+prog(g):(g.k?"Pas encore commencé":"▶ Jouer")}</div></div></a>`).join("");
+const tel=read("telephone1");let tot=0;["rapempire1","viral1","gangcity1","vie1","footlegende1","telephone1"].forEach(k=>{const d=read(k);if(d&&d.money>0)tot+=d.money});
+document.getElementById("wallet").innerHTML=`<div>💰 Argent dans tous tes jeux : <b>${fmt(tot)} €</b></div><div>📱 Transfère-le dans la <b>Banque du téléphone</b> (section « Argent de tes autres jeux »)</div>`;
+</script>
+</body>
+</html>
