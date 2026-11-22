@@ -97,7 +97,8 @@ const APPS={
  sonify:{n:"Sonify",ic:"🎧",bg:"linear-gradient(135deg,#16a34a,#065f46)"},
  mode:{n:"Shopping",ic:"👕",bg:"linear-gradient(135deg,#f472b6,#be185d)"},
  market:{n:"Bourse",ic:"📈",bg:"linear-gradient(135deg,#0f172a,#16a34a)"},
- phone:{n:"Téléphone",ic:"📞",bg:"#22c55e"}
+ phone:{n:"Téléphone",ic:"📞",bg:"#22c55e"},
+ promo:{n:"Promo",ic:"📣",bg:"linear-gradient(135deg,#ea580c,#facc15)"}
 };
 const GAMES=[["Fortnite-like","🔫"],["Jeu de foot","⚽"],["Minecraft-like","⛏️"],["Horreur","👻"],["Just Chatting","💬"],["Course","🏎️"],["Roblox-like","🧱"]];
 const NAMES=["sam","lina","yanis","ines","noah","jade","rayan","emma","adam","lou","nael","maya","ilyes","sara","enzo","zoe","kenzo","nour","mehdi","lea"];
@@ -156,7 +157,7 @@ function render(keep){save();sbar();if(!S.name){$("#scr").innerHTML=setupHTML();
  if(OPEN&&!keep)open(OPEN,true)}
 function homeHTML(){const fm=fame();const ap=k=>`<button class="app" data-app="${k}"><div class="ic" style="background:${APPS[k].bg}">${APPS[k].ic}</div>${APPS[k].n}${S.notifs[k]?`<span class="bd">${S.notifs[k]}</span>`:""}</button>`;
  return `<div class="home"><div class="wid"><div class="row"><div style="font-size:40px">${S.av}</div><div style="flex:1"><b>@${esc(S.name)}${S.verified?" ✅":""}</b><div class="mut" style="color:#ddd">${fmt(fm)} followers au total</div></div><div style="text-align:right"><div class="big">${eur(S.money)}</div></div></div></div>
- <div class="apps">${["streamo","snapo","toktok","insta","disko","sonify","mode","market","bank","shop","stats","panel"].map(ap).join("")}</div>
+ <div class="apps">${["streamo","snapo","toktok","insta","disko","sonify","mode","market","promo","bank","shop","stats","panel"].map(ap).join("")}</div>
  <div class="wid" style="margin-top:18px"><b>🔥 Tendance du jour : ${S.trend}</b><div class="mut" style="color:#ddd">Poste sur TokTok avec la tendance = ×3 vues</div></div>
  <button class="wid" id="sleepB" style="width:100%;text-align:left"><b>😴 Dormir → jour ${S.day+1}</b><div class="mut" style="color:#ddd">Envoie tes snaps avant, sinon tu perds tes flammes 🔥</div></button></div>
  <div class="dock">${["phone","msg","snapo","settings"].map(ap).join("")}</div>`}
@@ -228,7 +229,7 @@ VIEWS.insta=()=>`<div class="card" style="text-align:center"><div style="font-si
  <button class="btn full" id="post" style="margin-top:8px;background:linear-gradient(135deg,#f59e0b,#ec4899)">📸 Poster une photo (10 %, 1 h)</button></div>
  <div class="grid3">${S.posts.map(p=>`<div style="background:linear-gradient(135deg,#1f2937,#4c1d95)"><span>${p.ic}</span><small>❤️ ${fmt(p.l)}</small></div>`).join("")}</div>`;
 BIND.insta=()=>{let pl=0;document.querySelectorAll("#pl .chip").forEach(b=>b.onclick=()=>{document.querySelectorAll("#pl .chip").forEach(x=>x.classList.remove("on"));b.classList.add("on");pl=+b.dataset.p});
- $("#post").onclick=()=>{if(!useBat(10,1))return;const p=PLACES[pl];const l=Math.round((S.f.insta*rnd(.08,.2)+ri(5,30))*p.m*(1+(S.style||0)/100)*(1+S.up.cam*.25));const g=Math.round(l*rnd(.05,.15)*p.m);S.f.insta+=g;S.posts.unshift({ic:p.ic,l});S.posts=S.posts.slice(0,30);
+ $("#post").onclick=()=>{if(!useBat(10,1))return;const p=PLACES[pl];const l=Math.round((S.f.insta*rnd(.08,.2)+ri(5,30))*p.m*(1+((S.style||0)+PHONES[S.ph||0].cam*15)/100)*(1+S.up.cam*.25));const g=Math.round(l*rnd(.05,.15)*p.m);S.f.insta+=g;S.posts.unshift({ic:p.ic,l});S.posts=S.posts.slice(0,30);
   log(`📸 Photo à ${p.n} : ${fmt(l)} likes`);toast(`📸 ${fmt(l)} ❤️ · +${fmt(g)} abonnés`);checkV();open("insta",true)}};
 /* ---------- DISKO ---------- */
 const DK=["salut tout le monde","quand le prochain live ?","GG pour hier","qui joue ?","le boss est là 👀","@everyone ???","trop bien ce serveur","on fait un event ?"];
@@ -386,6 +387,53 @@ const _bA=bindAdmin;bindAdmin=(re,inPop)=>{_bA(re,inPop);const on=(id,f)=>{const
  on("crash",()=>{ASSETS.forEach(a=>S.px[a[0]]=+(S.px[a[0]]*.4).toFixed(2));re("📉 Krach !")});on("items",()=>{ITEMS.forEach((x,i)=>{if(!S.items.includes(i)){S.items.push(i);S.style+=x[3]}});re("👕 Tout acheté")})};
 /* appels aléatoires */
 setInterval(()=>{if(!S.name||LOCKED||$("#ov")||$("#live")||$("#call"))return;if(Math.random()<.35)incomingCall(pick(["maman","kenzo","brand","unk","unk"]))},70000);
+
+/* ================= TÉLÉPHONES, FONDS, ICÔNES, PROMO ================= */
+for(const [k,v] of Object.entries({ph:0,phones:[0],wall:0,walls:[0],ipack:0,ipacks:[0],promos:[]}))if(S[k]==null)S[k]=v;
+const PHONES=[{n:"Vieux tel fissuré",ic:"📱",c:0,bat:1,cam:0,fr:"#1d1d24",d:"Batterie normale"},{n:"Zphone 12",ic:"📱",c:400,bat:1.25,cam:1,fr:"#9ca3af",d:"Batterie +25 % · photo +15 %"},{n:"Galaxo S",ic:"📲",c:1800,bat:1.5,cam:2,fr:"#1e3a8a",d:"Batterie +50 % · photo +30 %"},{n:"Pixo Pro",ic:"📸",c:6000,bat:1.7,cam:4,fr:"#e5e7eb",d:"Caméra de fou · photo +60 %"},{n:"Zphone Ultra Titane",ic:"🔱",c:25000,bat:2.2,cam:5,fr:"#a8a29e",d:"Batterie ×2,2 · photo +75 %"},{n:"Zphone Gold Édition",ic:"👑",c:300000,bat:3,cam:7,fr:"#facc15",d:"En or. Batterie ×3 · photo +105 %"}];
+const WALLS=[{n:"Violet néon",c:0,bg:"radial-gradient(120% 80% at 20% 0%,#6d28d9 0,transparent 55%),radial-gradient(100% 70% at 100% 100%,#db2777 0,transparent 55%),#0f0a1f"},
+ {n:"Coucher de soleil",c:80,bg:"linear-gradient(180deg,#f97316,#db2777 45%,#312e81)"},{n:"Océan",c:80,bg:"linear-gradient(180deg,#0ea5e9,#1e3a8a 60%,#020617)"},
+ {n:"Galaxie",c:250,bg:"radial-gradient(2px 2px at 20% 30%,#fff,transparent),radial-gradient(2px 2px at 70% 60%,#fff,transparent),radial-gradient(1px 1px at 40% 80%,#fff,transparent),radial-gradient(1px 1px at 85% 15%,#fff,transparent),radial-gradient(80% 60% at 30% 40%,#7c3aed88,transparent),radial-gradient(60% 50% at 80% 70%,#0ea5e988,transparent),#030014"},
+ {n:"Anime nuit",c:400,bg:"radial-gradient(circle at 75% 18%,#fde68a 0 6%,transparent 6.5%),linear-gradient(180deg,#1e1b4b,#7f1d1d 75%,#111)"},
+ {n:"Matrix",c:600,bg:"repeating-linear-gradient(90deg,#052e16 0 14px,#064e3b 14px 16px),linear-gradient(#000,#022c22)"},
+ {n:"Noir & rouge",c:900,bg:"radial-gradient(90% 60% at 50% 110%,#dc2626,transparent 60%),#050505"},
+ {n:"Or massif",c:15000,bg:"linear-gradient(135deg,#78350f,#facc15 40%,#fef3c7 50%,#ca8a04 60%,#451a03)"}];
+const IPACKS=[{n:"Classique",c:0,css:""},{n:"Néon",c:300,css:"#phone.ip1 .app .ic{box-shadow:0 0 14px #a855f7,0 0 2px #fff inset;border:2px solid #e9d5ff}"},{n:"Ronds",c:200,css:"#phone.ip2 .app .ic{border-radius:50%}"},{n:"Noir & blanc",c:500,css:"#phone.ip3 .app .ic{filter:grayscale(1) contrast(1.2)}"},{n:"Doré",c:8000,css:"#phone.ip4 .app .ic{background:linear-gradient(135deg,#78350f,#facc15,#fef3c7,#ca8a04)!important;box-shadow:0 0 12px #facc1588}"}];
+(()=>{const st=document.createElement("style");st.textContent=IPACKS.map(x=>x.css).join("\n");document.head.appendChild(st)})();
+function applyLook(){const w=document.querySelector(".wall");if(w)w.style.background=WALLS[S.wall].bg;const ph=P();ph.className=S.ipack?"ip"+S.ipack:"";ph.style.borderColor=PHONES[S.ph].fr}
+const _ub=useBat;useBat=(n,h)=>_ub(Math.max(1,Math.round(n/PHONES[S.ph].bat)),h);
+/* Shopping avec onglets */
+let MT="ph";
+VIEWS.mode=()=>{const tabs=[["ph","📱 Téléphones"],["wl","🖼️ Fonds"],["ip","🎨 Icônes"],["cl","👕 Style"]];
+ const row=(own,eq,ic,n,d,c,attr)=>`<div class="it"><div class="av">${ic}</div><div class="inf"><b>${n}${eq?'<span class="tag">✔ utilisé</span>':own?'<span class="tag">à toi</span>':""}</b><small class="mut">${d}</small></div>${eq?"":own?`<button class="btn" ${attr} style="padding:8px 10px">Utiliser</button>`:`<button class="btn" ${attr} style="background:#be185d;padding:8px 10px">${c?eur(c):"Gratuit"}</button>`}</div>`;
+ let body="";
+ if(MT==="ph")body=`<div class="card"><b>📱 Ton téléphone : ${PHONES[S.ph].ic} ${PHONES[S.ph].n}</b><div class="mut">Un meilleur téléphone = plus de batterie et de plus belles photos.</div></div>`+PHONES.map((x,i)=>row(S.phones.includes(i),S.ph===i,`<span style="display:inline-block;width:22px;height:36px;border-radius:6px;border:3px solid ${x.fr};background:#111"></span>`,`${x.ic} ${x.n}`,x.d,x.c,`data-ph="${i}"`)).join("");
+ if(MT==="wl")body=WALLS.map((x,i)=>`<div class="it"><div style="width:44px;height:70px;border-radius:9px;background:${x.bg};flex:none;border:2px solid #333"></div><div class="inf"><b>${x.n}${S.wall===i?'<span class="tag">✔ utilisé</span>':S.walls.includes(i)?'<span class="tag">à toi</span>':""}</b></div>${S.wall===i?"":S.walls.includes(i)?`<button class="btn" data-wl="${i}" style="padding:8px 10px">Utiliser</button>`:`<button class="btn" data-wl="${i}" style="background:#be185d;padding:8px 10px">${x.c?eur(x.c):"Gratuit"}</button>`}</div>`).join("");
+ if(MT==="ip")body=IPACKS.map((x,i)=>row(S.ipacks.includes(i),S.ipack===i,`<span style="font-size:20px">${["📺","💜","⚪","⚫","🟡"][i]}</span>`,`Pack « ${x.n} »`,"Change le look de toutes les icônes",x.c,`data-ip="${i}"`)).join("");
+ if(MT==="cl")body=`<div class="card"><b>✨ Ton style : ${S.style}</b><div class="mut">+${S.style+PHONES[S.ph].cam*15} % de likes sur Instaflo (vêtements + téléphone)</div></div>`+ITEMS.map((x,i)=>`<div class="it"><div class="av">${x[0]}</div><div class="inf"><b>${x[1]}${S.items.includes(i)?'<span class="tag">✔ à toi</span>':""}</b><small class="mut">+${x[3]} style</small></div>${S.items.includes(i)?"":`<button class="btn" data-it="${i}" style="background:#be185d;padding:8px 10px">${eur(x[2])}</button>`}</div>`).join("");
+ return `<div class="chips">${tabs.map(t=>`<button class="chip ${MT===t[0]?"on":""}" data-mt="${t[0]}">${t[1]}</button>`).join("")}</div>${body}`};
+BIND.mode=()=>{document.querySelectorAll("[data-mt]").forEach(b=>b.onclick=()=>{MT=b.dataset.mt;open("mode",true)});
+ const buy=(own,list,i,cost,set,msg)=>{if(!S[list].includes(i)){if(!pay(cost))return;S[list].push(i)}S[set]=i;applyLook();toast(msg);open("mode",true)};
+ document.querySelectorAll("[data-ph]").forEach(b=>b.onclick=()=>{const i=+b.dataset.ph;buy(0,"phones",i,PHONES[i].c,"ph",`${PHONES[i].ic} ${PHONES[i].n} activé !`)});
+ document.querySelectorAll("[data-wl]").forEach(b=>b.onclick=()=>{const i=+b.dataset.wl;buy(0,"walls",i,WALLS[i].c,"wall","🖼️ Fond d'écran changé")});
+ document.querySelectorAll("[data-ip]").forEach(b=>b.onclick=()=>{const i=+b.dataset.ip;buy(0,"ipacks",i,IPACKS[i].c,"ipack","🎨 Icônes changées")});
+ document.querySelectorAll("[data-it]").forEach(b=>b.onclick=()=>{const i=+b.dataset.it,x=ITEMS[i];if(!pay(x[2]))return;S.items.push(i);S.style+=x[3];toast(`${x[0]} ${x[1]} acheté !`);open("mode",true)})};
+/* Promo : payer des gens pour te faire de la pub */
+const PROMOS=[{n:"@petit.créateur",ic:"🙂",f:2000,c:60,dur:20,g:[1,4],pl:["toktok","insta"]},{n:"@lina.vlog",ic:"📸",f:25000,c:400,dur:30,g:[4,12],pl:["insta","snapo"]},{n:"@kuro.gaming",ic:"🎮",f:120000,c:2500,dur:35,g:[12,35],pl:["streamo","disko"]},{n:"@mega.ryan",ic:"🦁",f:2e6,c:30000,dur:45,g:[80,220],pl:["toktok","streamo","insta"]},{n:"@lou.trend",ic:"✨",f:15e6,c:250000,dur:60,g:[500,1500],pl:["toktok","insta","snapo","streamo"]}];
+const PLN={toktok:"TokTok",insta:"Instaflo",snapo:"Snapo",streamo:"Streamo",disko:"Disko"};
+VIEWS.promo=()=>{const act=S.promos.filter(x=>x.until>Date.now());return `<div class="card" style="background:linear-gradient(135deg,#7c2d12,#0e0e14)"><b>📣 Paie des créateurs pour qu'ils parlent de toi</b><div class="mut" style="color:#ddd">Pendant la pub, tu gagnes des abonnés en direct.${act.length?` <b style="color:#86efac">${act.length} pub(s) en cours</b>`:""}</div></div>
+ ${act.map(x=>`<div class="it" style="border-color:#16a34a"><div class="av">${x.ic}</div><div class="inf"><b>${x.n} parle de toi 🔴</b><small class="mut">encore ${Math.ceil((x.until-Date.now())/1000)} s · +${fmt(x.got)} abonnés</small></div></div>`).join("")}
+ ${PROMOS.map((x,i)=>{const c=Math.round(x.c*(1+fame()/200000));return `<div class="it"><div class="av">${x.ic}</div><div class="inf"><b>${x.n} <span class="tag">${fmt(x.f)} abonnés</span></b><small class="mut">${x.pl.map(p=>PLN[p]).join(", ")} · ${x.dur} s</small></div><button class="btn" data-pr="${i}" style="background:#ea580c;padding:8px 10px">${eur(c)}</button></div>`}).join("")}`};
+BIND.promo=()=>document.querySelectorAll("[data-pr]").forEach(b=>b.onclick=()=>{const x=PROMOS[+b.dataset.pr];const c=Math.round(x.c*(1+fame()/200000));if(!pay(c))return;S.promos.push({n:x.n,ic:x.ic,until:Date.now()+x.dur*1000,g:x.g,pl:x.pl,got:0});log(`📣 Pub payée à ${x.n} : ${eur(c)}`);toast(`📣 ${x.n} va parler de toi !`);open("promo",true)});
+setInterval(()=>{if(!S.promos||!S.promos.length)return;const now_=Date.now();let any=false;for(const x of S.promos){if(x.until<now_){if(!x.done){x.done=true;if(!$("#ov")&&!LOCKED)popup(`<div class="bigi">${x.ic}</div><h3>Pub de ${x.n} terminée</h3><div class="mut">+${fmt(x.got)} abonnés grâce à elle 📣</div>${okB()}`)}continue}
+ any=true;const g=Math.round(rnd(x.g[0],x.g[1])*(1+fame()/50000));const pl=pick(x.pl);if(pl==="disko"){try{const d=JSON.parse(localStorage.getItem("disko1"));if(d&&d.servers&&d.servers.length){d.servers[d.cur||0].members+=g;localStorage.setItem("disko1",JSON.stringify(d))}}catch(e){}}S.f[pl]=(S.f[pl]||0)+g;x.got+=g;
+ if(Math.random()<.15)notify(pl==="disko"?"disko":pl,x.n,pick(["a parlé de toi dans sa story 🔥","« allez follow mon pote ! »","a partagé ton profil","t'a mentionné en live"]))}
+ S.promos=S.promos.filter(x=>x.until>now_-1000||!x.done);if(any&&OPEN==="promo"&&!$("#ov"))open("promo",true);checkV()},2000);
+const _ren=render;render=k=>{_ren(k);applyLook()};
+const _ab2=adminBody;adminBody=()=>_ab2().replace(/<\/div>$/,"")+`<h3>📱 Look & pub</h3><div class="chips"><button class="chip" id="allph">📱 Tous les téléphones</button><button class="chip" id="allwl">🖼️ Tous les fonds & icônes</button><button class="chip" id="frpr">📣 Pub de @lou.trend gratuite</button></div></div>`;
+const _bA2=bindAdmin;bindAdmin=(re,inPop)=>{_bA2(re,inPop);const on=(id,f)=>{const e=$("#"+id);if(e)e.onclick=f};
+ on("allph",()=>{S.phones=PHONES.map((_,i)=>i);S.ph=PHONES.length-1;applyLook();re("👑 Zphone Gold activé")});on("allwl",()=>{S.walls=WALLS.map((_,i)=>i);S.ipacks=IPACKS.map((_,i)=>i);re("🖼️ Tout débloqué")});
+ on("frpr",()=>{const x=PROMOS[4];S.promos.push({n:x.n,ic:x.ic,until:Date.now()+x.dur*1000,g:x.g,pl:x.pl,got:0});re("📣 Pub lancée")})};
 syncDisko();render();if(S.name&&S.pin)lockNow();
 Object.defineProperty(window,"__T",{get:()=>S});window.__saveT=()=>{save();sbar()};
 })();
