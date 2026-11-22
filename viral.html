@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<title>VIRAL</title>
+<style>
+:root{--bg:#050507;--card:#111118;--card2:#191922;--line:#272735;--txt:#f4f4fa;--mut:#8f8fa6;--cy:#25f4ee;--pk:#fe2c55;--gold:#ffd23d;--grn:#2ee59d}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;background:var(--bg);color:var(--txt);font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif}
+body{min-height:100vh;padding-bottom:84px}
+button{font:inherit;color:inherit;border:0;cursor:pointer}
+.top{position:sticky;top:0;z-index:20;background:rgba(5,5,7,.9);backdrop-filter:blur(10px);border-bottom:1px solid var(--line);padding:10px 14px}
+.row{display:flex;align-items:center;gap:8px}
+.logo{font-weight:900;font-size:20px;letter-spacing:1px;text-shadow:-2px -1px 0 var(--cy),2px 1px 0 var(--pk)}
+.rk{font-size:12px;color:var(--mut)}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-top:8px}
+.st{background:var(--card);border:1px solid var(--line);border-radius:10px;padding:6px 8px}
+.st b{display:block;font-size:14px}.st span{font-size:10px;color:var(--mut);text-transform:uppercase;letter-spacing:.5px}
+.en{height:6px;background:#1d1d28;border-radius:4px;margin-top:6px;overflow:hidden}.en i{display:block;height:100%;background:linear-gradient(90deg,var(--cy),var(--pk));transition:width .3s}
+main{padding:14px;max-width:760px;margin:0 auto}
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:14px;margin-bottom:12px}
+h2{margin:0 0 10px;font-size:18px}h3{margin:0 0 8px;font-size:15px}
+.mut{color:var(--mut);font-size:13px}
+.btn{background:var(--pk);padding:11px 14px;border-radius:12px;font-weight:700}
+.btn.c{background:var(--cy);color:#001}
+.btn.s{background:var(--card2);border:1px solid var(--line)}
+.btn.g{background:linear-gradient(135deg,var(--cy),var(--pk));color:#fff}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.act{background:var(--card2);border:1px solid var(--line);border-radius:14px;padding:12px;text-align:left}
+.act .ic{font-size:24px}.act b{display:block;margin-top:4px}.act small{color:var(--mut)}
+.nav{position:fixed;bottom:0;left:0;right:0;z-index:30;display:flex;background:#000;border-top:1px solid var(--line);padding:6px 4px calc(6px + env(safe-area-inset-bottom))}
+.nav button{flex:1;background:none;padding:6px 0;border-radius:10px;font-size:10px;color:var(--mut)}
+.nav button div{font-size:20px}
+.nav button.on{color:#fff}
+.nav button.plus div{background:linear-gradient(90deg,var(--cy),var(--pk));border-radius:10px;width:44px;margin:0 auto;font-size:18px;padding:2px 0;color:#fff}
+.vid{position:relative;border-radius:18px;overflow:hidden;margin-bottom:14px;aspect-ratio:9/13;max-height:72vh;display:flex;flex-direction:column;justify-content:flex-end;border:1px solid var(--line)}
+.vid .art{position:absolute;inset:0;display:grid;place-items:center;font-size:110px;filter:drop-shadow(0 10px 30px rgba(0,0,0,.6))}
+.vid .ov2{position:relative;padding:14px;background:linear-gradient(transparent,rgba(0,0,0,.85))}
+.vid .side{position:absolute;right:10px;bottom:90px;display:flex;flex-direction:column;gap:14px;align-items:center;font-size:12px;font-weight:700;text-shadow:0 1px 4px #000}
+.vid .side div{text-align:center}.vid .side span{display:block;font-size:26px}
+.vid .cap{font-size:14px;margin-top:4px;padding-right:60px}
+.vid .snd{font-size:12px;color:#ddd;margin-top:6px}
+.vid.me{border:2px solid var(--cy)}
+.badge{display:inline-block;background:var(--cy);color:#001;border-radius:50%;width:16px;height:16px;font-size:11px;text-align:center;line-height:16px;font-weight:900;vertical-align:middle}
+.ovl{position:fixed;inset:0;z-index:50;background:rgba(0,0,0,.8);display:grid;place-items:center;padding:16px}
+.pop{background:#14141c;border:1px solid var(--line);border-radius:18px;padding:18px;width:100%;max-width:440px;max-height:88vh;overflow:auto;text-align:center}
+.pop .big{font-size:52px}
+.chips{display:flex;flex-wrap:wrap;gap:6px;justify-content:center;margin:10px 0}
+.chip{background:var(--card2);border:1px solid var(--line);border-radius:999px;padding:8px 12px;font-size:13px}
+.chip.on{background:var(--cy);color:#001;border-color:var(--cy);font-weight:700}
+.chip .x{color:var(--gold);font-weight:800;margin-left:4px}
+.toast{position:fixed;left:50%;top:14px;transform:translateX(-50%);z-index:80;background:#191922;border:1px solid var(--cy);padding:10px 16px;border-radius:12px;font-weight:600;font-size:14px;box-shadow:0 10px 30px #000;animation:tin .25s;max-width:92vw}
+@keyframes tin{from{opacity:0;transform:translate(-50%,-10px)}}
+.tbar{position:relative;height:42px;background:#1d1d28;border-radius:12px;overflow:hidden;margin:14px 0}
+.tbar .z{position:absolute;top:0;bottom:0;background:rgba(37,244,238,.3);border-left:2px solid var(--cy);border-right:2px solid var(--cy)}
+.tbar .z.p{background:rgba(254,44,85,.55);border-color:var(--pk)}
+.tbar .k{position:absolute;top:0;bottom:0;width:4px;background:#fff;box-shadow:0 0 10px #fff}
+.clips{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:12px 0}
+.clips button{aspect-ratio:1;border-radius:12px;background:var(--card2);border:2px solid var(--line);font-size:30px;transition:.15s}
+.clips button.lit{border-color:var(--cy);background:#0f3537;transform:scale(1.06)}
+.clips button.ok{border-color:var(--grn);background:#0e3326}
+.clips button.ko{border-color:var(--pk);background:#3a0e18}
+.list .it{display:flex;align-items:center;gap:10px;padding:10px;border-radius:12px;background:var(--card2);margin-bottom:8px;border:1px solid var(--line)}
+.list .ic2{width:46px;height:46px;border-radius:50%;display:grid;place-items:center;font-size:24px;flex:none;background:#24243a}
+.list .inf{flex:1;min-width:0}.list .inf b{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tag{display:inline-block;font-size:10px;padding:2px 6px;border-radius:6px;background:#23233a;color:var(--cy);margin-left:4px}
+.bar2{height:8px;background:#1d1d28;border-radius:5px;overflow:hidden;margin-top:4px}.bar2 i{display:block;height:100%;background:linear-gradient(90deg,var(--cy),var(--pk))}
+input[type=text]{width:100%;background:#0a0a10;border:1px solid var(--line);color:var(--txt);border-radius:10px;padding:12px;font:inherit;font-size:16px}
+.hero{text-align:center;padding:18px 10px}
+.hero .av{font-size:64px}
+.log{font-size:13px;color:var(--mut);max-height:160px;overflow:auto}
+.log div{padding:4px 0;border-bottom:1px dashed #23233a}
+.flex{display:flex;gap:8px;flex-wrap:wrap}
+.opts{display:grid;gap:8px;margin-top:10px}
+.opts button{background:var(--card2);border:1px solid var(--line);padding:12px;border-radius:12px;text-align:left;font-size:14px}
+.cm{display:flex;gap:8px;text-align:left;padding:8px;border-radius:10px;background:var(--card2);margin-bottom:6px;font-size:13px}
+.cm b{font-size:12px;color:var(--mut)}
+.prof{display:grid;grid-template-columns:repeat(3,1fr);gap:4px}
+.prof div{aspect-ratio:3/4;border-radius:8px;display:flex;align-items:flex-end;justify-content:flex-start;padding:4px;font-size:11px;font-weight:700;position:relative;overflow:hidden}
+.prof div span{position:absolute;inset:0;display:grid;place-items:center;font-size:34px}
+.prof div small{position:relative;text-shadow:0 1px 3px #000}
+.livebox{background:#000;border-radius:16px;padding:12px;min-height:230px;text-align:left;position:relative;overflow:hidden}
+.livebox .chat{font-size:13px;height:150px;overflow:hidden;display:flex;flex-direction:column;justify-content:flex-end}
+.livebox .chat div{padding:2px 0;animation:tin .2s}
+.livebox .hd{display:flex;justify-content:space-between;font-size:13px;margin-bottom:8px}
+.lv{background:var(--pk);border-radius:6px;padding:2px 6px;font-weight:800;font-size:11px}
+.gift{position:absolute;right:10px;font-size:34px;animation:up 1.4s forwards}
+@keyframes up{from{bottom:20px;opacity:1}to{bottom:200px;opacity:0}}
+</style>
+</head>
+<body>
+<div class="top" id="top"></div>
+<main id="main"></main>
+<nav class="nav" id="nav"></nav>
+<script>
+(()=>{
+"use strict";
+const KEY="viral1";
+const $=s=>document.querySelector(s);
+const rnd=(a,b)=>a+Math.random()*(b-a), ri=(a,b)=>Math.floor(rnd(a,b+1)), pick=a=>a[Math.floor(Math.random()*a.length)];
+const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const fmt=n=>{n=Math.floor(n);const a=Math.abs(n);if(a>=1e9)return(n/1e9).toFixed(1).replace(".0","")+"Md";if(a>=1e6)return(n/1e6).toFixed(1).replace(".0","")+"M";if(a>=1e4)return(n/1e3).toFixed(1).replace(".0","")+"k";return n.toLocaleString("fr-FR")};
+const eur=n=>fmt(n)+" €";
+
+/* ---------- Données ---------- */
+const RANKS=[[0,"Inconnu","👤"],[1000,"Petit créateur","🌱"],[10000,"Créateur","🎬"],[100000,"Influenceur","✅"],[500000,"Gros influenceur","⭐"],[2e6,"Star du web","🔥"],[10e6,"Méga star","💎"],[50e6,"Icône","👑"],[150e6,"N°1 MONDIAL","🌍"]];
+const FORMATS=[
+ {n:"Danse",ic:"💃",col:"#3a1450",sk:"dance"},{n:"Humour",ic:"😂",col:"#4a3a08",sk:"humour"},{n:"Storytime",ic:"🗣️",col:"#123a4a",sk:"talk"},
+ {n:"Gaming",ic:"🎮",col:"#0f2a50",sk:"edit"},{n:"Réaction",ic:"😱",col:"#4a1020",sk:"talk"},{n:"Tuto",ic:"📚",col:"#103a28",sk:"edit"},
+ {n:"Défi",ic:"🏆",col:"#4a2a08",sk:"dance"},{n:"Vlog",ic:"📸",col:"#2a2a40",sk:"talk"},{n:"Cuisine",ic:"🍳",col:"#4a2010",sk:"edit"},{n:"Sport",ic:"⚽",col:"#0e3a1a",sk:"dance"}
+];
+const SOUNDS=["Phonk nocturne","Son mystère 🎵","Remix accéléré","Beat drill","Piano triste","Son qui buzz","Jingle rétro","Basse 808","Lo-fi chill","Son original"];
+const TRENDS=["#ChallengeDuSiècle","#POV","#AvantAprès","#JourDansMaVie","#ÇaPasse","#Transition","#5SecondesPour","#DisMoiSans","#Glow up","#CapOuPasCap","#Rétro","#ModeHiver","#BestOf","#Fail"];
+const CAPS={
+ Danse:["Nouvelle choré 🔥","Je l'ai apprise en 1h","Essayez de la faire"],Humour:["Quand ta mère dit 'on a à manger à la maison'","Le prof qui...","POV : t'es le seul réveillé"],
+ Storytime:["Le jour où j'ai perdu mes clés…","Ma pire honte","Vous allez pas me croire"],Gaming:["Le clutch de ma vie","Rage quit 😤","Top 1 sans armes"],
+ Réaction:["Je réagis à vos vidéos","C'est quoi ça ???","Mon avis honnête"],Tuto:["3 astuces que personne connaît","Comment faire en 30s","Tuto facile"],
+ Défi:["Défi 24h","Cap ou pas cap ?","Défi impossible"],Vlog:["Une journée avec moi","Je vous emmène","Ma routine"],Cuisine:["Recette en 1 minute","J'ai testé la recette virale","Meilleur goûter"],
+ Sport:["Mon meilleur geste","Entraînement du jour","Le but de l'année"]
+};
+const CREATORS=[
+ {n:"lea.dance",ic:"💃",f:4000,fmt:"Danse"},{n:"tom_lol",ic:"🤡",f:15000,fmt:"Humour"},{n:"nina.vlog",ic:"📸",f:60000,fmt:"Vlog"},
+ {n:"kurogamer",ic:"🎮",f:250000,fmt:"Gaming"},{n:"chef.moussa",ic:"🍳",f:900000,fmt:"Cuisine"},{n:"zoé.storytime",ic:"🗣️",f:3e6,fmt:"Storytime"},
+ {n:"maxfoot10",ic:"⚽",f:9e6,fmt:"Sport"},{n:"lou.trend",ic:"✨",f:25e6,fmt:"Défi"},{n:"mega.ryan",ic:"🦁",f:80e6,fmt:"Réaction"}
+];
+const BRANDS=[
+ {n:"Bulle Soda",ic:"🥤",need:5000,pay:150},{n:"ZapPhone",ic:"📱",need:30000,pay:800},{n:"Sneak'R",ic:"👟",need:120000,pay:3500},
+ {n:"GameNova",ic:"🎮",need:500000,pay:15000},{n:"Glow Cosmetic",ic:"💄",need:2e6,pay:60000},{n:"Volt Auto",ic:"🚗",need:10e6,pay:300000},{n:"Lux Watch",ic:"⌚",need:40e6,pay:1.2e6}
+];
+const SHOP=[
+ {k:"phone",n:"Téléphone",ic:"📱",lv:["Vieux tel fissuré","Tel correct","Tel dernier cri","Caméra pro","Caméra cinéma"],cost:[0,300,2500,20000,180000],d:"+qualité image"},
+ {k:"light",n:"Lumière",ic:"💡",lv:["Lampe de chambre","Ring light","Softbox","Studio lumière","Plateau TV"],cost:[0,120,1500,12000,100000],d:"+qualité et +énergie max"},
+ {k:"edit",n:"Montage",ic:"✂️",lv:["Appli gratuite","Appli payante","PC de montage","Monteur freelance","Équipe de monteurs"],cost:[0,200,3000,25000,220000],d:"+qualité montage"},
+ {k:"manager",n:"Manager",ic:"🕴️",lv:["Toi tout seul","Pote qui aide","Manager","Agence","Agence mondiale"],cost:[0,1500,15000,120000,900000],d:"+sponsors et +vues"}
+];
+const GOOD_C=["Trop drôle 😂😂","T'es trop fort","Je l'ai regardé 10 fois","Abonné direct 🔥","Le meilleur créateur","Partie 2 STP","Mdrrr","Pourquoi c'est si bien","Enfin une vidéo","Légende","Qui est là en 2026 ?","Ça mérite plus de vues"];
+const BAD_C=["Bof…","C'était mieux avant","Copieur","Pas drôle","Encore toi ?","Personne t'a demandé","Mid","Je skip"];
+const LIVE_C=["salut !!","t'es trop fort","dis bonjour à moi","d'où tu viens ?","quel âge t'as","fais une danse","🔥🔥🔥","je suis là depuis le début","GG","c'est quoi ton jeu préféré","t'as un chat ?","lol","❤️❤️","on veut un défi","premier !"];
+const GIFTS=[["🌹",1],["🍩",5],["🎁",20],["🦁",100],["🚀",500],["🌌",2000]];
+const NAMES=["sam","lina","yanis","ines","noah","jade","rayan","emma","adam","lou","nael","maya","ilyes","sara","enzo","zoe","kenzo","nour"];
+const user=()=>pick(NAMES)+ri(1,999);
+
+/* ---------- État ---------- */
+const NEW=()=>({v:1,name:"",av:"😎",day:1,money:20,fol:0,likes:0,views:0,en:100,hype:5,
+ sk:{dance:5,humour:5,talk:5,edit:5},up:{phone:0,light:0,edit:0,manager:0},
+ vids:[],deals:[],collabs:[],log:[],trends:[],verified:false,cancel:0,live:{best:0,coins:0,n:0},stats:{viral:0,best:0}});
+let S;try{S=JSON.parse(localStorage.getItem(KEY))||NEW()}catch(e){S=NEW()}S=Object.assign(NEW(),S);
+const save=()=>{try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}};
+const enMax=()=>100+S.up.light*20;
+const rank=()=>{let r=RANKS[0];for(const x of RANKS)if(S.fol>=x[0])r=x;return r};
+const nextRank=()=>RANKS.find(x=>x[0]>S.fol);
+const log=t=>{S.log.unshift("J"+S.day+" · "+t);S.log=S.log.slice(0,40)};
+function newTrends(){const t=[...TRENDS].sort(()=>Math.random()-.5).slice(0,3).map(x=>({t:x,f:pick(FORMATS).n,m:+rnd(1.6,3.2).toFixed(1)}));t.push({t:"Aucune tendance",f:null,m:1});S.trends=t}
+if(!S.trends.length)newTrends();
+let toastT;function toast(t){document.querySelectorAll(".toast").forEach(e=>e.remove());const d=document.createElement("div");d.className="toast";d.innerHTML=t;document.body.appendChild(d);clearTimeout(toastT);toastT=setTimeout(()=>d.remove(),2300)}
+function popup(html,close=true){closePop();const o=document.createElement("div");o.className="ovl";o.id="ov";o.innerHTML='<div class="pop">'+html+'</div>';if(close)o.addEventListener("click",e=>{if(e.target===o)closePop()});document.body.appendChild(o);return o}
+function closePop(){const o=$("#ov");if(o)o.remove()}
+const okBtn=(t="OK")=>`<button class="btn g" onclick="document.getElementById('ov').remove()" style="width:100%;margin-top:12px">${t}</button>`;
+function useEn(n){if(S.en<n){toast("😴 Plus d'énergie — va dormir");return false}S.en-=n;return true}
+function pay(n){if(S.money<n){toast("💸 Pas assez d'argent");return false}S.money-=n;return true}
+const blue=()=>S.verified?' <span class="badge">✓</span>':"";
+
+/* ---------- Mini-jeux ---------- */
+function timingGame({title,sub,rounds=4,speed=1,zone=.22,onEnd}){
+ let r=0,score=0,perfect=0,pos=0,dir=1,raf,last=performance.now(),z=0,zw=zone;
+ popup(`<h2>${title}</h2><div class="mut">${sub}</div><div class="tbar"><div class="z" id="tz"></div><div class="z p" id="tp"></div><div class="k" id="tk"></div></div><div id="tr" class="mut">Tape dans la zone bleue — rose = parfait</div><button class="btn g" id="tbt" style="width:100%;margin-top:10px;padding:18px">🎬 ACTION</button>`,false);
+ const place=()=>{zw=Math.max(.08,zone-r*.015);z=rnd(.05,.95-zw);$("#tz").style.left=z*100+"%";$("#tz").style.width=zw*100+"%";$("#tp").style.left=(z+zw*.35)*100+"%";$("#tp").style.width=zw*.3*100+"%"};
+ place();
+ const loop=t=>{const dt=(t-last)/1000;last=t;pos+=dir*dt*(.8+r*.12)*speed;if(pos>1){pos=1;dir=-1}if(pos<0){pos=0;dir=1}const k=$("#tk");if(k)k.style.left=pos*100+"%";raf=requestAnimationFrame(loop)};
+ raf=requestAnimationFrame(loop);
+ $("#tbt").onclick=()=>{const inZ=pos>=z&&pos<=z+zw,pf=pos>=z+zw*.35&&pos<=z+zw*.65;
+  if(pf){score+=1;perfect++;$("#tr").innerHTML="🔥 PARFAIT"}else if(inZ){score+=.65;$("#tr").innerHTML="✅ Bien"}else $("#tr").innerHTML="❌ Raté";
+  r++;if(r>=rounds){cancelAnimationFrame(raf);setTimeout(()=>{closePop();onEnd(score/rounds,perfect)},350)}else place()}}
+function editGame(onEnd){ // montage : touche les bons plans quand ils s'allument
+ const icons=["🎥","✨","😂","🔥","💥","🎵","👀","⚡"];let hits=0,miss=0,n=0,lit=-1,T;const total=10;
+ popup(`<h2>✂️ Montage</h2><div class="mut">Touche le plan qui s'allume — vite !</div><div style="font-weight:900;font-size:22px;margin-top:6px" id="ec">0/${total}</div><div class="clips">${icons.map((c,i)=>`<button data-i="${i}">${c}</button>`).join("")}</div>`,false);
+ const btns=[...document.querySelectorAll(".clips button")];
+ const next=()=>{btns.forEach(b=>b.classList.remove("lit"));if(n>=total){clearTimeout(T);setTimeout(()=>{closePop();onEnd(clamp((hits-miss*.5)/total,0,1))},300);return}
+  lit=ri(0,7);btns[lit].classList.add("lit");n++;$("#ec").textContent=`${n}/${total}`;T=setTimeout(()=>{miss++;next()},Math.max(520,900-n*30))};
+ btns.forEach((b,i)=>b.onclick=()=>{if(lit<0)return;clearTimeout(T);if(i===lit){hits++;b.classList.add("ok")}else{miss++;b.classList.add("ko")}setTimeout(()=>b.classList.remove("ok","ko"),200);lit=-1;next()});
+ setTimeout(next,500)}
+
+/* ---------- Rendu ---------- */
+let TAB="feed";
+const NAV=[["feed","🏠","Pour toi"],["trend","🔥","Tendances"],["post","➕",""],["biz","💼","Business"],["me","👤","Profil"]];
+function renderTop(){const r=rank();
+ $("#top").innerHTML=`<div class="row"><div class="logo">VIRAL</div><div style="flex:1"></div><div class="rk">${r[2]} ${r[1]}</div></div>
+ <div class="stats"><div class="st"><span>Abonnés</span><b>${fmt(S.fol)}</b></div><div class="st"><span>Likes</span><b>${fmt(S.likes)}</b></div><div class="st"><span>Argent</span><b>${eur(S.money)}</b></div><div class="st"><span>Jour</span><b>${S.day}</b></div></div>
+ <div class="en"><i style="width:${S.en/enMax()*100}%"></i></div>`}
+function renderNav(){$("#nav").innerHTML=NAV.map(n=>`<button class="${TAB===n[0]?"on":""} ${n[0]==="post"?"plus":""}" data-t="${n[0]}"><div>${n[1]}</div>${n[2]}</button>`).join("");
+ document.querySelectorAll(".nav button").forEach(b=>b.onclick=()=>{TAB=b.dataset.t;render();window.scrollTo(0,0)})}
+function render(){save();renderTop();renderNav();const m=$("#main");
+ if(!S.name){m.innerHTML=startHTML();bindStart();return}
+ m.innerHTML=({feed:feedHTML,trend:trendHTML,post:postHTML,biz:bizHTML,me:meHTML})[TAB]();
+ ({feed:bindFeed,trend:bindTrend,post:bindPost,biz:bindBiz,me:bindMe})[TAB]()}
+
+/* Démarrage */
+const AVS=["😎","🦊","🐼","👽","🥷","🐸","🦄","💀","🤖","🐺"];
+function startHTML(){return `<div class="hero"><div class="av">📱</div><h1 style="margin:8px 0" class="logo">VIRAL</h1><div class="mut">0 abonné. Un vieux téléphone fissuré.<br>Objectif : devenir le <b style="color:var(--cy)">N°1 MONDIAL</b>.</div></div>
+ <div class="card"><h3>Ton pseudo</h3><input type="text" id="nm" maxlength="18" placeholder="@ton.pseudo"><h3 style="margin-top:14px">Ta photo de profil</h3><div class="chips" id="avs">${AVS.map((a,i)=>`<button class="chip ${i?"":"on"}" data-a="${a}" style="font-size:22px">${a}</button>`).join("")}</div>
+ <button class="btn g" id="go" style="width:100%;margin-top:10px;padding:16px">📲 Créer mon compte</button></div>`}
+function bindStart(){let av=AVS[0];document.querySelectorAll("#avs .chip").forEach(b=>b.onclick=()=>{document.querySelectorAll("#avs .chip").forEach(x=>x.classList.remove("on"));b.classList.add("on");av=b.dataset.a});
+ $("#go").onclick=()=>{let n=$("#nm").value.trim().replace(/[^a-zA-Z0-9._àâéèêëîïôûùç-]/g,"").toLowerCase();if(n.length<2){toast("Choisis un pseudo (2 lettres min)");return}S.name=n;S.av=av;log("Compte @"+n+" créé");render();
+  popup(`<div class="big">📲</div><h2>Bienvenue @${esc(n)}</h2><div class="mut" style="text-align:left;line-height:1.6">1. ➕ <b>Poste</b> des vidéos (choisis format, tendance, son)<br>2. 🔥 Suis les <b>tendances</b> du jour = ×3 vues<br>3. 💬 Réponds aux <b>commentaires</b> et gère les <b>haters</b><br>4. 🔴 Fais des <b>lives</b> pour gagner des cadeaux<br>5. 🤝 <b>Collabs</b> et 💼 <b>sponsors</b><br>6. 😴 <b>Dors</b> pour passer au jour suivant</div>${okBtn("Let's go")}`)}}
+
+/* Pour toi (feed) */
+function feedItems(){const mine=S.vids.slice(0,3).map(v=>({me:1,v}));
+ const npc=CREATORS.filter(c=>c.f<S.fol*30+50000).slice(-5).concat(CREATORS.slice(0,2));
+ const seen=new Set();const items=[];
+ for(const c of npc){if(seen.has(c.n))continue;seen.add(c.n);const f=FORMATS.find(x=>x.n===c.fmt);items.push({me:0,c,f,cap:pick(CAPS[c.fmt]),views:Math.round(c.f*rnd(.3,2)),likes:0,snd:pick(SOUNDS),tr:pick(S.trends.filter(x=>x.f)).t})}
+ const out=[];let i=0,j=0;while(i<mine.length||j<items.length){if(j<items.length)out.push(items[j++]);if(i<mine.length)out.push(mine[i++]);if(j<items.length)out.push(items[j++])}
+ return out}
+function vidCard(x){if(x.me){const v=x.v;return `<div class="vid me" style="background:radial-gradient(circle at 50% 35%,${v.col},#000)"><div class="art">${v.ic}</div>
+ <div class="side"><div><span>${S.av}</span></div><div><span>❤️</span>${fmt(v.likes)}</div><div><span>💬</span>${fmt(v.com)}</div><div><span>↗️</span>${fmt(v.sh)}</div></div>
+ <div class="ov2"><b>@${esc(S.name)}${blue()}</b> <span class="tag">TOI</span>${v.viral?'<span class="tag" style="color:var(--pk)">VIRAL</span>':""}<div class="cap">${esc(v.cap)} <b style="color:var(--cy)">${esc(v.tr)}</b></div><div class="snd">🎵 ${esc(v.snd)} · 👁️ ${fmt(v.views)} vues</div></div></div>`}
+ const c=x.c;return `<div class="vid" style="background:radial-gradient(circle at 50% 35%,${x.f.col},#000)"><div class="art">${x.f.ic}</div>
+ <div class="side"><div><span>${c.ic}</span></div><div><span>❤️</span>${fmt(x.views*.08)}</div><div><span>💬</span>${fmt(x.views*.004)}</div><div><span>↗️</span>${fmt(x.views*.002)}</div></div>
+ <div class="ov2"><b>@${esc(c.n)}</b>${c.f>=1e5?' <span class="badge">✓</span>':""}<div class="cap">${esc(x.cap)} <b style="color:var(--cy)">${esc(x.tr)}</b></div><div class="snd">🎵 ${esc(x.snd)} · 👁️ ${fmt(x.views)} vues</div></div></div>`}
+function feedHTML(){const n=nextRank(),r=rank();const prog=n?clamp((S.fol-r[0])/(n[0]-r[0]),0,1):1;
+ return `<div class="card"><div class="row"><div style="font-size:30px">${S.av}</div><div style="flex:1"><b>@${esc(S.name)}${blue()}</b><div class="mut">${r[2]} ${r[1]}</div></div></div>${n?`<div class="bar2" style="margin-top:8px"><i style="width:${prog*100}%"></i></div><div class="mut" style="margin-top:4px">${fmt(S.fol)} / ${fmt(n[0])} abonnés → ${n[2]} ${n[1]}</div>`:""}</div>
+ <div class="grid" style="margin-bottom:12px">
+  <button class="act" data-a="post"><div class="ic">🎬</div><b>Poster</b><small>Nouvelle vidéo</small></button>
+  <button class="act" data-a="live"><div class="ic">🔴</div><b>Live</b><small>Cadeaux · 30⚡</small></button>
+  <button class="act" data-a="train"><div class="ic">🏋️</div><b>S'entraîner</b><small>+skills · 15⚡</small></button>
+  <button class="act" data-a="com"><div class="ic">💬</div><b>Commentaires</b><small>${S.vids.length?"Réponds à tes fans":"Poste d'abord"}</small></button>
+  <button class="act" data-a="sleep" style="grid-column:span 2;background:linear-gradient(135deg,#0b2a33,#330b1a)"><div class="ic">😴</div><b>Dormir → jour suivant</b><small>Tes vidéos continuent de tourner pendant la nuit</small></button>
+ </div>
+ <h3>Pour toi</h3>${feedItems().map(vidCard).join("")}`}
+function bindFeed(){document.querySelectorAll(".act").forEach(b=>b.onclick=()=>{const a=b.dataset.a;
+ if(a==="post"){TAB="post";render()}if(a==="live")goLive();if(a==="train")train();if(a==="com")comments();if(a==="sleep")sleep()})}
+const SKN={dance:"💃 Danse",humour:"😂 Humour",talk:"🗣️ Parler",edit:"✂️ Montage"};
+function train(){popup(`<h2>🏋️ S'entraîner</h2><div class="mut">15⚡ — choisis ton skill</div><div class="opts">${Object.keys(SKN).map(k=>`<button data-k="${k}">${SKN[k]} — ${Math.round(S.sk[k])}/100</button>`).join("")}</div>`);
+ document.querySelectorAll("[data-k]").forEach(b=>b.onclick=()=>{const k=b.dataset.k;if(!useEn(15)){closePop();return}closePop();
+  const done=sc=>{const g=(1+sc*3)*(1-S.sk[k]/140);S.sk[k]=clamp(S.sk[k]+g,0,100);toast(`${SKN[k]} +${g.toFixed(1)}`);render()};
+  if(k==="edit")editGame(done);else timingGame({title:SKN[k],sub:"Entraîne-toi",rounds:4,onEnd:done})})}
+
+/* Poster */
+let P={f:null,t:null,s:null};
+function postHTML(){const tr=S.trends;
+ return `<div class="card"><h2>🎬 Nouvelle vidéo</h2><div class="mut">Choisis bien : suivre la tendance du jour = beaucoup plus de vues.</div>
+ <h3 style="margin-top:12px">1. Format</h3><div class="chips" id="pf">${FORMATS.map((f,i)=>`<button class="chip ${P.f===i?"on":""}" data-i="${i}">${f.ic} ${f.n}</button>`).join("")}</div>
+ <h3>2. Tendance</h3><div class="chips" id="pt">${tr.map((t,i)=>`<button class="chip ${P.t===i?"on":""}" data-i="${i}">${esc(t.t)}${t.f?` <small>(${t.f})</small>`:""}${t.m>1?`<span class="x">×${t.m}</span>`:""}</button>`).join("")}</div>
+ <h3>3. Son</h3><div class="chips" id="ps">${SOUNDS.slice(0,6).map((s,i)=>`<button class="chip ${P.s===i?"on":""}" data-i="${i}">🎵 ${s}</button>`).join("")}</div>
+ <button class="btn g" id="film" style="width:100%;margin-top:8px;padding:15px">🎥 Filmer (25⚡)</button></div>
+ <div class="card"><h3>💡 Astuce</h3><div class="mut">Une tendance marche seulement si ton format correspond (ex : tendance "Danse" → poste une Danse). Le son "Son qui buzz" donne un petit bonus.</div></div>`}
+function bindPost(){for(const [id,key] of [["#pf","f"],["#pt","t"],["#ps","s"]])document.querySelectorAll(id+" .chip").forEach(b=>b.onclick=()=>{P[key]=+b.dataset.i;document.querySelectorAll(id+" .chip").forEach(x=>x.classList.remove("on"));b.classList.add("on")});
+ $("#film").onclick=()=>{if(P.f==null||P.t==null||P.s==null){toast("Choisis format, tendance et son");return}if(!useEn(25))return;
+  const f=FORMATS[P.f],t=S.trends[P.t],snd=SOUNDS[P.s];
+  timingGame({title:`🎥 Tournage — ${f.ic} ${f.n}`,sub:"Les 3 premières secondes décident de tout : réussis ton hook",rounds:4,onEnd:(hook)=>{
+   editGame(ed=>{
+    const skill=S.sk[f.sk]*.5+S.sk.edit*.2;const gear=S.up.phone*4+S.up.light*2+S.up.edit*4;
+    let q=Math.round(clamp(hook*30+ed*20+skill*.6+gear+rnd(-6,6),1,100));
+    const trendOk=t.f===null?1:(t.f===f.n?t.m:1+(t.m-1)*.25);
+    publish(f,t,snd,q,trendOk);P={f:null,t:null,s:null}})}})}}
+function publish(f,t,snd,q,trendOk){
+ const mgr=1+S.up.manager*.2;const soundB=snd==="Son qui buzz"?1.25:1;
+ const reach=(S.fol*rnd(.6,1.4)+ri(80,250))*(q/55)**2*trendOk*soundB*mgr*(.7+S.hype/100*.6)*(S.cancel>0?.4:1);
+ const vChance=clamp((q-60)/120*trendOk*.9,0,.6);const viral=Math.random()<vChance;
+ const views=Math.round(reach*(viral?rnd(8,25):1));
+ const likes=Math.round(views*rnd(.05,.12)*(q/70));const com=Math.round(views*rnd(.003,.008));const sh=Math.round(views*rnd(.001,.004)*(viral?3:1));
+ const fol=Math.round(views*rnd(.008,.02)*(q/70)*(viral?1.6:1));
+ const v={ic:f.ic,col:f.col,fmt:f.n,cap:pick(CAPS[f.n]),tr:t.f?t.t:"#fyp",snd,q,views,likes,com,sh,viral,day:S.day,tail:Math.round(views*(viral?.5:.25)),replied:false};
+ S.vids.unshift(v);S.vids=S.vids.slice(0,30);S.views+=views;S.likes+=likes;S.fol+=fol;S.hype=clamp(S.hype+(viral?35:6),0,100);S.stats.best=Math.max(S.stats.best,views);if(viral)S.stats.viral++;
+ log(`${viral?"🚀 VIRAL":"🎬 Vidéo"} ${f.ic} ${f.n} : ${fmt(views)} vues, +${fmt(fol)} abonnés`);checkVerified();
+ popup(`<div class="big">${viral?"🚀":q>=70?"🔥":q>=45?"👍":"😐"}</div><h2>${viral?"TA VIDÉO EST VIRALE":"Vidéo en ligne"}</h2>
+  <div class="mut">Qualité ${q}/100 · ${trendOk>1.4?"tendance réussie ✅":trendOk>1?"tendance à moitié":"pas de tendance"}</div>
+  <div style="font-size:26px;font-weight:900;margin:10px 0;color:var(--cy)">👁️ ${fmt(views)} vues</div><div class="mut">❤️ ${fmt(likes)} · 💬 ${fmt(com)} · ↗️ ${fmt(sh)} · <b style="color:#fff">+${fmt(fol)} abonnés</b></div>
+  <div class="flex" style="justify-content:center;margin-top:12px"><button class="btn s" onclick="document.getElementById('ov').remove()">OK</button><button class="btn g" id="seecom">💬 Voir les commentaires</button></div>`);
+ $("#seecom").onclick=()=>{closePop();comments(0)};TAB="feed";render()}
+function checkVerified(){if(!S.verified&&S.fol>=100000){S.verified=true;log("✅ Compte certifié");const sh=()=>{if($("#ov")){setTimeout(sh,800);return}popup(`<div class="big">✅</div><h2>COMPTE CERTIFIÉ</h2><div class="mut">Tu as le badge bleu à côté de ton pseudo !</div>${okBtn("Trop bien")}`)};setTimeout(sh,900)}}
+
+/* Commentaires */
+function comments(idx=0){const v=S.vids[idx];if(!v){toast("Poste d'abord une vidéo");return}
+ const cs=[];const nb=Math.min(6,2+Math.floor(Math.log10(v.com+1)));for(let i=0;i<nb;i++){const bad=Math.random()<(v.q<45?.5:.18);cs.push({u:user(),t:bad?pick(BAD_C):pick(GOOD_C),bad,l:ri(1,Math.max(2,v.likes/50))})}
+ popup(`<h2>💬 ${fmt(v.com)} commentaires</h2><div class="mut" style="margin-bottom:8px">${v.ic} ${esc(v.cap)}</div>${cs.map((c,i)=>`<div class="cm"><div style="font-size:20px">${c.bad?"😒":"😊"}</div><div style="flex:1"><b>@${c.u}</b><div>${esc(c.t)}</div><small class="mut">❤️ ${fmt(c.l)}</small></div></div>`).join("")}
+ ${v.replied?`<div class="mut">Tu as déjà répondu sous cette vidéo.</div>`:`<div class="mut" style="margin-top:8px">Comment tu réagis ?</div><div class="opts">
+  <button data-r="0">📌 Épingler le meilleur commentaire</button><button data-r="1">😂 Répondre avec humour à un hater</button><button data-r="2">🎥 Répondre en vidéo (10⚡)</button><button data-r="3">😤 Clasher le hater</button></div>`}${okBtn("Fermer")}`);
+ document.querySelectorAll("[data-r]").forEach(b=>b.onclick=()=>{const r=+b.dataset.r;v.replied=true;closePop();
+  if(r===0){const f=Math.round(v.views*.002+5);S.fol+=f;toast(`📌 Les fans adorent · +${fmt(f)} abonnés`)}
+  if(r===1){if(Math.random()<.5+S.sk.humour/200){const f=Math.round(v.views*.006+10);S.fol+=f;S.hype=clamp(S.hype+8,0,100);toast(`😂 Ta réponse fait rire tout le monde · +${fmt(f)}`)}else toast("😐 Ta blague est tombée à plat")}
+  if(r===2){if(!useEn(10))return;const vv=Math.round(v.views*rnd(.2,.6));const f=Math.round(vv*.015);S.views+=vv;S.fol+=f;toast(`🎥 Ta réponse vidéo fait ${fmt(vv)} vues · +${fmt(f)}`)}
+  if(r===3){if(Math.random()<.4){const f=Math.round(v.views*.01);S.fol+=f;S.hype=clamp(S.hype+15,0,100);toast(`🔥 Le clash buzz · +${fmt(f)}`)}else{const f=Math.round(S.fol*.02);S.fol-=f;S.cancel=Math.max(S.cancel,1);log("😬 Clash mal passé avec un hater");toast(`😬 Les gens te trouvent méchant · −${fmt(f)} abonnés`)}}
+  render()})}
+
+/* Live */
+function goLive(){if(!useEn(30))return;S.live.n++;
+ let t=40,viewers=Math.max(3,Math.round(S.fol*rnd(.005,.02)+ri(2,10))),coins=0,eng=50,ev=null,T;
+ popup(`<div class="livebox"><div class="hd"><span><span class="lv">LIVE</span> @${esc(S.name)}</span><span>👁️ <b id="lvv">${viewers}</b> · ⏱️ <b id="lvt">${t}</b>s</span></div>
+  <div class="chat" id="lch"></div><div id="lgf"></div></div>
+  <div class="mut" style="margin:8px 0">Ambiance : <b id="lve">50</b>% — garde le chat chaud !</div><div class="bar2"><i id="lvb" style="width:50%"></i></div>
+  <div class="opts" style="grid-template-columns:1fr 1fr" id="lact"><button data-l="hi">👋 Dire bonjour</button><button data-l="q">❓ Répondre aux questions</button><button data-l="dance">💃 Danse</button><button data-l="game">🎮 Défi du chat</button></div>
+  <button class="btn s" id="lstop" style="width:100%;margin-top:10px">⏹️ Arrêter le live</button>`,false);
+ const chat=(u,m,col)=>{const c=$("#lch");if(!c)return;const d=document.createElement("div");d.innerHTML=`<b style="color:${col||"var(--mut)"}">${esc(u)}</b> ${esc(m)}`;c.appendChild(d);while(c.children.length>9)c.firstChild.remove()};
+ const gift=()=>{const p=Math.random()*100;let g=GIFTS[0];for(const x of GIFTS)if(p<100/(x[1]**.55)*1.2)g=x;const val=g[1]*(1+viewers/800);coins+=val;chat("@"+user(),`a envoyé ${g[0]}`,"var(--gold)");const el=document.createElement("div");el.className="gift";el.textContent=g[0];el.style.right=ri(10,60)+"px";$("#lgf")?.appendChild(el);setTimeout(()=>el.remove(),1400)};
+ const upd=()=>{$("#lvv").textContent=fmt(viewers);$("#lvt").textContent=t;$("#lve").textContent=Math.round(eng);$("#lvb").style.width=eng+"%"};
+ document.querySelectorAll("[data-l]").forEach(b=>b.onclick=()=>{const a=b.dataset.l;b.disabled=true;setTimeout(()=>{b.disabled=false},2500);
+  const sk={hi:S.sk.talk,q:S.sk.talk,dance:S.sk.dance,game:S.sk.humour}[a];const g=8+sk/8+rnd(0,6);eng=clamp(eng+g,0,100);
+  chat("@"+esc(S.name),{hi:"Salut tout le monde 👋",q:"Je réponds à vos questions !",dance:"Allez une petite danse 💃",game:"Défi : le chat choisit !"}[a],"var(--cy)");
+  if(a==="game"&&Math.random()<.5)for(let i=0;i<3;i++)gift();upd()});
+ T=setInterval(()=>{t--;eng=clamp(eng-rnd(2,4.5),0,100);const g=(eng-40)/100;viewers=Math.max(1,Math.round(viewers*(1+g*.12)+(eng>60?ri(0,3):0)));
+  if(Math.random()<.7)chat("@"+user(),pick(LIVE_C));if(Math.random()<.08+eng/400+viewers/4000)gift();
+  if(eng<12&&Math.random()<.2)chat("@"+user(),"c'est ennuyant…","var(--pk)");upd();if(t<=0)end()},1000);
+ const end=()=>{clearInterval(T);closePop();const money=Math.round(coins*.5);const f=Math.round(viewers*.15*(eng/60)+1);S.money+=money;S.fol+=f;S.live.coins+=coins;S.live.best=Math.max(S.live.best,viewers);S.hype=clamp(S.hype+eng/10,0,100);
+  log(`🔴 Live : ${fmt(viewers)} spectateurs, +${eur(money)}`);popup(`<div class="big">🔴</div><h2>Live terminé</h2><div class="mut">Pic : ${fmt(viewers)} spectateurs · ${Math.round(coins)} 🪙 de cadeaux</div><div style="font-size:24px;font-weight:900;color:var(--cy);margin:8px 0">+${eur(money)} · +${fmt(f)} abonnés</div>${okBtn()}`);render()};
+ $("#lstop").onclick=end;upd()}
+
+/* Nuit */
+function sleep(){let tv=0,tf=0;for(const v of S.vids){if(!v.tail)continue;const g=Math.round(v.tail);v.views+=g;v.likes+=Math.round(g*.08);tv+=g;tf+=Math.round(g*.01*(v.q/70));v.tail=Math.round(v.tail*.45)}
+ const fund=Math.round(tv*.003*(S.fol>=10000?1:0));const dealM=S.deals.reduce((a,d)=>a+(d.daily||0),0);
+ S.views+=tv;S.fol+=tf;S.money+=fund+dealM;S.hype=clamp(S.hype*.9-1,0,100);if(S.cancel>0)S.cancel--;S.day++;S.en=enMax();newTrends();
+ log(`😴 Nuit : +${fmt(tv)} vues, +${fmt(tf)} abonnés${fund?", fonds créateurs +"+eur(fund):""}`);checkVerified();render();
+ toast(`☀️ Jour ${S.day} · nouvelles tendances 🔥`);if(S.day>2&&Math.random()<.4)setTimeout(event,600)}
+function event(){const evs=[
+ ()=>({ic:"😬",t:"Drama : on t'accuse d'avoir copié une vidéo",d:"Ça commence à tourner partout…",a:[["🎥 Vidéo d'explication",()=>{if(Math.random()<.65){const f=Math.round(S.fol*.05+20);S.fol+=f;toast(`🙏 Les gens te croient · +${fmt(f)}`)}else{const f=Math.round(S.fol*.06);S.fol-=f;S.cancel=2;toast(`😰 Ça s'empire · −${fmt(f)}`)}}],["🤐 Ignorer",()=>{const f=Math.round(S.fol*.02);S.fol-=f;toast(`−${fmt(f)} abonnés, mais ça passe`)}]]}),
+ ()=>({ic:"📺",t:"Un média parle de toi",d:"Article : « le créateur qui monte »",a:[["Trop bien",()=>{const f=Math.round(S.fol*.08+100);S.fol+=f;S.hype=clamp(S.hype+20,0,100);toast(`📺 +${fmt(f)} abonnés`)}]]}),
+ ()=>({ic:"🔒",t:"Quelqu'un essaie de pirater ton compte",d:"Un message te demande ton mot de passe pour « vérifier ton compte ».",a:[["🛡️ Ignorer et activer la double sécurité",()=>{S.hype=clamp(S.hype+3,0,100);toast("🛡️ Bien joué : on ne donne JAMAIS son mot de passe")}],["Donner le mot de passe",()=>{const f=Math.round(S.fol*.15);S.fol-=f;log("🔓 Compte piraté");toast(`🔓 Piraté ! −${fmt(f)} abonnés. Ne donne jamais ton mdp !`)}]]}),
+ ()=>({ic:"🎤",t:"Une star a dueté ta vidéo",d:"Ta vidéo repart en flèche !",a:[["🔥",()=>{const v=S.vids[0];if(v){v.tail+=Math.round(v.views*.8+S.fol)}toast("🔥 Ta vidéo repart demain")}]]}),
+ ()=>({ic:"😵",t:"Tu es fatigué de poster tous les jours",d:"Faire une pause ?",a:[["🏖️ Pause d'une journée",()=>{S.en=enMax()+40;toast("😌 Énergie bonus aujourd'hui")}],["💪 Continuer",()=>{S.hype=clamp(S.hype+5,0,100)}]]})];
+ const e=pick(evs)();popup(`<div class="big">${e.ic}</div><h2>${esc(e.t)}</h2><div class="mut">${esc(e.d)}</div><div class="opts">${e.a.map((x,i)=>`<button data-i="${i}">${esc(x[0])}</button>`).join("")}</div>`,false);
+ document.querySelectorAll("#ov [data-i]").forEach(b=>b.onclick=()=>{closePop();e.a[+b.dataset.i][1]();render()})}
+
+/* Tendances + collabs */
+function trendHTML(){
+ return `<div class="card"><h2>🔥 Tendances du jour</h2><div class="mut">Elles changent chaque nuit.</div>${S.trends.filter(t=>t.f).map((t,i)=>`<div class="list"><div class="it"><div class="ic2">${FORMATS.find(f=>f.n===t.f).ic}</div><div class="inf"><b>${esc(t.t)}</b><small class="mut">Format : ${t.f}</small></div><span class="tag" style="color:var(--gold);font-size:14px">×${t.m}</span></div></div>`).join("")}</div>
+ <div class="card"><h2>🤝 Collabs</h2><div class="mut" style="margin-bottom:8px">Une collab = ses abonnés découvrent ton contenu. 35⚡</div><div class="list">${CREATORS.map((c,i)=>{const ok=S.fol>=c.f*.08,done=S.collabs.includes(i);return `<div class="it"><div class="ic2">${c.ic}</div><div class="inf"><b>@${c.n}${c.f>=1e5?' <span class="badge">✓</span>':""}${done?'<span class="tag">✔ fait</span>':""}</b><small class="mut">${fmt(c.f)} abonnés · ${c.fmt}</small></div>${ok?`<button class="btn" data-c="${i}" style="padding:8px 12px;font-size:13px">Collab</button>`:`<small class="mut">🔒 ${fmt(c.f*.08)}</small>`}</div>`}).join("")}</div></div>
+ <div class="card"><h2>🏆 Classement</h2>${[...CREATORS.map(c=>({n:c.n,ic:c.ic,f:c.f})),{n:S.name,ic:S.av,f:S.fol,me:1}].sort((a,b)=>b.f-a.f).map((a,i)=>`<div class="list"><div class="it" style="${a.me?"border-color:var(--cy)":""}"><b style="width:22px;color:var(--cy)">${i+1}</b><div class="ic2" style="width:34px;height:34px;font-size:18px">${a.ic}</div><div class="inf"><b>@${esc(a.n)}</b></div><small>${fmt(a.f)}</small></div></div>`).join("")}</div>`}
+function bindTrend(){document.querySelectorAll("[data-c]").forEach(b=>b.onclick=()=>{const i=+b.dataset.c,c=CREATORS[i];if(!useEn(35))return;
+ timingGame({title:`🤝 Collab avec @${c.n}`,sub:"Tournez ensemble — reste synchro",rounds:5,onEnd:sc=>{const f=Math.round(c.f*rnd(.01,.03)*(.4+sc)*(S.collabs.includes(i)?.4:1)+20);const v=Math.round(c.f*rnd(.2,.6)*(.5+sc));S.fol+=f;S.views+=v;S.hype=clamp(S.hype+15,0,100);if(!S.collabs.includes(i))S.collabs.push(i);
+  log(`🤝 Collab avec @${c.n} : +${fmt(f)} abonnés`);popup(`<div class="big">🤝</div><h2>Collab en ligne</h2><div class="mut">avec @${c.n} ${c.ic}</div><div style="font-size:24px;font-weight:900;color:var(--cy);margin:8px 0">👁️ ${fmt(v)} vues · +${fmt(f)} abonnés</div>${okBtn()}`);checkVerified();render()}})})}
+
+/* Business */
+function bizHTML(){
+ return `<div class="card"><h2>💰 Fonds créateurs</h2><div class="mut">${S.fol>=10000?"✅ Activé : tu gagnes de l'argent sur les vues de chaque nuit.":"🔒 Débloqué à 10 000 abonnés."}</div></div>
+ <div class="card"><h2>🤝 Sponsors</h2><div class="list">${BRANDS.map((b,i)=>{const own=S.deals.find(d=>d.i===i),ok=S.fol>=b.need;const p=Math.round(b.pay*(1+S.up.manager*.3));return `<div class="it"><div class="ic2">${b.ic}</div><div class="inf"><b>${b.n}${own?'<span class="tag">✔ partenaire</span>':""}</b><small class="mut">${ok?(own?`+${eur(own.daily)}/jour`:`Vidéo sponso : ${eur(p)} + ${eur(p*.05)}/jour`):`🔒 ${fmt(b.need)} abonnés`}</small></div>${ok&&!own?`<button class="btn c" data-b="${i}" style="padding:8px 10px;font-size:13px">Signer</button>`:""}</div>`}).join("")}</div></div>
+ <div class="card"><h2>🛒 Matos</h2><div class="list">${SHOP.map(s=>{const l=S.up[s.k],nx=s.cost[l+1];return `<div class="it"><div class="ic2">${s.ic}</div><div class="inf"><b>${s.n} <span class="tag">${s.lv[l]}</span></b><small class="mut">${s.d}</small></div>${nx!=null?`<button class="btn c" data-u="${s.k}" style="padding:8px 10px;font-size:13px">${eur(nx)}</button>`:`<span class="tag">MAX</span>`}</div>`}).join("")}</div></div>`}
+function bindBiz(){
+ document.querySelectorAll("[data-b]").forEach(x=>x.onclick=()=>{const i=+x.dataset.b,b=BRANDS[i];if(!useEn(20))return;const p=Math.round(b.pay*(1+S.up.manager*.3));
+  timingGame({title:`${b.ic} Vidéo sponso ${b.n}`,sub:"Présente le produit sans que ce soit gênant",rounds:4,onEnd:sc=>{const money=Math.round(p*(.6+sc*.6));S.money+=money;S.deals.push({i,daily:Math.round(p*.05)});const f=Math.round(S.fol*(sc>.6?.01:-.01));S.fol+=f;
+   log(`${b.ic} Partenariat ${b.n} : +${eur(money)}`);popup(`<div class="big">${b.ic}</div><h2>Partenariat signé</h2><div style="font-size:24px;font-weight:900;color:var(--grn);margin:8px 0">+${eur(money)}</div><div class="mut">${sc>.6?"Vidéo réussie, tes abonnés ont aimé":"Un peu forcé… certains abonnés sont partis"}</div>${okBtn()}`);render()}})});
+ document.querySelectorAll("[data-u]").forEach(b=>b.onclick=()=>{const s=SHOP.find(x=>x.k===b.dataset.u),l=S.up[s.k];if(!pay(s.cost[l+1]))return;S.up[s.k]++;log(`🛒 ${s.n} : ${s.lv[l+1]}`);toast(`${s.ic} ${s.lv[l+1]} !`);render()})}
+
+/* Profil */
+function meHTML(){
+ return `<div class="card hero"><div class="av">${S.av}</div><h2 style="margin:6px 0">@${esc(S.name)}${blue()}</h2><div class="mut">${rank()[2]} ${rank()[1]}</div>
+ <div class="flex" style="justify-content:space-around;margin-top:12px"><div><b>${fmt(S.fol)}</b><div class="mut">abonnés</div></div><div><b>${fmt(S.likes)}</b><div class="mut">likes</div></div><div><b>${fmt(S.views)}</b><div class="mut">vues</div></div></div></div>
+ <div class="card"><h3>🎬 Mes vidéos (${S.vids.length})</h3>${S.vids.length?`<div class="prof">${S.vids.map((v,i)=>`<div data-v="${i}" style="background:radial-gradient(circle,${v.col},#000)"><span>${v.ic}</span><small>▶ ${fmt(v.views)}${v.viral?" 🚀":""}</small></div>`).join("")}</div>`:`<div class="mut">Aucune vidéo.</div>`}</div>
+ <div class="card"><h3>📊 Skills</h3>${Object.keys(SKN).map(k=>`<div style="margin-bottom:8px"><div class="row"><span style="font-size:13px">${SKN[k]}</span><div style="flex:1"></div><b style="font-size:13px">${Math.round(S.sk[k])}/100</b></div><div class="bar2"><i style="width:${S.sk[k]}%"></i></div></div>`).join("")}</div>
+ <div class="card"><h3>🏆 Stats</h3><div class="mut" style="line-height:1.8">🚀 Vidéos virales : ${S.stats.viral}<br>👁️ Record : ${fmt(S.stats.best)} vues<br>🔴 Lives : ${S.live.n} · record ${fmt(S.live.best)} spectateurs<br>🤝 Collabs : ${S.collabs.length}</div></div>
+ <div class="card"><h3>📰 Journal</h3><div class="log">${S.log.map(l=>`<div>${esc(l)}</div>`).join("")}</div></div>
+ <div style="text-align:center"><button class="btn s" id="reset" style="font-size:12px;padding:6px 10px">Recommencer à zéro</button></div>`}
+function bindMe(){document.querySelectorAll("[data-v]").forEach(b=>b.onclick=()=>comments(+b.dataset.v));
+ $("#reset").onclick=()=>{popup(`<h2>Tout effacer ?</h2><div class="flex" style="justify-content:center;margin-top:12px"><button class="btn s" onclick="document.getElementById('ov').remove()">Non</button><button class="btn" id="rz">Oui</button></div>`);$("#rz").onclick=()=>{S=NEW();newTrends();closePop();TAB="feed";render()}}}
+
+render();
+Object.defineProperty(window,"__VI",{get:()=>S});
+})();
+</script>
+</body>
+</html>
