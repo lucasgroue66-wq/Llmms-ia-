@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<title>DE ZÉRO À MILLIARDAIRE</title>
+<style>
+:root{--bg:#070910;--card:#111522;--card2:#181d2e;--line:#262d45;--txt:#f1f4ff;--mut:#929bbd;--a:#6366f1;--b:#22d3ee;--g:#22c55e;--y:#facc15;--r:#ef4444;--p:#ec4899}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;background:var(--bg);color:var(--txt);font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif}
+body{min-height:100vh;padding-bottom:150px;background:radial-gradient(900px 500px at 50% -20%,#1e1b4b 0,transparent 60%),var(--bg)}
+button{font:inherit;color:inherit;border:0;cursor:pointer}
+.top{position:sticky;top:0;z-index:20;background:rgba(7,9,16,.92);backdrop-filter:blur(10px);border-bottom:1px solid var(--line);padding:10px 14px}
+.row{display:flex;align-items:center;gap:8px}
+.logo{font-weight:900;font-size:15px;letter-spacing:1px;background:linear-gradient(90deg,var(--b),var(--a),var(--p));-webkit-background-clip:text;color:transparent}
+.who{display:flex;align-items:center;gap:10px;margin-top:8px}
+.who .em{font-size:38px}.who b{font-size:16px}
+.bars{display:grid;grid-template-columns:1fr 1fr;gap:4px 12px;margin-top:8px}
+.bar{font-size:11px;color:var(--mut)}.bar div{height:7px;background:#1c2238;border-radius:5px;overflow:hidden;margin-top:2px}.bar i{display:block;height:100%;border-radius:5px;transition:width .3s}
+main{padding:14px;max-width:760px;margin:0 auto}
+.card{background:linear-gradient(180deg,var(--card),#0c0f19);border:1px solid var(--line);border-radius:16px;padding:14px;margin-bottom:12px}
+h2{margin:0 0 10px;font-size:18px}h3{margin:0 0 8px;font-size:15px}
+.mut{color:var(--mut);font-size:13px}
+.btn{background:linear-gradient(135deg,var(--a),#818cf8);padding:11px 14px;border-radius:12px;font-weight:800;color:#fff}
+.btn.g{background:linear-gradient(135deg,#16a34a,var(--g))}.btn.y{background:linear-gradient(135deg,#eab308,var(--y));color:#1a1400}.btn.r{background:var(--r)}
+.btn.s{background:var(--card2);border:1px solid var(--line)}
+.btn:disabled{opacity:.4}
+.age{position:fixed;left:50%;transform:translateX(-50%);bottom:74px;z-index:31;width:min(92vw,420px);padding:16px;border-radius:18px;font-size:19px;font-weight:900;background:linear-gradient(135deg,var(--g),#16a34a);color:#03140a;box-shadow:0 12px 30px -8px var(--g)}
+.nav{position:fixed;bottom:0;left:0;right:0;z-index:30;display:flex;background:rgba(6,8,14,.97);border-top:1px solid var(--line);padding:6px 4px calc(6px + env(safe-area-inset-bottom))}
+.nav button{flex:1;background:none;padding:6px 0;border-radius:10px;font-size:10px;color:var(--mut)}
+.nav button div{font-size:20px}.nav button.on{color:var(--b);background:#181d2e}
+.tl .y{margin-bottom:10px}.tl .y b{color:var(--b)}.tl .y div{font-size:14px;padding:2px 0 2px 10px;border-left:2px solid var(--line);margin-left:4px}
+.list .it{display:flex;align-items:center;gap:10px;padding:10px;border-radius:12px;background:var(--card2);margin-bottom:8px;border:1px solid var(--line);text-align:left}
+.list .ic2{width:42px;height:42px;border-radius:12px;display:grid;place-items:center;font-size:22px;flex:none;background:#232a44}
+.list .inf{flex:1;min-width:0}.list .inf b{display:block}
+.tag{display:inline-block;font-size:10px;padding:2px 6px;border-radius:6px;background:#232a44;color:var(--b);margin-left:4px}
+.ovl{position:fixed;inset:0;z-index:50;background:rgba(0,0,0,.8);display:grid;place-items:center;padding:14px}
+.pop{background:linear-gradient(180deg,#171c2e,#0c0f19);border:1px solid var(--line);border-radius:18px;padding:16px;width:100%;max-width:460px;max-height:90vh;overflow:auto;text-align:center}
+.pop .big{font-size:52px}
+.opts{display:grid;gap:8px;margin-top:12px}.opts button{background:var(--card2);border:1px solid var(--line);padding:12px;border-radius:12px;text-align:left;font-size:14px}
+.chips{display:flex;flex-wrap:wrap;gap:6px;justify-content:center;margin:10px 0}
+.chip{background:var(--card2);border:1px solid var(--line);border-radius:999px;padding:8px 12px;font-size:13px}
+.chip.on{background:var(--b);color:#001;border-color:var(--b);font-weight:800}
+.adm h3{margin:14px 0 6px;text-align:left;font-size:14px;color:var(--b)}.adm .chips{justify-content:flex-start;margin:0}.adm .chip{font-size:12px;padding:7px 10px}
+.toast{position:fixed;left:50%;top:14px;transform:translateX(-50%);z-index:90;background:#181d2e;border:1px solid var(--b);padding:10px 16px;border-radius:12px;font-weight:700;font-size:14px;box-shadow:0 10px 30px #000;animation:tin .25s;max-width:92vw}
+@keyframes tin{from{opacity:0;transform:translate(-50%,-10px)}}
+input[type=text]{width:100%;background:#090c15;border:1px solid var(--line);color:var(--txt);border-radius:10px;padding:12px;font:inherit;font-size:16px}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.act{background:var(--card2);border:1px solid var(--line);border-radius:14px;padding:12px;text-align:left}
+.act .ic{font-size:24px}.act b{display:block;margin-top:4px;font-size:14px}.act small{color:var(--mut)}
+.act:disabled{opacity:.35}
+</style>
+</head>
+<body>
+<div class="top" id="top"></div>
+<main id="main"></main>
+<button class="age" id="ageBtn" style="display:none">➕ VIEILLIR D'UN AN</button>
+<nav class="nav" id="nav"></nav>
+<script>
+(()=>{
+"use strict";
+const KEY="vie1";
+const $=s=>document.querySelector(s);
+const rnd=(a,b)=>a+Math.random()*(b-a), ri=(a,b)=>Math.floor(rnd(a,b+1)), pick=a=>a[Math.floor(Math.random()*a.length)];
+const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const fmt=n=>{n=Math.floor(n);const a=Math.abs(n);if(a>=1e9)return(n/1e9).toFixed(2).replace(/\.?0+$/,"")+" Md";if(a>=1e6)return(n/1e6).toFixed(1).replace(".0","")+" M";if(a>=1e4)return(n/1e3).toFixed(1).replace(".0","")+"k";return n.toLocaleString("fr-FR")};
+const eur=n=>fmt(n)+" €";
+
+/* ---------- Données ---------- */
+const PRE_M=["Lucas","Noah","Adam","Rayan","Enzo","Nathan","Yanis","Hugo","Ilyes","Sacha","Kylian","Malik","Théo","Liam"];
+const PRE_F=["Emma","Jade","Lina","Inès","Léa","Sarah","Maya","Nour","Chloé","Zoé","Aya","Lou","Camille","Mila"];
+const NOMS=["Martin","Bernard","Diallo","Moreau","Lefèvre","Benali","Garcia","Petit","Rousseau","Mendy","Fontaine","Haddad","Lambert","Durand"];
+const JOBS=[
+ {k:"caisse",n:"Caissier",ic:"🛒",sal:19000,req:{edu:0},lv:["Caissier","Chef de caisse","Responsable magasin","Directeur de magasin"]},
+ {k:"livr",n:"Livreur",ic:"🛵",sal:20000,req:{edu:0},lv:["Livreur","Chef d'équipe","Gérant de flotte","Patron de société de livraison"]},
+ {k:"serv",n:"Serveur",ic:"🍽️",sal:19500,req:{edu:0},lv:["Serveur","Chef de rang","Maître d'hôtel","Propriétaire de restaurant"]},
+ {k:"meca",n:"Mécanicien",ic:"🔧",sal:26000,req:{edu:2},lv:["Apprenti mécano","Mécanicien","Chef d'atelier","Patron de garage"]},
+ {k:"police",n:"Policier",ic:"👮",sal:30000,req:{edu:3},lv:["Gardien de la paix","Brigadier","Lieutenant","Commissaire"]},
+ {k:"prof",n:"Professeur",ic:"👩‍🏫",sal:34000,req:{edu:4,dip:"any"},lv:["Prof stagiaire","Professeur","Prof principal","Proviseur"]},
+ {k:"info",n:"Développeur",ic:"💻",sal:45000,req:{edu:4,dip:"ing"},lv:["Développeur junior","Développeur","Lead dev","Directeur technique"]},
+ {k:"ing",n:"Ingénieur",ic:"🏗️",sal:52000,req:{edu:4,dip:"ing"},lv:["Ingénieur junior","Ingénieur","Chef de projet","Directeur général"]},
+ {k:"avocat",n:"Avocat",ic:"⚖️",sal:65000,req:{edu:4,dip:"droit"},lv:["Avocat stagiaire","Avocat","Associé","Avocat star"]},
+ {k:"med",n:"Médecin",ic:"🩺",sal:90000,req:{edu:4,dip:"med"},lv:["Interne","Médecin","Chef de service","Professeur de médecine"]},
+ {k:"com",n:"Commercial",ic:"💼",sal:38000,req:{edu:4,dip:"com"},lv:["Commercial","Chef des ventes","Directeur commercial","PDG"]}
+];
+const STUDIES=[{k:"med",n:"Médecine",ic:"🩺",y:8,int:70,cost:0},{k:"droit",n:"Droit",ic:"⚖️",y:5,int:55,cost:0},{k:"ing",n:"École d'ingénieur",ic:"🏗️",y:5,int:60,cost:15000},{k:"com",n:"École de commerce",ic:"💼",y:3,int:40,cost:30000},{k:"art",n:"Arts & musique",ic:"🎨",y:3,int:30,cost:5000}];
+const EDU=["Aucun","Primaire","Brevet","Bac","Diplôme supérieur"];
+const HOUSES=[{n:"Studio",ic:"🏠",c:90000},{n:"Appartement",ic:"🏢",c:250000},{n:"Maison",ic:"🏡",c:450000},{n:"Villa",ic:"🏖️",c:2.5e6},{n:"Château",ic:"🏰",c:2e7},{n:"Île privée",ic:"🏝️",c:2.5e8}];
+const CARS=[{n:"Vieille voiture",ic:"🚗",c:3000},{n:"Citadine neuve",ic:"🚙",c:18000},{n:"SUV",ic:"🚐",c:55000},{n:"Sportive",ic:"🏎️",c:220000},{n:"Hypercar",ic:"🏁",c:2.8e6},{n:"Jet privé",ic:"✈️",c:6e7}];
+const POL=["Citoyen","Conseiller municipal","Maire","Député","Ministre","Président de la République"];
+
+/* ---------- État ---------- */
+function NEW(){return{v:1,alive:false,first:"",last:"",sex:"m",em:"👶",age:0,st:{bon:70,san:85,int:50,app:50},sk:{sport:5,music:5,social:20},money:0,
+ edu:0,dip:null,study:null,job:null,fam:[],part:null,kids:[],fri:[],house:null,cars:[],biz:null,
+ rap:null,foot:null,yt:null,pol:0,polPop:0,tl:[],acts:0,gen:1,inh:0,heir:null,adm:{},lastAct:{}}}
+let S;try{S=JSON.parse(localStorage.getItem(KEY))||NEW()}catch(e){S=NEW()}S=Object.assign(NEW(),S);
+const save=()=>{try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}};
+const A=()=>S.adm||(S.adm={});
+const name=()=>S.first+" "+S.last;
+const he=()=>S.sex==="m";
+let yearLog=[],QUIET=false;
+const say=t=>{yearLog.push(t)};
+function flushYear(){if(!S.tl.length||S.tl[0].a!==S.age)S.tl.unshift({a:S.age,l:[]});S.tl[0].l.push(...yearLog);yearLog=[];S.tl=S.tl.slice(0,90)}
+let toastT;function toast(t){document.querySelectorAll(".toast").forEach(e=>e.remove());const d=document.createElement("div");d.className="toast";d.innerHTML=t;document.body.appendChild(d);clearTimeout(toastT);toastT=setTimeout(()=>d.remove(),2300)}
+function popup(html,close=true){closePop();const o=document.createElement("div");o.className="ovl";o.id="ov";o.innerHTML='<div class="pop">'+html+'</div>';if(close)o.addEventListener("click",e=>{if(e.target===o)closePop()});document.body.appendChild(o);return o}
+function closePop(){const o=$("#ov");if(o)o.remove()}
+const okBtn=(t="OK",id="")=>`<button class="btn" ${id?`id="${id}"`:`onclick="document.getElementById('ov').remove()"`} style="width:100%;margin-top:12px">${t}</button>`;
+const st=(k,d)=>{S.st[k]=clamp(S.st[k]+d,0,100)};
+function choice(ic,t,d,opts){return new Promise(res=>{popup(`<div class="big">${ic}</div><h2>${esc(t)}</h2><div class="mut">${esc(d)}</div><div class="opts">${opts.map((o,i)=>`<button data-i="${i}">${esc(o[0])}</button>`).join("")}</div>`,false);
+ document.querySelectorAll("#ov [data-i]").forEach(b=>b.onclick=()=>{closePop();opts[+b.dataset.i][1]();res()})})}
+
+/* ---------- Naissance ---------- */
+function birth(first,sex,last,inherit=0){
+ const old=S.gen?S:null;const g=old&&old.alive===false&&inherit?old.gen+1:1;
+ S=NEW();S.first=first;S.last=last||pick(NOMS);S.sex=sex;S.alive=true;S.gen=g;S.inh=inherit;
+ S.st={bon:ri(60,90),san:ri(70,100),int:ri(25,80),app:ri(25,85)};
+ const pm=pick(PRE_M),pf=pick(PRE_F);
+ S.fam=[{r:"Père",n:pm+" "+S.last,ic:"👨",rel:ri(55,95),age:ri(24,40),alive:true},{r:"Mère",n:pf+" "+S.last,ic:"👩",rel:ri(60,98),age:ri(22,38),alive:true}];
+ if(Math.random()<.55)S.fam.push({r:Math.random()<.5?"Frère":"Sœur",n:pick(Math.random()<.5?PRE_M:PRE_F),ic:"🧒",rel:ri(40,90),age:ri(2,8),alive:true});
+ S.money=inherit;
+ say(`👶 Naissance de ${name()}. ${inherit?`Tu hérites de ${eur(inherit)} !`:""}`);say(`Tes parents : ${S.fam[0].n} et ${S.fam[1].n}.`);flushYear();render()}
+
+/* ---------- Une année ---------- */
+const life=()=>S.age<6?"bébé":S.age<11?"enfant":S.age<18?"ado":S.age<65?"adulte":"senior";
+const emoji=()=>{const m=he();if(S.age<3)return"👶";if(S.age<12)return m?"👦":"👧";if(S.age<18)return m?"🧑":"👱‍♀️";if(S.age<60)return m?"👨":"👩";return m?"👴":"👵"};
+async function ageUp(){if(!S.alive)return;closePop();S.acts=0;S.lastAct={};S.age++;S.em=emoji();
+ // stats naturelles
+ st("san",S.age>50?-rnd(1,3)*(S.age>75?2:1):rnd(-1,1));st("bon",rnd(-3,3));if(S.age<25)st("int",rnd(0,1.5));
+ for(const f of S.fam){f.age++;if(f.alive&&f.age>70&&Math.random()<(f.age-68)/60){f.alive=false;say(`🕊️ ${f.r} (${f.n}) est décédé${f.r==="Mère"||f.r==="Sœur"?"e":""} à ${f.age} ans.`);st("bon",-20)}}
+ for(const k of S.kids)k.age++;if(S.part)S.part.age++;
+ // école
+ if(S.age===6){S.edu=0;say("🎒 Premier jour à l'école primaire.")}
+ if(S.age===11){S.edu=1;say("🏫 Entrée au collège.")}
+ if(S.age===15){if(S.st.int+rnd(-15,25)>=35){S.edu=2;say("📜 Tu as le brevet !")}else say("😕 Tu as raté le brevet… mais tu passes au lycée.");say("🏫 Entrée au lycée.")}
+ if(S.age===18&&!S.dip){const ok=A().pass||S.st.int+rnd(-15,20)>=48;if(ok){S.edu=Math.max(S.edu,3);say(`🎓 BAC obtenu ${S.st.int>80?"avec mention très bien":S.st.int>65?"avec mention":""} !`)}else say("❌ Bac raté. Tu peux travailler ou retenter plus tard (Carrière).")}
+ // études
+ if(S.study){S.study.left--;if(S.study.left<=0){S.dip=S.study.k;S.edu=4;say(`🎓 Diplômé en ${STUDIES.find(x=>x.k===S.study.k).n} !`);S.study=null;st("bon",10)}}
+ // travail
+ if(S.job){const J=JOBS.find(j=>j.k===S.job.k);const sal=jobSal();S.money+=sal;S.job.y++;S.job.perf=clamp(S.job.perf+rnd(-8,6),0,100);
+  if(S.job.perf>75&&S.job.l<3&&Math.random()<.45){S.job.l++;say(`🎉 Promotion : tu deviens ${J.lv[S.job.l]} !`);st("bon",8)}
+  if(S.job.perf<15&&Math.random()<.5&&!A().noBad){say(`📦 Tu es viré de ton poste de ${J.lv[S.job.l]}…`);S.job=null;st("bon",-15)}
+  if(S.age>=64&&S.job){say("🏖️ Retraite ! Tu arrêtes de travailler.");S.job=null;S.retired=true}}
+ if(S.retired)S.money+=15000;
+ // carrières spéciales
+ if(S.rap){const inc=S.rap.fans*.8;S.money+=inc;S.rap.fans=Math.round(S.rap.fans*rnd(.85,1.02))}
+ if(S.yt){const inc=S.yt.subs*.5;S.money+=inc;S.yt.subs=Math.round(S.yt.subs*rnd(.9,1.03))}
+ if(S.foot){S.foot.y++;const sal=footSal();S.money+=sal;if(S.age<=27)S.foot.ovr=clamp(S.foot.ovr+ri(0,4),40,99);else if(S.age>=31)S.foot.ovr=clamp(S.foot.ovr-ri(1,4),40,99);
+  const g=Math.round(S.foot.ovr/4*rnd(.4,1.3));S.foot.goals+=g;say(`⚽ Saison avec ${S.foot.club} : ${g} buts (note ${S.foot.ovr}).`);if(S.foot.ovr>=88&&Math.random()<.3){S.foot.bdo++;say("🟡 BALLON D'OR !!!");st("bon",20)}
+  if(S.age>=36){say("👋 Fin de ta carrière de footballeur.");S.foot.end=true;S.foot=null}}
+ if(S.pol>=2)S.money+=[0,0,60000,90000,150000,250000][S.pol];
+ if(S.biz){const g=S.biz.val*rnd(-.25,.6)*(.6+S.st.int/150);S.biz.val=Math.max(0,S.biz.val+g);const prof=Math.round(S.biz.val*.08);S.money+=prof;say(`🏢 ${S.biz.n} vaut maintenant ${eur(S.biz.val)} (+${eur(prof)} de bénéfices).`);if(S.biz.val<1000){say(`💥 ${S.biz.n} a fait faillite.`);S.biz=null}}
+ // dépenses adulte
+ if(S.age>=18&&!S.study){const earns=S.job||S.foot||S.rap||S.yt||S.biz||S.retired||S.pol>=2;const cost=earns?(S.house!=null?4000:11000)+S.kids.length*5000:2500;S.money-=cost}
+ if(S.part){S.part.rel=clamp(S.part.rel+rnd(-6,3),0,100);if(S.part.rel<12&&!A().noBad){say(`💔 ${S.part.n} et toi, c'est fini.`);S.part=null;st("bon",-15)}}
+ if(S.money<-50000&&!A().noBad){say("💸 Tu as trop de dettes : la banque saisit une partie de tes biens.");if(S.cars.length)S.cars.pop();else if(S.house)S.house=null;S.money=Math.min(S.money+30000,0)}
+ // mort ?
+ const risk=S.age<60?.0008:Math.max(0,(S.age-58)/180)*(1.6-S.st.san/100);
+ if(!A().immortal&&(S.st.san<=0||Math.random()<risk||S.age>=110)){flushYear();death();return}
+ flushYear();render();
+ if(!QUIET&&Math.random()<.65&&!(A().noBad&&Math.random()<.5))await yearEvent();
+ save()}
+const jobSal=()=>{const J=JOBS.find(j=>j.k===S.job.k);return Math.round(J.sal*(1+S.job.l*.6)*(1+S.job.y*.02))};
+const footSal=()=>Math.round(30000*Math.pow(1.12,S.foot.ovr-55));
+
+/* ---------- Événements ---------- */
+async function yearEvent(){const a=S.age;const evs=[];
+ if(a>=4&&a<12)evs.push(()=>choice("🧸","Un enfant te prend ton jouet","Comment tu réagis ?",[["😤 Je le reprends",()=>{st("bon",3);say("😤 Tu as repris ton jouet.")}],["😢 Je vais voir la maîtresse",()=>{st("int",2);say("Tu es allé voir la maîtresse.")}],["🤝 On joue ensemble",()=>{S.sk.social+=5;st("bon",5);addFriend();say("🤝 Vous êtes devenus amis !")}]]));
+ if(a>=11&&a<18)evs.push(()=>choice("📚","Gros contrôle demain","Tu fais quoi ce soir ?",[["📖 Je révise à fond",()=>{st("int",4);say("📖 Tu as bien révisé : bonne note !")}],["🎮 Je joue aux jeux vidéo",()=>{st("bon",4);st("int",-2);say("🎮 Soirée jeux… note moyenne.")}],["😴 Je dors tôt",()=>{st("san",3);say("😴 Bien reposé.")}]]));
+ if(a>=12&&a<18)evs.push(()=>choice("😠","Quelqu'un se moque de toi au collège","Tu réagis comment ?",[["🗣️ Je lui réponds avec humour",()=>{if(Math.random()<.6){st("bon",5);S.sk.social+=4;say("😂 Ta réponse a fait rire toute la classe.")}else{st("bon",-3);say("😐 Ta vanne n'a pas marché.")}}],["🧑‍🏫 J'en parle à un adulte",()=>{st("bon",3);say("🧑‍🏫 Un adulte a réglé le problème. Bien joué.")}],["🙄 J'ignore",()=>{say("🙄 Tu as ignoré.")}]]));
+ if(a>=16&&a<70&&!S.part)evs.push(()=>choice("💘","Coup de cœur","Quelqu'un te plaît beaucoup…",[["💌 Je tente ma chance",()=>{if(Math.random()<.35+S.st.app/250+S.sk.social/400){const n=pick(he()?PRE_F:PRE_M);S.part={n:n+" "+pick(NOMS),ic:he()?"👩":"👨",rel:ri(60,90),age:a+ri(-3,3),married:false};say(`💘 Tu es en couple avec ${S.part.n} !`);st("bon",12)}else{say("💔 Râteau…");st("bon",-6)}}],["😶 Trop timide",()=>say("😶 Tu n'as rien osé dire.")]]));
+ if(a>=18)evs.push(()=>choice("💸","Un inconnu te propose un « investissement miracle »","Il promet ×10 en un mois.",[["🚫 Non, c'est une arnaque",()=>{st("int",2);say("🧠 Tu as évité une arnaque.")}],["💰 J'investis 5 000 €",()=>{S.money-=5000;say("💸 C'était une arnaque. Tu as perdu 5 000 €.");st("bon",-5)}]]));
+ if(a>=18&&a<60)evs.push(()=>choice("🎟️","Ticket de loterie","Tu en achètes un ?",[["🎟️ Oui (5 €)",()=>{S.money-=5;if(Math.random()<.02||A().luck){const g=ri(1e5,5e6);S.money+=g;say(`🤑 JACKPOT ! Tu gagnes ${eur(g)} !`);st("bon",25)}else say("🎟️ Perdu.")}],["Non",()=>{}]]));
+ if(a>=25&&S.money>20000)evs.push(()=>choice("📈","Une amie lance une entreprise","Elle te propose d'investir 10 000 €.",[["🤝 J'investis",()=>{S.money-=10000;if(Math.random()<.4){const g=ri(20000,120000);S.money+=g;say(`📈 L'entreprise a cartonné : +${eur(g)} !`)}else say("📉 L'entreprise a coulé. Investissement perdu.")}],["Non merci",()=>{}]]));
+ if(a>=30)evs.push(()=>choice("🤒","Tu ne te sens pas bien","Aller chez le médecin ?",[["🩺 Oui",()=>{S.money-=50;st("san",8);say("🩺 Le médecin t'a soigné.")}],["😬 Ça va passer",()=>{st("san",-10);say("🤒 Tu as laissé traîner…")}]]));
+ evs.push(()=>choice("🐶","Un chien perdu te suit","Il a l'air gentil.",[["🏠 Je l'adopte",()=>{S.pet=pick(["Rex","Pixel","Moka","Oreo","Nala"]);st("bon",10);say(`🐶 Tu as adopté ${S.pet} !`)}],["📞 J'appelle un refuge",()=>{st("bon",3);say("📞 Le chien a retrouvé ses maîtres.")}]]));
+ if(!evs.length)return;await pick(evs)()}
+function addFriend(){const n=pick(Math.random()<.5?PRE_M:PRE_F)+" "+pick(NOMS);S.fri.push({n,ic:pick(["🧑","👦","👧","🧒"]),rel:ri(50,85)});return n}
+
+/* ---------- Mort & héritage ---------- */
+function death(){S.alive=false;const worth=S.money+(S.house?HOUSES[S.house].c:0)+S.cars.reduce((a,i)=>a+CARS[i].c,0)+(S.biz?S.biz.val:0);
+ const ach=[];if(S.foot&&S.foot.bdo||S.footBdo)ach.push("🟡 Ballon d'Or");if(S.pol>=5)ach.push("🏛️ Président");if(S.rap&&S.rap.fans>1e6)ach.push("🎤 Star du rap");if(worth>=1e9)ach.push("💰 Milliardaire");
+ save();render();
+ popup(`<div class="big">🪦</div><h2>${esc(name())} est décédé${he()?"":"e"} à ${S.age} ans</h2><div class="mut">Fortune finale : <b style="color:var(--y)">${eur(worth)}</b></div>${ach.length?`<div style="margin:8px 0">${ach.join(" · ")}</div>`:""}
+ ${S.kids.length?`<div class="mut" style="margin-top:8px">Continue avec un de tes enfants : il hérite de tout.</div><div class="opts">${S.kids.map((k,i)=>`<button data-k="${i}">${k.ic} Jouer ${esc(k.n)} (${k.age} ans)</button>`).join("")}</div>`:""}
+ <button class="btn g" id="nl" style="width:100%;margin-top:12px">👶 Nouvelle vie</button>`,false);
+ document.querySelectorAll("#ov [data-k]").forEach(b=>b.onclick=()=>{const k=S.kids[+b.dataset.k];const inh=Math.max(0,worth);const parent=name(),gen=S.gen;closePop();
+  const [f,...l]=k.n.split(" ");const age=k.age;birth(f,k.sex,l.join(" "),inh);S.gen=gen+1;S.age=age;S.edu=age>=18?3:age>=15?2:age>=11?1:0;S.em=emoji();S.tl[0].l.push(`🕊️ Tu reprends la vie de ${parent} (génération ${S.gen}).`);render()});
+ $("#nl").onclick=()=>{S=NEW();closePop();render()}}
+
+/* ---------- Rendu ---------- */
+let TAB="vie";
+const NAV=[["vie","📜","Vie"],["act","🎯","Activités"],["job","💼","Carrière"],["rel","❤️","Relations"],["biens","🏠","Biens"]];
+const COL={bon:"#facc15",san:"#22c55e",int:"#22d3ee",app:"#ec4899"},STN={bon:"😊 Bonheur",san:"❤️ Santé",int:"🧠 Intelligence",app:"✨ Apparence"};
+function renderTop(){if(!S.first){$("#top").innerHTML=`<div class="logo" style="text-align:center">DE ZÉRO À MILLIARDAIRE</div>`;return}
+ const job=S.job?JOBS.find(j=>j.k===S.job.k).lv[S.job.l]:S.study?"Étudiant":S.foot?"Footballeur pro":S.pol>=2?POL[S.pol]:S.age<18?"Élève":S.retired?"Retraité":"Sans emploi";
+ $("#top").innerHTML=`<div class="row"><div class="logo">DE ZÉRO À MILLIARDAIRE</div><button id="adm" style="background:#181d2e;border:1px solid var(--line);border-radius:8px;padding:2px 8px;font-size:15px">🛠️</button><div style="flex:1"></div><span class="mut">Gén. ${S.gen}</span></div>
+ <div class="who"><div class="em">${S.em}</div><div style="flex:1"><b>${esc(name())}</b><div class="mut">${S.age} ans · ${esc(job)}</div></div><div style="text-align:right"><b style="color:${S.money<0?"var(--r)":"var(--y)"}">${eur(S.money)}</b><div class="mut">argent</div></div></div>
+ <div class="bars">${Object.keys(STN).map(k=>`<div class="bar">${STN[k]} ${Math.round(S.st[k])}%<div><i style="width:${S.st[k]}%;background:${COL[k]}"></i></div></div>`).join("")}</div>`;
+ $("#adm").onclick=admin}
+function renderNav(){$("#nav").innerHTML=NAV.map(n=>`<button class="${TAB===n[0]?"on":""}" data-t="${n[0]}"><div>${n[1]}</div>${n[2]}</button>`).join("");
+ document.querySelectorAll(".nav button").forEach(b=>b.onclick=()=>{TAB=b.dataset.t;render();window.scrollTo(0,0)})}
+function render(){save();renderTop();const m=$("#main"),ab=$("#ageBtn");
+ if(!S.first||(!S.alive&&!S.tl.length)){$("#nav").innerHTML="";ab.style.display="none";m.innerHTML=startHTML();bindStart();return}
+ renderNav();ab.style.display=S.alive?"block":"none";ab.onclick=ageUp;
+ m.innerHTML=({vie:vieHTML,act:actHTML,job:jobHTML,rel:relHTML,biens:biensHTML})[TAB]();({vie:()=>{const b=$("#nl2");if(b)b.onclick=()=>{S=NEW();render()}},act:bindAct,job:bindJob,rel:bindRel,biens:bindBiens})[TAB]()}
+
+function startHTML(){return `<div class="card" style="text-align:center"><div style="font-size:60px">👶</div><h2>Une nouvelle vie commence</h2><div class="mut">De la naissance à la vieillesse. École, études, métier, amour, famille…<br>Deviens rappeur, footballeur, YouTubeur, président ou <b style="color:var(--y)">milliardaire</b>.</div></div>
+ <div class="card"><h3>Prénom</h3><input type="text" id="fn" maxlength="14" placeholder="Prénom"><h3 style="margin-top:12px">Nom de famille</h3><input type="text" id="ln" maxlength="14" placeholder="(au hasard si vide)">
+ <div class="chips" id="sx"><button class="chip on" data-s="m">👦 Garçon</button><button class="chip" data-s="f">👧 Fille</button></div>
+ <div class="flex" style="display:flex;gap:8px"><button class="btn s" id="rand" style="flex:1">🎲 Au hasard</button><button class="btn g" id="go" style="flex:2;padding:14px">👶 Naître</button></div></div>`}
+function bindStart(){let sx="m";document.querySelectorAll("#sx .chip").forEach(b=>b.onclick=()=>{document.querySelectorAll("#sx .chip").forEach(x=>x.classList.remove("on"));b.classList.add("on");sx=b.dataset.s});
+ $("#rand").onclick=()=>{sx=Math.random()<.5?"m":"f";birth(pick(sx==="m"?PRE_M:PRE_F),sx,pick(NOMS))};
+ $("#go").onclick=()=>{const f=$("#fn").value.trim().replace(/[<>]/g,"");if(f.length<2){toast("Choisis un prénom");return}birth(f,sx,$("#ln").value.trim().replace(/[<>]/g,""))}}
+
+function vieHTML(){return `${S.alive?"":`<div class="card" style="text-align:center"><div class="big" style="font-size:44px">🪦</div><b>${esc(name())}</b> (${S.age} ans)<br><button class="btn g" id="nl2" style="margin-top:10px">👶 Nouvelle vie</button></div>`}
+ <div class="card tl">${S.tl.map(y=>`<div class="y"><b>${y.a} an${y.a>1?"s":""}</b>${y.l.map(l=>`<div>${esc(l)}</div>`).join("")}</div>`).join("")}</div>`}
+
+/* Activités */
+const ACTS=[
+ {k:"sport",ic:"🏃",n:"Sport",d:"+santé, +niveau sport",min:4,f:()=>{st("san",4);S.sk.sport=clamp(S.sk.sport+ri(3,7),0,100);return"🏃 Séance de sport."}},
+ {k:"lib",ic:"📚",n:"Bibliothèque",d:"+intelligence",min:5,f:()=>{st("int",ri(2,5));return"📚 Tu as lu des livres."}},
+ {k:"gym",ic:"🏋️",n:"Salle de muscu",d:"+apparence",min:14,f:()=>{st("app",ri(2,4));st("san",1);return"🏋️ Muscu."}},
+ {k:"music",ic:"🎹",n:"Musique",d:"+niveau musique",min:6,f:()=>{S.sk.music=clamp(S.sk.music+ri(3,7),0,100);st("bon",2);return"🎹 Tu as fait de la musique."}},
+ {k:"medit",ic:"🧘",n:"Méditation",d:"+bonheur",min:8,f:()=>{st("bon",ri(4,8));return"🧘 Méditation."}},
+ {k:"party",ic:"🎉",n:"Sortir avec des amis",d:"+social, +bonheur",min:13,f:()=>{S.sk.social=clamp(S.sk.social+4,0,100);st("bon",5);if(Math.random()<.3){return"🎉 Soirée : tu t'es fait un nouvel ami, "+addFriend()+" !"}return"🎉 Super soirée."}},
+ {k:"look",ic:"💇",n:"Nouveau look (200 €)",d:"+apparence",min:12,cost:200,f:()=>{st("app",ri(3,7));return"💇 Nouveau look !"}},
+ {k:"trip",ic:"✈️",n:"Vacances (2 000 €)",d:"++bonheur",min:18,cost:2000,f:()=>{st("bon",ri(10,18));st("san",3);return"✈️ Vacances à "+pick(["Bali","Tokyo","New York","Marrakech","Rio","Dubaï","Rome"])+"."}},
+ {k:"doc",ic:"🩺",n:"Médecin (100 €)",d:"+santé",min:0,cost:100,f:()=>{st("san",ri(6,12));return"🩺 Visite chez le médecin."}},
+ {k:"babysit",ic:"🍼",n:"Petit job",d:"+argent",min:14,max:17,f:()=>{const g=ri(150,500);S.money+=g;return`💶 Petit job : +${eur(g)}.`}}
+];
+function actHTML(){const left=3-S.acts;return `<div class="card"><h2>🎯 Activités</h2><div class="mut">${A().infAct?"Illimitées (admin)":`${left} activité${left>1?"s":""} restante${left>1?"s":""} cette année`}</div></div>
+ <div class="grid">${ACTS.filter(a=>S.age>=a.min&&(a.max==null||S.age<=a.max)).map(a=>`<button class="act" data-a="${a.k}" ${(left<=0&&!A().infAct)||S.lastAct[a.k]?"disabled":""}><div class="ic">${a.ic}</div><b>${a.n}</b><small>${a.d}</small></button>`).join("")}</div>`}
+function bindAct(){document.querySelectorAll("[data-a]").forEach(b=>b.onclick=()=>{const a=ACTS.find(x=>x.k===b.dataset.a);if(a.cost&&S.money<a.cost){toast("💸 Pas assez d'argent");return}if(a.cost)S.money-=a.cost;S.acts++;S.lastAct[a.k]=1;const t=a.f();say(t);flushYear();toast(t);render()})}
+
+/* Carrière */
+function jobHTML(){const a=S.age;let h="";
+ if(a<14)return `<div class="card"><h2>💼 Carrière</h2><div class="mut">Tu es trop jeune pour travailler. Concentre-toi sur l'école 📚 et tes activités.</div><div class="mut" style="margin-top:8px">Niveau d'études : ${EDU[S.edu]}</div></div>`;
+ h+=`<div class="card"><h3>🎓 Études : ${EDU[S.edu]}${S.dip?` · ${STUDIES.find(x=>x.k===S.dip).n}`:""}</h3>${S.study?`<div class="mut">📖 En cours : ${STUDIES.find(x=>x.k===S.study.k).n} — encore ${S.study.left} an(s)</div><button class="btn s" id="quitS" style="margin-top:8px">Arrêter les études</button>`:
+  (S.edu>=3&&!S.dip&&!S.job?`<div class="mut">Choisis tes études supérieures :</div><div class="list" style="margin-top:8px">${STUDIES.map(s=>`<div class="it"><div class="ic2">${s.ic}</div><div class="inf"><b>${s.n}</b><small class="mut">${s.y} ans · intelligence ${s.int}+${s.cost?` · ${eur(s.cost)}`:""}</small></div><button class="btn" data-st="${s.k}" style="padding:8px 10px;font-size:12px">S'inscrire</button></div>`).join("")}</div>`:a>=18&&S.edu<3?`<button class="btn" id="rebac">📝 Repasser le bac (cours du soir)</button>`:"")}</div>`;
+ if(S.job){const J=JOBS.find(j=>j.k===S.job.k);h+=`<div class="card"><h3>${J.ic} ${J.lv[S.job.l]}</h3><div class="mut">Salaire : ${eur(jobSal())}/an · ${S.job.y} an(s) · Performance ${Math.round(S.job.perf)}%</div><div class="grid" style="margin-top:10px"><button class="act" id="work"><div class="ic">💪</div><b>Travailler dur</b><small>+performance</small></button><button class="act" id="raise"><div class="ic">💶</div><b>Demander une augmentation</b><small>Risqué</small></button><button class="act" id="quitJ"><div class="ic">🚪</div><b>Démissionner</b><small></small></button></div></div>`}
+ else if(a>=16&&!S.study&&!S.retired){h+=`<div class="card"><h3>📋 Offres d'emploi</h3><div class="list">${JOBS.map(j=>{const ok=canJob(j);return `<div class="it"><div class="ic2">${j.ic}</div><div class="inf"><b>${j.n}</b><small class="mut">${eur(j.sal)}/an${ok?"":` · 🔒 ${j.req.dip?(j.req.dip==="any"?"diplôme supérieur":"diplôme "+STUDIES.find(s=>s.k===j.req.dip).n):EDU[j.req.edu]}`}</small></div>${ok?`<button class="btn g" data-j="${j.k}" style="padding:8px 10px;font-size:12px">Postuler</button>`:""}</div>`}).join("")}</div></div>`}
+ // carrières de rêve
+ h+=`<div class="card"><h3>⭐ Carrières de rêve</h3><div class="list">
+  <div class="it"><div class="ic2">🎤</div><div class="inf"><b>Rappeur ${S.rap?`<span class="tag">${fmt(S.rap.fans)} fans</span>`:""}</b><small class="mut">Musique ${S.sk.music}/100 · sors des sons</small></div><button class="btn y" id="rap" style="padding:8px 10px;font-size:12px">${S.rap?"🎵 Sortir un son":"Commencer"}</button></div>
+  <div class="it"><div class="ic2">📱</div><div class="inf"><b>YouTubeur ${S.yt?`<span class="tag">${fmt(S.yt.subs)} abonnés</span>`:""}</b><small class="mut">Social ${S.sk.social}/100</small></div><button class="btn y" id="yt" style="padding:8px 10px;font-size:12px">${S.yt?"🎬 Poster":"Créer ma chaîne"}</button></div>
+  <div class="it"><div class="ic2">⚽</div><div class="inf"><b>Footballeur ${S.foot?`<span class="tag">${S.foot.club} · ${S.foot.ovr}</span>`:""}</b><small class="mut">Sport ${S.sk.sport}/100 · détection entre 15 et 21 ans</small></div>${S.foot?`<span class="tag">⚽ ${S.foot.goals} buts</span>`:(a>=15&&a<=21?`<button class="btn y" id="foot" style="padding:8px 10px;font-size:12px">Détection</button>`:"")}</div>
+  <div class="it"><div class="ic2">🏛️</div><div class="inf"><b>Politique <span class="tag">${POL[S.pol]}</span></b><small class="mut">${S.pol<5?`Prochaine élection : ${POL[S.pol+1]}${S.pol===4?" (35 ans min)":""}`:"Tu es au sommet !"}</small></div>${S.pol<5&&a>=18?`<button class="btn y" id="pol" style="padding:8px 10px;font-size:12px">Se présenter</button>`:""}</div>
+  <div class="it"><div class="ic2">🏢</div><div class="inf"><b>Entrepreneur ${S.biz?`<span class="tag">${esc(S.biz.n)} · ${eur(S.biz.val)}</span>`:""}</b><small class="mut">Crée ta boîte (10 000 €)</small></div>${S.biz?`<button class="btn s" id="sellbiz" style="padding:8px 10px;font-size:12px">Vendre</button>`:a>=18?`<button class="btn y" id="biz" style="padding:8px 10px;font-size:12px">Créer</button>`:""}</div>
+ </div><div class="mut">Les actions de carrière comptent comme une activité de l'année.</div></div>`;
+ return h}
+const canJob=j=>S.edu>=j.req.edu&&(!j.req.dip||(j.req.dip==="any"?!!S.dip:S.dip===j.req.dip))&&S.age>=16;
+function useAct(){if(A().infAct)return true;if(S.acts>=3){toast("⏳ Plus d'actions cette année : vieillis d'un an");return false}S.acts++;return true}
+function bindJob(){const on=(id,f)=>{const e=$("#"+id);if(e)e.onclick=f};
+ document.querySelectorAll("[data-st]").forEach(b=>b.onclick=()=>{const s=STUDIES.find(x=>x.k===b.dataset.st);if(S.st.int<s.int&&!A().pass){toast(`🧠 Il faut ${s.int} en intelligence`);return}if(S.money<s.cost&&s.cost){S.money-=s.cost;say(`💳 Prêt étudiant de ${eur(s.cost)}.`)}else S.money-=s.cost;S.study={k:s.k,left:s.y};say(`🎓 Tu commences ${s.n}.`);flushYear();render()});
+ on("quitS",()=>{say("🚪 Tu arrêtes tes études.");S.study=null;flushYear();render()});
+ on("rebac",()=>{if(!useAct())return;if(S.st.int+rnd(-10,25)>=48||A().pass){S.edu=3;say("🎓 Tu as enfin le bac !")}else say("❌ Bac raté encore une fois.");flushYear();render()});
+ document.querySelectorAll("[data-j]").forEach(b=>b.onclick=()=>{const j=JOBS.find(x=>x.k===b.dataset.j);const p=.45+S.st.int/300+S.st.app/400+S.sk.social/500;if(Math.random()<p||A().pass){S.job={k:j.k,l:0,y:0,perf:60};say(`💼 Embauché comme ${j.lv[0]} !`);st("bon",6)}else say(`📭 Refusé pour le poste de ${j.n}.`);flushYear();render()});
+ on("work",()=>{if(!useAct())return;S.job.perf=clamp(S.job.perf+ri(8,15),0,100);st("san",-1);toast("💪 +performance");render()});
+ on("raise",()=>{if(!useAct())return;if(S.job.perf>60&&Math.random()<.55){S.job.y+=3;say("💶 Augmentation accordée !")}else{S.job.perf-=10;say("😬 Augmentation refusée.")}flushYear();render()});
+ on("quitJ",()=>{const J=JOBS.find(j=>j.k===S.job.k);say(`🚪 Tu démissionnes (${J.lv[S.job.l]}).`);S.job=null;flushYear();render()});
+ on("rap",()=>{if(!useAct())return;if(!S.rap){S.rap={fans:ri(20,200),songs:0};say("🎤 Tu lances ta carrière de rappeur !")}
+  const q=clamp(S.sk.music*.7+rnd(0,35),1,100);const hit=q>80&&Math.random()<.4;const g=Math.round((S.rap.fans*.3+200)*(q/50)**2*(hit?8:1));S.rap.fans+=g;S.rap.songs++;S.money+=g*.5;say(`🎵 Son n°${S.rap.songs} (${Math.round(q)}/100) ${hit?"— 💥 C'EST UN HIT":""} : +${fmt(g)} fans.`);S.sk.music=clamp(S.sk.music+2,0,100);flushYear();render()});
+ on("yt",()=>{if(!useAct())return;if(!S.yt){S.yt={subs:ri(5,50),v:0};say("📱 Tu crées ta chaîne YouTube !")}
+  const q=clamp(S.sk.social*.5+S.st.app*.2+S.st.int*.1+rnd(0,40),1,100);const viral=Math.random()<q/400;const g=Math.round((S.yt.subs*.25+50)*(q/50)**2*(viral?10:1));S.yt.subs+=g;S.yt.v++;say(`🎬 Vidéo n°${S.yt.v} ${viral?"🚀 VIRALE":""} : +${fmt(g)} abonnés.`);S.sk.social=clamp(S.sk.social+1,0,100);flushYear();render()});
+ on("foot",()=>{if(!useAct())return;if(S.sk.sport+rnd(-10,20)>=60||A().pass){const clubs=["FC Rivière-Nord","Racing Lumière","AC Ventoux","Olympique Marine","Paris Étoile FC","Imperial Madrid"];const lvl=clamp(Math.floor((S.sk.sport-55)/8),0,5);S.foot={club:clubs[lvl],ovr:clamp(50+S.sk.sport/3+ri(0,6),50,85),goals:0,y:0,bdo:0};say(`⚽ Détecté ! Tu signes pro à ${S.foot.club}.`);st("bon",15);if(S.job)S.job=null;S.study=null}else say("❌ Pas retenu à la détection. Fais plus de sport.");flushYear();render()});
+ on("pol",()=>{if(!useAct())return;const nx=S.pol+1;if(nx===5&&S.age<35){toast("🏛️ 35 ans minimum pour être président");S.acts--;return}const cost=[0,500,5000,30000,0,200000][nx];if(S.money<cost){toast(`💸 Campagne : ${eur(cost)}`);S.acts--;return}S.money-=cost;
+  const p=.25+S.st.int/250+S.st.app/400+S.sk.social/300-nx*.07;if(Math.random()<p||A().pass){S.pol=nx;say(`🗳️ Élu : ${POL[nx]} !`);st("bon",15);if(nx===5)say("🇫🇷 TU ES PRÉSIDENT DE LA RÉPUBLIQUE !")}else say(`🗳️ Battu à l'élection (${POL[nx]}).`);flushYear();render()});
+ on("biz",()=>{if(S.money<10000){toast("💸 Il faut 10 000 €");return}if(!useAct())return;const n=prompt("Nom de ton entreprise :","Ma Startup");if(!n){S.acts--;return}S.money-=10000;S.biz={n:n.replace(/[<>]/g,"").slice(0,20),val:15000};say(`🏢 Tu crées ${S.biz.n} !`);flushYear();render()});
+ on("sellbiz",()=>{const v=Math.round(S.biz.val);S.money+=v;say(`🤝 Tu vends ${S.biz.n} pour ${eur(v)}.`);S.biz=null;flushYear();render()})}
+
+/* Relations */
+function relHTML(){const ppl=[...S.fam.map((p,i)=>({...p,g:"fam",i})),...(S.part?[{...S.part,r:S.part.married?(he()?"Épouse":"Mari"):"Copain/copine",g:"part",i:0,alive:true}]:[]),...S.kids.map((k,i)=>({...k,r:k.sex==="m"?"Fils":"Fille",g:"kid",i,alive:true,rel:k.rel})),...S.fri.map((f,i)=>({...f,r:"Ami",g:"fri",i,alive:true}))];
+ return `<div class="card"><h2>❤️ Relations</h2><div class="list">${ppl.map(p=>`<div class="it" ${p.alive?"":'style="opacity:.45"'}><div class="ic2">${p.alive?p.ic:"🕊️"}</div><div class="inf"><b>${esc(p.n)} <span class="tag">${p.r}</span></b>${p.alive?`<div class="bar" style="margin-top:4px"><div><i style="width:${p.rel}%;background:#ec4899"></i></div></div>`:`<small class="mut">Décédé</small>`}</div>${p.alive?`<button class="btn s" data-p="${p.g}:${p.i}" style="padding:8px 10px;font-size:12px">Voir</button>`:""}</div>`).join("")}</div></div>
+ ${S.age>=16&&!S.part?`<button class="btn" id="date" style="width:100%">💘 Chercher l'amour</button>`:""}`}
+function bindRel(){document.querySelectorAll("[data-p]").forEach(b=>b.onclick=()=>{const [g,i]=b.dataset.p.split(":");const p=g==="fam"?S.fam[+i]:g==="part"?S.part:g==="kid"?S.kids[+i]:S.fri[+i];
+  const opts=[["⏰ Passer du temps ensemble",()=>{p.rel=clamp(p.rel+ri(5,12),0,100);st("bon",3);say(`⏰ Moment avec ${p.n}.`)}],["💬 Discuter",()=>{p.rel=clamp(p.rel+ri(2,6),0,100);say(`💬 Discussion avec ${p.n}.`)}]];
+  if(g==="fam"&&(p.r==="Père"||p.r==="Mère"))opts.push(["💶 Demander de l'argent",()=>{if(Math.random()<p.rel/130){const m=ri(20,S.age>=18?2000:100);S.money+=m;say(`💶 ${p.n} te donne ${eur(m)}.`)}else{p.rel-=5;say(`🙅 ${p.n} refuse de te donner de l'argent.`)}}]);
+  if(g==="part"&&!p.married&&S.age>=18)opts.push(["💍 Demander en mariage",()=>{if(p.rel>65&&Math.random()<.75){p.married=true;S.money-=8000;st("bon",20);say(`💍 Mariage avec ${p.n} ! 🎉`)}else{p.rel-=15;say("💔 Elle/il a dit non…")}}]);
+  if(g==="part"&&S.age>=20&&S.age<=50&&S.kids.length<5)opts.push(["👶 Avoir un enfant",()=>{if(Math.random()<.7||A().pass){const sx=Math.random()<.5?"m":"f";const n=pick(sx==="m"?PRE_M:PRE_F)+" "+S.last;S.kids.push({n,sex:sx,ic:sx==="m"?"👦":"👧",age:0,rel:90});st("bon",15);say(`👶 Naissance de ${n} !`)}else say("Pas de bébé cette année.")}]);
+  if(g==="part")opts.push(["💔 Rompre",()=>{say(`💔 Tu quittes ${p.n}.`);S.part=null;st("bon",-8)}]);
+  if(g==="kid"&&S.money>500)opts.push(["🎁 Offrir un cadeau (500 €)",()=>{S.money-=500;p.rel=clamp(p.rel+12,0,100);say(`🎁 Cadeau pour ${p.n}.`)}]);
+  choice(p.ic,p.n,`${p.age!=null?p.age+" ans · ":""}Relation ${Math.round(p.rel)}%`,opts.map(o=>[o[0],()=>{if(!useAct())return;o[1]();flushYear();render()}]))});
+ const d=$("#date");if(d)d.onclick=()=>{if(!useAct())return;if(Math.random()<.3+S.st.app/200+S.sk.social/400||A().pass){const n=pick(he()?PRE_F:PRE_M);S.part={n:n+" "+pick(NOMS),ic:he()?"👩":"👨",rel:ri(55,85),age:S.age+ri(-3,3),married:false};say(`💘 Rencontre avec ${S.part.n} : vous êtes en couple !`);st("bon",10)}else say("💔 Pas de rencontre cette année.");flushYear();render()}}
+
+/* Biens */
+function biensHTML(){if(S.age<18)return `<div class="card"><h2>🏠 Biens</h2><div class="mut">Tu pourras acheter une maison et une voiture à 18 ans.</div></div>`;
+ const worth=S.money+(S.house!=null?HOUSES[S.house].c:0)+S.cars.reduce((a,i)=>a+CARS[i].c,0)+(S.biz?S.biz.val:0);
+ return `<div class="card"><h2>💰 Fortune totale : <span style="color:var(--y)">${eur(worth)}</span></h2><div class="mut">${worth>=1e9?"🏆 TU ES MILLIARDAIRE !":"Objectif : 1 milliard"}</div><div class="bar"><div><i style="width:${Math.min(100,Math.log10(Math.max(1,worth))/9*100)}%;background:var(--y)"></i></div></div></div>
+ <div class="card"><h3>🏠 Logement ${S.house!=null?`: ${HOUSES[S.house].ic} ${HOUSES[S.house].n}`:": locataire"}</h3><div class="list">${HOUSES.map((h,i)=>`<div class="it"><div class="ic2">${h.ic}</div><div class="inf"><b>${h.n}${S.house===i?'<span class="tag">✔ chez toi</span>':""}</b><small class="mut">${eur(h.c)}</small></div>${S.house===i?"":`<button class="btn g" data-h="${i}" style="padding:8px 10px;font-size:12px">Acheter</button>`}</div>`).join("")}</div></div>
+ <div class="card"><h3>🚗 Véhicules</h3><div class="list">${CARS.map((c,i)=>`<div class="it"><div class="ic2">${c.ic}</div><div class="inf"><b>${c.n}${S.cars.includes(i)?'<span class="tag">✔ à toi</span>':""}</b><small class="mut">${eur(c.c)}</small></div>${S.cars.includes(i)?"":`<button class="btn g" data-c="${i}" style="padding:8px 10px;font-size:12px">Acheter</button>`}</div>`).join("")}</div></div>`}
+function bindBiens(){document.querySelectorAll("[data-h]").forEach(b=>b.onclick=()=>{const i=+b.dataset.h,h=HOUSES[i];const back=S.house!=null?HOUSES[S.house].c*.9:0;if(S.money+back<h.c){toast("💸 Pas assez d'argent");return}S.money+=back-h.c;S.house=i;st("bon",8);say(`${h.ic} Tu emménages : ${h.n} !`);flushYear();render()});
+ document.querySelectorAll("[data-c]").forEach(b=>b.onclick=()=>{const c=CARS[+b.dataset.c];if(S.money<c.c){toast("💸 Pas assez d'argent");return}S.money-=c.c;S.cars.push(+b.dataset.c);st("bon",5);say(`${c.ic} Achat : ${c.n}.`);flushYear();render()})}
+
+/* ---------- Panel admin ---------- */
+function admin(){const a=A();const T=(k,l)=>`<button class="chip ${a[k]?"on":""}" data-tg="${k}">${a[k]?"✅":"⬜"} ${l}</button>`;
+ popup(`<div class="adm"><h2>🛠️ Panel admin</h2><div class="mut">Ta vie, tes règles 😈</div>
+ <h3>💶 Argent</h3><div class="chips">${[1e4,1e6,1e8,1e9].map(v=>`<button class="chip" data-mo="${v}">+${fmt(v)} €</button>`).join("")}<button class="chip" id="adebt">Effacer les dettes</button></div>
+ <h3>📊 Stats</h3><div class="chips"><button class="chip" id="a100">Tout à 100 %</button><button class="chip" id="asan">❤️ Santé 100</button><button class="chip" id="askl">⭐ Sport, musique, social à 100</button></div>
+ <h3>⚙️ Triches</h3><div class="chips">${T("immortal","Immortel")}${T("infAct","Activités illimitées")}${T("pass","Tout réussir (exams, jobs, élections…)")}${T("noBad","Pas de malheurs")}${T("luck","Gagner au loto")}</div>
+ <h3>🎂 Âge</h3><div class="chips"><button class="chip" data-ag="1">+1 an</button><button class="chip" data-ag="5">+5 ans</button><button class="chip" data-ag="10">+10 ans</button><button class="chip" data-sa="18">Avoir 18 ans</button><button class="chip" data-sa="25">Avoir 25 ans</button></div>
+ <h3>🎓 Études & métier</h3><div class="chips"><button class="chip" id="abac">🎓 Bac</button>${STUDIES.map(s=>`<button class="chip" data-dp="${s.k}">${s.ic} Diplôme ${s.n}</button>`).join("")}</div><div class="chips" style="margin-top:6px">${JOBS.map(j=>`<button class="chip" data-jb="${j.k}">${j.ic} ${j.n} (patron)</button>`).join("")}</div>
+ <h3>⭐ Carrières de rêve</h3><div class="chips"><button class="chip" id="apres">🏛️ Devenir président</button><button class="chip" id="arap">🎤 Star du rap (10M fans)</button><button class="chip" id="ayt">📱 50M abonnés</button><button class="chip" id="afoot">⚽ Footballeur 95 à Imperial Madrid</button></div>
+ <h3>❤️ Famille</h3><div class="chips"><button class="chip" id="alove">💘 Trouver l'amour</button><button class="chip" id="amar">💍 Se marier</button><button class="chip" id="akid">👶 Avoir un enfant</button><button class="chip" id="afri">🤝 +3 amis</button></div>
+ <h3>🏠 Biens</h3><div class="chips"><button class="chip" id="aall">🏝️ Tous les biens</button></div>
+ <h3>☠️ Vie</h3><div class="chips"><button class="chip" id="adie">🪦 Mourir maintenant</button><button class="chip" id="anew" style="color:var(--r)">👶 Nouvelle vie</button></div>
+ <button class="btn" onclick="document.getElementById('ov').remove()" style="width:100%;margin-top:16px">Fermer</button></div>`);
+ const re=m=>{if(m)toast(m);flushYear();render();admin()};const on=(id,f)=>{$("#"+id).onclick=f};
+ document.querySelectorAll("[data-mo]").forEach(b=>b.onclick=()=>{S.money+=+b.dataset.mo;re("💶 Ajouté")});
+ document.querySelectorAll("[data-tg]").forEach(b=>b.onclick=()=>{a[b.dataset.tg]=!a[b.dataset.tg];re()});
+ document.querySelectorAll("[data-ag]").forEach(b=>b.onclick=async()=>{closePop();const n=+b.dataset.ag;const nb=a.noBad;a.noBad=true;for(let i=0;i<n&&S.alive;i++){await ageUpQuiet()}a.noBad=nb;render();toast(`🎂 ${S.age} ans`)});
+ document.querySelectorAll("[data-sa]").forEach(b=>b.onclick=()=>{S.age=+b.dataset.sa;S.em=emoji();if(S.age>=18)S.edu=Math.max(S.edu,3);re(`🎂 ${S.age} ans`)});
+ document.querySelectorAll("[data-dp]").forEach(b=>b.onclick=()=>{S.dip=b.dataset.dp;S.edu=4;S.study=null;if(S.age<18){S.age=22;S.em=emoji()}re("🎓 Diplômé")});
+ document.querySelectorAll("[data-jb]").forEach(b=>b.onclick=()=>{if(S.age<18){S.age=25;S.em=emoji()}S.job={k:b.dataset.jb,l:3,y:10,perf:90};S.study=null;re("💼 Poste obtenu")});
+ on("adebt",()=>{S.money=Math.max(0,S.money);re("✅ Dettes effacées")});
+ on("a100",()=>{for(const k in S.st)S.st[k]=100;re("📊 100 %")});on("asan",()=>{S.st.san=100;re("❤️ Santé max")});on("askl",()=>{S.sk={sport:100,music:100,social:100};re("⭐ Skills max")});
+ on("abac",()=>{S.edu=Math.max(S.edu,3);if(S.age<18){S.age=18;S.em=emoji()}re("🎓 Bac")});
+ on("apres",()=>{S.pol=5;if(S.age<35){S.age=35;S.em=emoji()}say("🇫🇷 Tu es président de la République !");re("🏛️ Président")});
+ on("arap",()=>{S.rap={fans:1e7,songs:(S.rap?S.rap.songs:0)+10};re("🎤 Star du rap")});on("ayt",()=>{S.yt={subs:5e7,v:300};re("📱 50M abonnés")});
+ on("afoot",()=>{if(S.age<18){S.age=20;S.em=emoji()}S.foot={club:"Imperial Madrid",ovr:95,goals:0,y:0,bdo:0};S.job=null;re("⚽ Signé !")});
+ on("alove",()=>{if(S.age<16){S.age=18;S.em=emoji()}const n=pick(he()?PRE_F:PRE_M);S.part={n:n+" "+pick(NOMS),ic:he()?"👩":"👨",rel:95,age:S.age,married:false};say(`💘 En couple avec ${S.part.n}.`);re("💘 En couple")});
+ on("amar",()=>{if(!S.part){toast("Trouve l'amour d'abord");return}if(S.age<18){S.age=18;S.em=emoji()}S.part.married=true;say(`💍 Mariage avec ${S.part.n}.`);re("💍 Mariés")});
+ on("akid",()=>{if(S.age<20){S.age=20;S.em=emoji()}const sx=Math.random()<.5?"m":"f";const n=pick(sx==="m"?PRE_M:PRE_F)+" "+S.last;S.kids.push({n,sex:sx,ic:sx==="m"?"👦":"👧",age:0,rel:90});say(`👶 Naissance de ${n}.`);re("👶 Bébé")});
+ on("afri",()=>{for(let i=0;i<3;i++)addFriend();re("🤝 +3 amis")});
+ on("aall",()=>{if(S.age<18){S.age=18;S.em=emoji()}S.house=HOUSES.length-1;S.cars=CARS.map((_,i)=>i);re("🏝️ Tout est à toi")});
+ on("adie",()=>{closePop();flushYear();death()});on("anew",()=>{S=NEW();closePop();render()})}
+async function ageUpQuiet(){QUIET=true;try{await ageUp()}finally{QUIET=false}}
+
+if(S.first&&S.alive)S.em=emoji();
+render();
+Object.defineProperty(window,"__V",{get:()=>S});
+})();
+</script>
+</body>
+</html>
