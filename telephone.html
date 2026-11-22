@@ -295,7 +295,7 @@ setInterval(()=>{if(!S.name||$("#ov")||$("#live"))return;const r=Math.random();
  else if(r<.58)newDM();
  if(!OPEN)render()},22000);
 syncDisko();render();
-Object.defineProperty(window,"__T",{get:()=>S});
+Object.defineProperty(window,"__T",{get:()=>S});window.__saveT=()=>{save();sbar()};
 })();
 </script>
 </body>
