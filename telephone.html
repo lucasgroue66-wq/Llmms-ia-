@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<title>LE TÉLÉPHONE ULTIME</title>
+<style>
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;height:100%;background:#0a0a0f;font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;color:#fff;overflow:hidden}
+button{font:inherit;color:inherit;border:0;cursor:pointer;background:none}
+#phone{position:relative;width:100%;height:100%;max-width:430px;max-height:930px;margin:0 auto;overflow:hidden;background:#000}
+@media(min-width:500px){#phone{margin-top:2vh;height:96vh;border-radius:44px;border:10px solid #1d1d24;box-shadow:0 30px 80px #000}}
+.wall{position:absolute;inset:0;background:radial-gradient(120% 80% at 20% 0%,#6d28d9 0,transparent 55%),radial-gradient(100% 70% at 100% 100%,#db2777 0,transparent 55%),#0f0a1f}
+.sb{position:absolute;top:0;left:0;right:0;height:34px;display:flex;align-items:center;justify-content:space-between;padding:0 22px;font-size:14px;font-weight:700;z-index:40;text-shadow:0 1px 3px rgba(0,0,0,.6)}
+.screen{position:absolute;inset:34px 0 0 0;overflow-y:auto;overflow-x:hidden}
+.home{padding:18px 18px 110px}
+.wid{background:rgba(255,255,255,.14);backdrop-filter:blur(14px);border-radius:24px;padding:14px;margin-bottom:18px}
+.wid b{font-size:15px}.wid .big{font-size:30px;font-weight:900}
+.apps{display:grid;grid-template-columns:repeat(4,1fr);gap:18px 10px}
+.app{display:flex;flex-direction:column;align-items:center;gap:5px;font-size:11.5px;position:relative}
+.app .ic{width:62px;height:62px;border-radius:16px;display:grid;place-items:center;font-size:31px;box-shadow:0 6px 16px rgba(0,0,0,.35)}
+.app .bd{position:absolute;top:-6px;right:4px;background:#ff3b30;border-radius:999px;min-width:22px;height:22px;font-size:12px;font-weight:800;display:grid;place-items:center;padding:0 5px}
+.dock{position:absolute;bottom:22px;left:14px;right:14px;background:rgba(255,255,255,.16);backdrop-filter:blur(16px);border-radius:28px;padding:12px;display:flex;justify-content:space-around;z-index:5}
+.homebar{position:absolute;bottom:6px;left:50%;transform:translateX(-50%);width:140px;height:5px;border-radius:5px;background:rgba(255,255,255,.8);z-index:45}
+.appv{position:absolute;inset:0;background:#0e0e14;z-index:20;display:flex;flex-direction:column;animation:op .22s}
+@keyframes op{from{transform:scale(.85);opacity:0}}
+.ah{display:flex;align-items:center;gap:10px;padding:12px 14px;font-weight:800;font-size:19px;border-bottom:1px solid #222}
+.ah .bk{font-size:22px;padding:2px 8px}
+.ab{flex:1;overflow-y:auto;padding:14px 14px 40px}
+.card{background:#17171f;border:1px solid #26262f;border-radius:16px;padding:12px;margin-bottom:10px}
+.mut{color:#9a9aae;font-size:13px}
+.btn{background:#7c3aed;border-radius:12px;padding:11px 14px;font-weight:800;color:#fff}
+.btn.full{width:100%}
+.row{display:flex;align-items:center;gap:10px}
+.it{display:flex;align-items:center;gap:10px;padding:10px;border-radius:12px;background:#17171f;margin-bottom:8px;border:1px solid #24242e}
+.it .av{width:44px;height:44px;border-radius:50%;display:grid;place-items:center;font-size:22px;background:#26263a;flex:none}
+.it .inf{flex:1;min-width:0}.it .inf b{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tag{display:inline-block;font-size:10px;padding:2px 6px;border-radius:6px;background:#26263a;color:#c4b5fd;margin-left:4px}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0}
+.chip{background:#1e1e28;border:1px solid #2e2e3a;border-radius:999px;padding:8px 12px;font-size:13px}
+.chip.on{background:#fff;color:#000;font-weight:800}
+.notif{position:absolute;top:40px;left:10px;right:10px;z-index:60;background:rgba(40,40,52,.95);backdrop-filter:blur(14px);border-radius:20px;padding:12px;display:flex;gap:10px;align-items:center;animation:nd .3s;box-shadow:0 10px 30px rgba(0,0,0,.5)}
+@keyframes nd{from{transform:translateY(-120%)}}
+.notif .ni{width:40px;height:40px;border-radius:10px;display:grid;place-items:center;font-size:22px;flex:none}
+.notif b{font-size:13px}.notif div{font-size:13px}
+.ov{position:absolute;inset:0;z-index:70;background:rgba(0,0,0,.75);display:grid;place-items:center;padding:16px}
+.pop{background:#17171f;border:1px solid #2a2a36;border-radius:22px;padding:18px;width:100%;max-height:86%;overflow:auto;text-align:center}
+.pop .bigi{font-size:50px}
+.opts{display:grid;gap:8px;margin-top:10px}.opts button{background:#22222e;border:1px solid #30303e;padding:12px;border-radius:12px;text-align:left;font-size:14px}
+.live{position:absolute;inset:34px 0 0 0;background:linear-gradient(160deg,#1b103a,#050508);z-index:30;display:flex;flex-direction:column}
+.live .game{height:38%;display:grid;place-items:center;font-size:90px;position:relative;background:radial-gradient(circle,#2a1960,#090612)}
+.live .lv{position:absolute;top:10px;left:10px;background:#e11d48;border-radius:6px;padding:3px 8px;font-weight:900;font-size:12px}
+.live .vw{position:absolute;top:10px;right:10px;background:rgba(0,0,0,.55);border-radius:6px;padding:3px 8px;font-size:13px;font-weight:700}
+.chat{flex:1;overflow:hidden;padding:8px 12px;display:flex;flex-direction:column;justify-content:flex-end;font-size:14px}
+.chat div{padding:3px 0;animation:op .15s}
+.chat .sub{background:linear-gradient(90deg,#7c3aed55,transparent);border-left:3px solid #a78bfa;padding-left:6px;border-radius:4px}
+.chat .troll{color:#fca5a5}
+.chat .troll button{background:#ef4444;border-radius:6px;padding:1px 6px;font-size:12px;margin-left:6px}
+.lacts{display:grid;grid-template-columns:1fr 1fr;gap:8px;padding:10px 12px 26px}
+.lacts button{background:#22222e;border:1px solid #33334a;border-radius:12px;padding:11px 6px;font-size:13px;font-weight:700}
+.lacts button:disabled{opacity:.35}
+.flame{color:#fb923c;font-weight:900}
+.adm h3{margin:14px 0 6px;text-align:left;font-size:14px;color:#c4b5fd}.adm .chips{margin:0}.adm .chip{font-size:12px;padding:7px 10px}
+.toast{position:absolute;left:50%;bottom:60px;transform:translateX(-50%);z-index:80;background:#22222e;border:1px solid #a78bfa;padding:10px 16px;border-radius:12px;font-weight:700;font-size:14px;white-space:nowrap;animation:op .2s}
+input[type=text]{width:100%;background:#0b0b10;border:1px solid #2e2e3a;color:#fff;border-radius:12px;padding:12px;font:inherit;font-size:16px}
+.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:3px}
+.grid3 div{aspect-ratio:1;display:grid;place-items:center;font-size:34px;border-radius:4px;position:relative}
+.grid3 small{position:absolute;bottom:3px;left:4px;font-size:11px;font-weight:700;text-shadow:0 1px 2px #000}
+.bat{display:inline-block;width:24px;height:12px;border:2px solid #fff;border-radius:3px;position:relative;vertical-align:-1px}.bat i{position:absolute;left:1px;top:1px;bottom:1px;border-radius:1px}
+</style>
+</head>
+<body>
+<div id="phone"><div class="wall"></div><div class="sb" id="sb"></div><div class="screen" id="scr"></div><div class="homebar" id="hb"></div></div>
+<script>
+(()=>{
+"use strict";
+const KEY="telephone1";
+const $=s=>document.querySelector(s);const P=()=>$("#phone");
+const rnd=(a,b)=>a+Math.random()*(b-a),ri=(a,b)=>Math.floor(rnd(a,b+1)),pick=a=>a[Math.floor(Math.random()*a.length)],clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const fmt=n=>{n=Math.floor(n);const a=Math.abs(n);if(a>=1e9)return(n/1e9).toFixed(1).replace(".0","")+"Md";if(a>=1e6)return(n/1e6).toFixed(1).replace(".0","")+"M";if(a>=1e4)return(n/1e3).toFixed(1).replace(".0","")+"k";return n.toLocaleString("fr-FR")};
+const eur=n=>fmt(n)+" €";
+/* ---------- Applis (noms inventés) ---------- */
+const APPS={
+ streamo:{n:"Streamo",ic:"📺",bg:"linear-gradient(135deg,#7c3aed,#a855f7)"},
+ snapo:{n:"Snapo",ic:"👻",bg:"#fde047"},
+ toktok:{n:"TokTok",ic:"🎵",bg:"linear-gradient(135deg,#111,#222)"},
+ insta:{n:"Instaflo",ic:"📸",bg:"linear-gradient(135deg,#f59e0b,#ec4899,#8b5cf6)"},
+ disko:{n:"Disko",ic:"💬",bg:"#5865f2"},
+ msg:{n:"Messages",ic:"✉️",bg:"#22c55e"},
+ bank:{n:"Banque",ic:"💳",bg:"linear-gradient(135deg,#0ea5e9,#2563eb)"},
+ shop:{n:"Boutique",ic:"🛍️",bg:"linear-gradient(135deg,#f97316,#ef4444)"},
+ stats:{n:"Stats",ic:"📊",bg:"linear-gradient(135deg,#14b8a6,#0d9488)"},
+ settings:{n:"Réglages",ic:"⚙️",bg:"#6b7280"}
+};
+const GAMES=[["Fortnite-like","🔫"],["Jeu de foot","⚽"],["Minecraft-like","⛏️"],["Horreur","👻"],["Just Chatting","💬"],["Course","🏎️"],["Roblox-like","🧱"]];
+const NAMES=["sam","lina","yanis","ines","noah","jade","rayan","emma","adam","lou","nael","maya","ilyes","sara","enzo","zoe","kenzo","nour","mehdi","lea"];
+const user=()=>pick(NAMES)+pick(["","_","."])+ri(1,999);
+const CHAT=["salut !!","GG","t'es trop fort","premier !","d'où tu viens ?","fais un défi","😂😂😂","on t'aime","c'est quoi ton setup ?","clip ça","LETS GO","dis bonjour à moi stp","w stream","joue avec nous","🔥🔥🔥","mdrr","t'as quel âge ?","tu streams demain ?"];
+const TROLL=["t'es nul","ennuyant…","stream de fou… NON","je dors","nul le jeu"];
+const FRIENDS=[["kenzo","🧑🏾"],["lina","👧"],["yanis","🧑"],["jade","👱‍♀️"],["mehdi","🧔"],["zoe","👩‍🦰"]];
+const PLACES=[{n:"Ta chambre",ic:"🛏️",c:0,m:1},{n:"Parc",ic:"🌳",c:0,m:1.1},{n:"Resto chic",ic:"🍣",c:300,m:1.4},{n:"Plage",ic:"🏖️",c:2000,m:1.8},{n:"Paris",ic:"🗼",c:8000,m:2.3},{n:"Dubaï",ic:"🏙️",c:60000,m:3.2},{n:"Jet privé",ic:"✈️",c:500000,m:5}];
+const SETUP=[{k:"pc",n:"PC",ic:"🖥️",lv:["Vieux PC","PC gamer","PC de streamer","Setup de pro"],c:[0,800,5000,40000]},{k:"cam",n:"Caméra",ic:"📷",lv:["Webcam floue","Webcam HD","Caméra pro","Caméra cinéma"],c:[0,150,1500,15000]},{k:"mic",n:"Micro",ic:"🎙️",lv:["Micro du casque","Micro USB","Micro studio","Micro légendaire"],c:[0,100,1200,10000]},{k:"light",n:"Lumière",ic:"💡",lv:["Lampe","Ring light","LED RGB","Studio lumière"],c:[0,60,600,6000]}];
+const BRANDS=[["Bulle Soda","🥤",200],["ZapPhone","📱",900],["Sneak'R","👟",3000],["GameNova","🎮",12000],["Glow","💄",40000],["Volt Auto","🚗",150000]];
+const TRENDS=["#POV","#Transition","#Danse","#Défi24h","#AvantAprès","#Fail","#GlowUp","#Rétro"];
+/* ---------- État ---------- */
+const NEW=()=>({v:1,name:"",av:"😎",day:1,hour:9,bat:100,money:30,
+ f:{streamo:0,snapo:0,toktok:0,insta:0,disko:0},subs:0,
+ flames:FRIENDS.map(x=>({n:x[0],ic:x[1],fl:ri(0,4),sent:false})),
+ posts:[],tok:[],up:{pc:0,cam:0,mic:0,light:0},places:[0,1],
+ dms:[],notifs:{},log:[],verified:false,trend:pick(TRENDS),lives:0,bestV:0,deals:[],adm:{},liveDone:0});
+let S;try{S=JSON.parse(localStorage.getItem(KEY))||NEW()}catch(e){S=NEW()}S=Object.assign(NEW(),S);
+const save=()=>{try{localStorage.setItem(KEY,JSON.stringify(S))}catch(e){}};
+const A=()=>S.adm||(S.adm={});
+const fame=()=>Object.values(S.f).reduce((a,b)=>a+b,0);
+const gear=()=>Object.values(S.up).reduce((a,b)=>a+b,0);
+const log=t=>{S.log.unshift(`J${S.day} ${hh()} · ${t}`);S.log=S.log.slice(0,60)};
+const hh=()=>String(Math.floor(S.hour)).padStart(2,"0")+":"+String(Math.round((S.hour%1)*60)).padStart(2,"0");
+function toast(t){document.querySelectorAll(".toast").forEach(e=>e.remove());const d=document.createElement("div");d.className="toast";d.innerHTML=t;P().appendChild(d);setTimeout(()=>d.remove(),2200)}
+function popup(h,close=true){closePop();const o=document.createElement("div");o.className="ov";o.id="ov";o.innerHTML=`<div class="pop">${h}</div>`;if(close)o.onclick=e=>{if(e.target===o)closePop()};P().appendChild(o)}
+function closePop(){const o=$("#ov");if(o)o.remove()}
+const okB=(t="OK",id="")=>`<button class="btn full" style="margin-top:12px" ${id?`id="${id}"`:`onclick="this.closest('.ov').remove()"`}>${t}</button>`;
+function notify(app,title,text){const a=APPS[app];document.querySelectorAll(".notif").forEach(e=>e.remove());const d=document.createElement("div");d.className="notif";d.innerHTML=`<div class="ni" style="background:${a.bg}">${a.ic}</div><div style="flex:1"><b>${a.n.toUpperCase()} · maintenant</b><div><b>${esc(title)}</b> ${esc(text)}</div></div>`;d.onclick=()=>{d.remove();open(app)};P().appendChild(d);setTimeout(()=>d.remove(),3500);S.notifs[app]=(S.notifs[app]||0)+1}
+function useBat(n,h=1){if(A().infBat){S.hour+=h*.5;return true}if(S.bat<n){popup(`<div class="bigi">🪫</div><h3>Batterie faible</h3><div class="mut">Il te reste ${Math.round(S.bat)}%. Recharge ton téléphone ou va dormir.</div><div class="opts"><button id="chg">🔌 Recharger (+2 h)</button><button id="slp">😴 Dormir → jour suivant</button></div>`);$("#chg").onclick=()=>{closePop();charge()};$("#slp").onclick=()=>{closePop();sleep()};return false}
+ S.bat-=n;S.hour+=h;if(S.hour>=24){sleep(true);return false}return true}
+function charge(){S.bat=100;S.hour+=2;if(S.hour>=24){sleep(true);return}toast("🔌 Batterie 100 %");render()}
+function sleep(forced){
+ // flammes Snapo
+ let lost=0;for(const f of S.flames){if(f.sent)f.fl++;else if(f.fl>0&&!A().keepFl){f.fl=0;lost++}f.sent=false}
+ const passive=Math.round(S.subs*2.5+S.f.toktok*.01+S.f.insta*.01+S.deals.reduce((a,d)=>a+d,0));S.money+=passive;
+ for(const k in S.f)S.f[k]=Math.round(S.f[k]*rnd(.995,1.01));
+ S.day++;S.hour=8+Math.random();S.bat=100;S.trend=pick(TRENDS);S.liveDone=0;
+ log(`😴 Nuit : +${eur(passive)} (abonnés payants & partenariats)${lost?` · 💔 ${lost} flamme(s) perdue(s)`:""}`);
+ render();popup(`<div class="bigi">${forced?"🥱":"☀️"}</div><h3>${forced?"Il est minuit, tu t'endors…":"Bonjour !"} Jour ${S.day}</h3><div class="mut">+${eur(passive)} pendant la nuit${lost?`<br>💔 Tu as perdu ${lost} flamme(s) Snapo (tu n'as pas envoyé de snap)`:""}<br>🔥 Tendance du jour : <b>${S.trend}</b></div>${okB()}`);
+ if(Math.random()<.7)setTimeout(newDM,2500)}
+/* ---------- DM ---------- */
+function newDM(){const fm=fame();const pool=[
+ {from:"Un fan",ic:"🥹",t:"Je regarde tous tes lives, tu m'as trop motivé ❤️",o:[["Répondre ❤️",()=>{S.f.insta+=ri(5,20);toast("❤️ Le fan est trop content")}],["Ignorer",()=>{}]]},
+ {from:"Hater",ic:"😒",t:"T'es surcôté frère.",o:[["😂 Répondre avec humour",()=>{if(Math.random()<.6){S.f.toktok+=ri(10,60);toast("😂 Ta réponse a fait rire tout le monde")}else toast("😐 Bof")}],["🚫 Bloquer",()=>toast("🚫 Bloqué")]]}];
+ if(fm>200)pool.push({from:"Créateur "+pick(["@luna.live","@maxgaming","@nina.vlog","@kuro"]),ic:"🤝",t:"Collab ensemble ? Live à deux ce soir 👀",o:[["Accepter (20 % batterie)",()=>{if(!useBat(20,1))return;const g=Math.round(fm*rnd(.05,.12)+40);S.f.streamo+=g;S.f.toktok+=Math.round(g*.6);log(`🤝 Collab : +${fmt(g)} followers`);toast(`🤝 +${fmt(g)} followers`)}],["Refuser",()=>{}]]});
+ const b=BRANDS.filter(x=>fm>=x[2]*3);if(b.length){const B=b[b.length-1];const pay=Math.round(B[2]*(1+gear()*.08));pool.push({from:B[0],ic:B[1],t:`Partenariat ? On te paye ${eur(pay)} pour une story + ${eur(Math.round(pay*.03))}/jour.`,o:[["✅ Signer",()=>{S.money+=pay;S.deals.push(Math.round(pay*.03));log(`${B[1]} Partenariat ${B[0]} : +${eur(pay)}`);toast(`💸 +${eur(pay)}`)}],["Non merci",()=>{}]]})}
+ if(Math.random()<.25)pool.push({from:"Compte « Support »",ic:"⚠️",t:"Ton compte va être supprimé ! Envoie ton mot de passe pour le vérifier.",o:[["🛡️ Ignorer (c'est une arnaque)",()=>toast("🛡️ Bien joué : JAMAIS de mot de passe")],["Envoyer le mot de passe",()=>{const l=Math.round(S.f.insta*.2);S.f.insta-=l;log("🔓 Compte Instaflo piraté");toast(`🔓 Piraté ! −${fmt(l)} abonnés`)}]]});
+ const d=pick(pool);S.dms.unshift({...d,o:d.o.map(x=>x[0]),id:Date.now(),done:false});S.dms=S.dms.slice(0,20);DMF[S.dms[0].id]=d.o.map(x=>x[1]);notify("msg",d.from,d.t);render(true)}
+const DMF={};
+/* ---------- Rendu ---------- */
+let OPEN=null;
+function sbar(){const b=Math.round(S.bat);$("#sb").innerHTML=`<span>${hh()}</span><span>J${S.day} · 📶 <span class="bat"><i style="width:${Math.max(4,b/100*18)}px;background:${b<20?"#ef4444":"#fff"}"></i></span> ${A().infBat?"∞":b+"%"}</span>`}
+function render(keep){save();sbar();if(!S.name){$("#scr").innerHTML=setupHTML();bindSetup();return}
+ if(!keep||!OPEN){$("#scr").innerHTML=homeHTML();document.querySelectorAll("[data-app]").forEach(b=>b.onclick=()=>open(b.dataset.app));const sb=$("#sleepB");if(sb)sb.onclick=()=>sleep()}
+ if(OPEN&&!keep)open(OPEN,true)}
+function homeHTML(){const fm=fame();const ap=k=>`<button class="app" data-app="${k}"><div class="ic" style="background:${APPS[k].bg}">${APPS[k].ic}</div>${APPS[k].n}${S.notifs[k]?`<span class="bd">${S.notifs[k]}</span>`:""}</button>`;
+ return `<div class="home"><div class="wid"><div class="row"><div style="font-size:40px">${S.av}</div><div style="flex:1"><b>@${esc(S.name)}${S.verified?" ✅":""}</b><div class="mut" style="color:#ddd">${fmt(fm)} followers au total</div></div><div style="text-align:right"><div class="big">${eur(S.money)}</div></div></div></div>
+ <div class="apps">${["streamo","snapo","toktok","insta","disko","bank","shop","stats"].map(ap).join("")}</div>
+ <div class="wid" style="margin-top:18px"><b>🔥 Tendance du jour : ${S.trend}</b><div class="mut" style="color:#ddd">Poste sur TokTok avec la tendance = ×3 vues</div></div>
+ <button class="wid" id="sleepB" style="width:100%;text-align:left"><b>😴 Dormir → jour ${S.day+1}</b><div class="mut" style="color:#ddd">Envoie tes snaps avant, sinon tu perds tes flammes 🔥</div></button></div>
+ <div class="dock">${["msg","streamo","snapo","settings"].map(ap).join("")}</div>`}
+function shell(k,body){const a=APPS[k];return `<div class="appv"><div class="ah" style="background:${k==="snapo"?"#fde047;color:#000":"#0e0e14"}"><button class="bk" id="bk">‹</button><span>${a.ic} ${a.n}</span></div><div class="ab">${body}</div></div>`}
+function open(k,re){OPEN=k;S.notifs[k]=0;const el=document.createElement("div");el.id="appwrap";document.querySelectorAll("#appwrap").forEach(e=>e.remove());el.innerHTML=shell(k,VIEWS[k]());$("#scr").appendChild(el);$("#bk").onclick=goHome;(BIND[k]||(()=>{}))();save();sbar()}
+function goHome(){OPEN=null;document.querySelectorAll("#appwrap").forEach(e=>e.remove());render()}
+$("#hb").onclick=goHome;
+/* Démarrage */
+const AVS=["😎","🦊","🐼","👽","🥷","🐸","💀","🤖","🐺","👑"];
+function setupHTML(){return `<div style="padding:40px 22px;text-align:center"><div style="font-size:70px">📱</div><h2>Bienvenue sur ton nouveau téléphone</h2><div class="mut" style="color:#ddd">Streamo, Snapo, TokTok, Instaflo, Disko… Deviens la plus grosse star du téléphone.</div>
+ <div style="margin-top:20px;text-align:left"><b>Ton pseudo</b><input type="text" id="nm" maxlength="16" placeholder="@pseudo" style="margin-top:6px"><div class="chips" id="avs">${AVS.map((a,i)=>`<button class="chip ${i?"":"on"}" data-a="${a}" style="font-size:22px">${a}</button>`).join("")}</div>
+ <button class="btn full" id="go" style="padding:15px">Allumer le téléphone</button></div></div>`}
+function bindSetup(){let av=AVS[0];document.querySelectorAll("#avs .chip").forEach(b=>b.onclick=()=>{document.querySelectorAll("#avs .chip").forEach(x=>x.classList.remove("on"));b.classList.add("on");av=b.dataset.a});
+ $("#go").onclick=()=>{const n=$("#nm").value.trim().replace(/[^a-zA-Z0-9._-]/g,"").toLowerCase();if(n.length<2){toast("Choisis un pseudo");return}S.name=n;S.av=av;log("📱 Téléphone allumé");render();setTimeout(()=>notify("snapo","kenzo","t'a envoyé un snap 👻"),1200);setTimeout(newDM,5000)}}
+/* ---------- STREAMO (live) ---------- */
+const VIEWS={},BIND={};
+VIEWS.streamo=()=>`<div class="card" style="text-align:center"><div style="font-size:44px">${S.av}</div><b>${esc(S.name)}</b><div class="mut">${fmt(S.f.streamo)} followers · ${fmt(S.subs)} abonnés 💜 · ${S.lives} lives</div></div>
+ <div class="card"><b>🎮 Choisis ton jeu</b><div class="chips" id="gm">${GAMES.map((g,i)=>`<button class="chip ${i?"":"on"}" data-g="${i}">${g[1]} ${g[0]}</button>`).join("")}</div><button class="btn full" id="golive" style="background:#e11d48;padding:14px">🔴 PASSER EN LIVE (25 % batterie, 2 h)</button></div>
+ <div class="mut">Record : ${fmt(S.bestV)} viewers. Les abonnés 💜 te rapportent de l'argent chaque nuit.</div>`;
+BIND.streamo=()=>{let g=0;document.querySelectorAll("#gm .chip").forEach(b=>b.onclick=()=>{document.querySelectorAll("#gm .chip").forEach(x=>x.classList.remove("on"));b.classList.add("on");g=+b.dataset.g});$("#golive").onclick=()=>{if(!useBat(25,2))return;goLive(g)}};
+function goLive(gi){S.lives++;const G=GAMES[gi];const fm=fame();let v=Math.max(2,Math.round(S.f.streamo*rnd(.04,.09)+fm*.01+ri(1,6)+gear()*3)),hype=55,t=45,subs=0,money=0,newF=0,T;
+ const el=document.createElement("div");el.className="live";el.id="live";el.innerHTML=`<div class="game"><span class="lv">LIVE</span><span class="vw">👁️ <b id="lvv">${v}</b> · ⏱️ <b id="lvt">${t}</b>s</span>${G[1]}<div style="position:absolute;bottom:8px;left:10px;right:10px"><div style="height:8px;background:#ffffff22;border-radius:6px;overflow:hidden"><i id="lvh" style="display:block;height:100%;width:55%;background:linear-gradient(90deg,#a78bfa,#f472b6)"></i></div><div class="mut" style="margin-top:3px;color:#ddd">Ambiance — garde le chat chaud !</div></div></div>
+ <div class="chat" id="lch"></div><div class="lacts"><button data-l="talk">💬 Parler au chat</button><button data-l="play">🎮 Action de fou</button><button data-l="def">🎯 Défi du chat</button><button data-l="give">🎁 Giveaway</button><button data-l="end" style="grid-column:span 2;background:#3a0d18;border-color:#e11d48">⏹️ Arrêter le live</button></div>`;
+ P().appendChild(el);
+ const chat=(h,cls="")=>{const c=$("#lch");if(!c)return;const d=document.createElement("div");d.className=cls;d.innerHTML=h;c.appendChild(d);while(c.children.length>12)c.firstChild.remove()};
+ const upd=()=>{$("#lvv").textContent=fmt(v);$("#lvt").textContent=t;$("#lvh").style.width=hype+"%"};
+ el.querySelectorAll("[data-l]").forEach(b=>b.onclick=()=>{const a=b.dataset.l;if(a==="end"){end();return}b.disabled=true;setTimeout(()=>b.disabled=false,a==="give"?15000:2500);
+  const q=1+gear()*.12;if(a==="talk"){hype=clamp(hype+10*q,0,100);chat(`<b style="color:#a78bfa">${esc(S.name)}</b> : Wesh le chat, ça va ?`)}
+  if(a==="play"){if(Math.random()<.65+gear()*.03){hype=clamp(hype+18*q,0,100);chat("💥 <b>CLIP CLIP CLIP</b>");v+=ri(2,8)}else{hype=clamp(hype-6,0,100);chat("😬 raté mdrrr")}}
+  if(a==="def"){hype=clamp(hype+14*q,0,100);chat(`🎯 Défi de ${user()} : ${pick(["jouer sans regarder","faire un cri","chanter 10 s","danser en live"])} ✅`)}
+  if(a==="give"){if(!pay(50))return;hype=clamp(hype+25,0,100);v=Math.round(v*1.25+5);chat("🎁 <b>GIVEAWAY</b> lancé ! Tout le monde reste !")}upd()});
+ T=setInterval(()=>{t--;hype=clamp(hype-rnd(2,4),0,100);const g=(hype-40)/100;v=Math.max(1,Math.round(v*(1+g*.1)+(hype>60?ri(0,2+gear()):0)));
+  if(Math.random()<.75)chat(`<b style="color:${pick(["#60a5fa","#f472b6","#34d399","#fbbf24","#f87171"])}">${user()}</b> : ${esc(pick(CHAT))}`);
+  if(Math.random()<.06+hype/500+v/3000){subs++;money+=5;chat(`💜 <b>${user()}</b> s'est abonné !`,"sub")}
+  if(Math.random()<.05+v/5000){const b=ri(1,20)*(1+Math.floor(v/300));money+=b;chat(`💎 <b>${user()}</b> a envoyé ${b} € !`,"sub")}
+  if(Math.random()<.07){const u=user();const id="tr"+Date.now();chat(`<b>${u}</b> : ${esc(pick(TROLL))}<button id="${id}">🔨 Ban</button>`,"troll");setTimeout(()=>{const x=$("#"+id);if(x)x.onclick=()=>{x.parentElement.innerHTML=`🔨 <i>${u} a été banni</i>`;hype=clamp(hype+5,0,100)}},10)}
+  if(hype<10&&Math.random()<.3)chat("<i>…des viewers s'en vont</i>","troll");
+  newF+=Math.max(0,Math.round(v*.02*(hype/60)));upd();if(t<=0)end()},1000);
+ const end=()=>{clearInterval(T);const raid=v>30&&Math.random()<.4;const rv=raid?ri(10,Math.max(12,Math.round(v*.8))):0;
+  newF+=Math.round(v*.12*(hype/60))+rv;S.f.streamo+=newF;S.subs+=subs;S.money+=money;S.bestV=Math.max(S.bestV,v);log(`🔴 Live : ${v} viewers, +${fmt(newF)} followers, +${subs} 💜, +${eur(money)}`);
+  el.remove();popup(`<div class="bigi">🔴</div><h3>Live terminé !</h3><div class="mut">Pic à ${fmt(v)} viewers${raid?` · ⚡ Raid de ${rv} viewers !`:""}</div><div style="font-size:22px;font-weight:900;margin:10px 0">+${fmt(newF)} followers · +${subs} 💜 · +${eur(money)}</div>${okB()}`);checkV();open("streamo",true)}}
+/* ---------- SNAPO ---------- */
+VIEWS.snapo=()=>`<div class="card"><b>🔥 Tes flammes</b><div class="mut">Envoie un snap à chaque pote <b>chaque jour</b>, sinon la flamme s'éteint !</div></div>
+ ${S.flames.map((f,i)=>`<div class="it"><div class="av">${f.ic}</div><div class="inf"><b>${f.n}</b><small class="mut">${f.sent?"✅ Snap envoyé aujourd'hui":"⏳ À envoyer"}</small></div><span class="flame">${f.fl} 🔥</span>${f.sent?"":`<button class="btn" data-s="${i}" style="padding:8px 12px;background:#facc15;color:#000">📸</button>`}</div>`).join("")}
+ <button class="btn full" id="all" style="background:#facc15;color:#000;margin-top:4px">📸 Envoyer à tout le monde (10 %)</button>
+ <div class="card" style="margin-top:10px"><b>👻 Ta story</b><div class="mut">${fmt(S.f.snapo)} amis · tes stories font grimper ta popularité</div><button class="btn full" id="story" style="margin-top:8px;background:#facc15;color:#000">➕ Poster une story (10 %)</button></div>`;
+BIND.snapo=()=>{document.querySelectorAll("[data-s]").forEach(b=>b.onclick=()=>{if(!useBat(2,.2))return;S.flames[+b.dataset.s].sent=true;toast("📸 Snap envoyé");open("snapo",true)});
+ $("#all").onclick=()=>{if(!useBat(10,.5))return;S.flames.forEach(f=>f.sent=true);toast("📸 Snaps envoyés à tout le monde");open("snapo",true)};
+ $("#story").onclick=()=>{if(!useBat(10,.5))return;const fl=S.flames.reduce((a,f)=>a+f.fl,0);const g=Math.round(ri(3,10)+fl*.6+fame()*.004);S.f.snapo+=g;toast(`👻 Story vue · +${g} amis`);if(Math.random()<.3)setTimeout(()=>notify("snapo",pick(S.flames).n,"a fait une capture d'écran de ta story 👀"),900);open("snapo",true)}};
+/* ---------- TOKTOK ---------- */
+VIEWS.toktok=()=>`<div class="card" style="text-align:center"><b>@${esc(S.name)}${S.verified?" ✅":""}</b><div class="mut">${fmt(S.f.toktok)} abonnés</div></div>
+ <div class="card"><b>🎬 Nouvelle vidéo</b><div class="chips" id="tt">${["Danse 💃","Humour 😂","Gaming 🎮","Storytime 🗣️","Défi 🏆"].map((x,i)=>`<button class="chip ${i?"":"on"}" data-i="${i}">${x}</button>`).join("")}</div>
+ <label class="row" style="gap:6px;margin:6px 0"><input type="checkbox" id="usetr" checked> Utiliser la tendance <b>${S.trend}</b> (×3)</label>
+ <button class="btn full" id="film" style="background:#fe2c55;padding:14px">🎥 Filmer (15 %, 1 h)</button></div>
+ <div class="grid3">${S.tok.map(v=>`<div style="background:${v.col}"><span>${v.ic}</span><small>▶ ${fmt(v.v)}${v.vir?" 🚀":""}</small></div>`).join("")}</div>`;
+BIND.toktok=()=>{let ty=0;document.querySelectorAll("#tt .chip").forEach(b=>b.onclick=()=>{document.querySelectorAll("#tt .chip").forEach(x=>x.classList.remove("on"));b.classList.add("on");ty=+b.dataset.i});
+ $("#film").onclick=()=>{const tr=$("#usetr").checked;if(!useBat(15,1))return;tapGame("🎥 Tournage","Tape vite pour une vidéo de fou !",sc=>{
+  const q=clamp(sc*60+gear()*4+rnd(0,25),1,100);const vir=A().viral||Math.random()<(q-50)/180*(tr?1.6:1);
+  const v=Math.round((S.f.toktok*rnd(.5,1.5)+ri(50,300))*(q/55)**2*(tr?3:1)*(vir?rnd(6,20):1));const g=Math.round(v*rnd(.01,.02));S.f.toktok+=g;
+  const ics=["💃","😂","🎮","🗣️","🏆"],cols=["#4c1d95","#78350f","#1e3a8a","#134e4a","#7c2d12"];S.tok.unshift({ic:ics[ty],col:cols[ty],v,vir});S.tok=S.tok.slice(0,30);
+  log(`🎵 Vidéo TokTok : ${fmt(v)} vues${vir?" (VIRALE)":""}`);popup(`<div class="bigi">${vir?"🚀":"🎵"}</div><h3>${vir?"TA VIDÉO EST VIRALE !":"Vidéo en ligne"}</h3><div style="font-size:26px;font-weight:900;margin:8px 0">👁️ ${fmt(v)} vues</div><div class="mut">+${fmt(g)} abonnés</div>${okB()}`);checkV();open("toktok",true)})}};
+function tapGame(title,sub,cb){if(A().autoWin){cb(1);return}let n=0,t0=0,T,done=false;const goal=14;
+ popup(`<h3>${title}</h3><div class="mut">${sub}</div><div style="font-size:44px;font-weight:900;margin:8px 0" id="tpn">0</div><div class="mut" id="tpt">Appuie pour commencer (3 s)</div><button id="tbt" style="width:100%;padding:32px;border-radius:18px;margin-top:10px;font-size:22px;font-weight:900;background:linear-gradient(135deg,#fe2c55,#7c3aed);touch-action:manipulation">👆 TAPE !</button>`,false);
+ const fin=()=>{if(done)return;done=true;clearInterval(T);setTimeout(()=>{closePop();cb(Math.min(1,n/goal))},350)};
+ $("#tbt").onpointerdown=e=>{e.preventDefault();if(done)return;if(!t0){t0=performance.now();T=setInterval(()=>{const l=3-(performance.now()-t0)/1000;$("#tpt").textContent=Math.max(0,l).toFixed(1)+" s";if(l<=0)fin()},100)}n++;$("#tpn").textContent=n;if(n>=goal)fin()}}
+/* ---------- INSTAFLO ---------- */
+VIEWS.insta=()=>`<div class="card" style="text-align:center"><div style="font-size:44px">${S.av}</div><b>${esc(S.name)}${S.verified?" ✅":""}</b><div class="row" style="justify-content:space-around;margin-top:8px"><div><b>${S.posts.length}</b><div class="mut">posts</div></div><div><b>${fmt(S.f.insta)}</b><div class="mut">abonnés</div></div></div></div>
+ <div class="card"><b>📍 Où tu prends ta photo ?</b><div class="chips" id="pl">${PLACES.map((p,i)=>S.places.includes(i)?`<button class="chip ${i?"":"on"}" data-p="${i}">${p.ic} ${p.n}</button>`:"").join("")}</div><div class="mut">Débloque de nouveaux lieux dans la 🛍️ Boutique</div>
+ <button class="btn full" id="post" style="margin-top:8px;background:linear-gradient(135deg,#f59e0b,#ec4899)">📸 Poster une photo (10 %, 1 h)</button></div>
+ <div class="grid3">${S.posts.map(p=>`<div style="background:linear-gradient(135deg,#1f2937,#4c1d95)"><span>${p.ic}</span><small>❤️ ${fmt(p.l)}</small></div>`).join("")}</div>`;
+BIND.insta=()=>{let pl=0;document.querySelectorAll("#pl .chip").forEach(b=>b.onclick=()=>{document.querySelectorAll("#pl .chip").forEach(x=>x.classList.remove("on"));b.classList.add("on");pl=+b.dataset.p});
+ $("#post").onclick=()=>{if(!useBat(10,1))return;const p=PLACES[pl];const l=Math.round((S.f.insta*rnd(.08,.2)+ri(5,30))*p.m*(1+S.up.cam*.25));const g=Math.round(l*rnd(.05,.15)*p.m);S.f.insta+=g;S.posts.unshift({ic:p.ic,l});S.posts=S.posts.slice(0,30);
+  log(`📸 Photo à ${p.n} : ${fmt(l)} likes`);toast(`📸 ${fmt(l)} ❤️ · +${fmt(g)} abonnés`);checkV();open("insta",true)}};
+/* ---------- DISKO ---------- */
+const DK=["salut tout le monde","quand le prochain live ?","GG pour hier","qui joue ?","le boss est là 👀","@everyone ???","trop bien ce serveur","on fait un event ?"];
+VIEWS.disko=()=>{const m=S.f.disko;return `<div class="card"><b>🏠 Serveur de ${esc(S.name)}</b><div class="mut">👥 ${fmt(m)} membres · 🟢 ${fmt(Math.round(m*.12)+ (m?1:0))} en ligne</div></div>
+ <div class="card"><b># général</b>${m?Array.from({length:5},()=>`<div style="padding:4px 0;font-size:14px"><b style="color:${pick(["#60a5fa","#f472b6","#34d399","#fbbf24"])}">${user()}</b> ${esc(pick(DK))}</div>`).join(""):`<div class="mut">Personne… pour l'instant. Partage le lien !</div>`}</div>
+ <div class="opts"><button id="dkl">🔗 Partager le lien partout (10 %)</button><button id="dka">📣 Annonce @everyone (5 %)</button><button id="dke">🎉 Lancer un event (20 %)</button></div>`};
+BIND.disko=()=>{$("#dkl").onclick=()=>{if(!useBat(10,.5))return;const g=Math.round(fame()*rnd(.01,.03)+ri(2,10));S.f.disko+=g;toast(`🔗 +${g} membres`);open("disko",true)};
+ $("#dka").onclick=()=>{if(!useBat(5,.3))return;if(!S.f.disko){toast("Personne dans le serveur");return}const g=Math.round(S.f.disko*rnd(.01,.05));S.f.disko+=g;toast(`📣 +${g} membres`);open("disko",true)};
+ $("#dke").onclick=()=>{if(!useBat(20,1))return;tapGame("🎉 Event Disko","Anime ton event !",sc=>{const g=Math.round((S.f.disko*.1+20)*(.5+sc));S.f.disko+=g;S.f.streamo+=Math.round(g*.3);log(`🎉 Event Disko : +${fmt(g)} membres`);toast(`🎉 +${fmt(g)} membres`);open("disko",true)})}};
+/* ---------- MESSAGES ---------- */
+VIEWS.msg=()=>S.dms.length?S.dms.map((d,i)=>`<div class="it" ${d.done?'style="opacity:.5"':""}><div class="av">${d.ic}</div><div class="inf"><b>${esc(d.from)}</b><small class="mut">${esc(d.t)}</small></div>${d.done?"":`<button class="btn" data-d="${i}" style="padding:8px 10px">Ouvrir</button>`}</div>`).join(""):`<div class="mut">Aucun message.</div>`;
+BIND.msg=()=>document.querySelectorAll("[data-d]").forEach(b=>b.onclick=()=>{const d=S.dms[+b.dataset.d];const fns=DMF[d.id];
+ popup(`<div class="bigi">${d.ic}</div><h3>${esc(d.from)}</h3><div class="mut">${esc(d.t)}</div><div class="opts">${d.o.map((o,i)=>`<button data-o="${i}">${esc(o)}</button>`).join("")}</div>`);
+ document.querySelectorAll("#ov [data-o]").forEach(x=>x.onclick=()=>{closePop();d.done=true;if(fns)fns[+x.dataset.o]();else toast("Message expiré");checkV();open("msg",true)})});
+/* ---------- BANQUE / BOUTIQUE / STATS ---------- */
+VIEWS.bank=()=>`<div class="card" style="text-align:center;background:linear-gradient(135deg,#0ea5e9,#2563eb)"><div class="mut" style="color:#e0f2fe">Solde</div><div style="font-size:36px;font-weight:900">${eur(S.money)}</div></div>
+ <div class="card"><b>💸 Revenus chaque nuit</b><div class="mut">💜 Abonnés Streamo : ${eur(S.subs*2.5)}<br>🎵 TokTok + 📸 Instaflo : ${eur(S.f.toktok*.01+S.f.insta*.01)}<br>🤝 Partenariats : ${eur(S.deals.reduce((a,d)=>a+d,0))}</div></div>
+ <div class="card"><b>📜 Historique</b><div class="mut" style="max-height:260px;overflow:auto">${S.log.slice(0,25).map(l=>`<div style="padding:3px 0;border-bottom:1px dashed #26262f">${esc(l)}</div>`).join("")}</div></div>`;
+VIEWS.shop=()=>`<div class="card"><b>🖥️ Ton setup</b><div class="mut">Meilleur setup = plus de viewers, de vues et de likes</div></div>${SETUP.map(s=>{const l=S.up[s.k],nx=s.c[l+1];return `<div class="it"><div class="av">${s.ic}</div><div class="inf"><b>${s.n} <span class="tag">${s.lv[l]}</span></b></div>${nx!=null?`<button class="btn" data-u="${s.k}" style="padding:8px 10px">${eur(nx)}</button>`:`<span class="tag">MAX</span>`}</div>`}).join("")}
+ <div class="card" style="margin-top:10px"><b>📍 Lieux pour tes photos</b></div>${PLACES.map((p,i)=>`<div class="it"><div class="av">${p.ic}</div><div class="inf"><b>${p.n} <span class="tag">×${p.m} likes</span></b></div>${S.places.includes(i)?`<span class="tag">✔</span>`:`<button class="btn" data-pl="${i}" style="padding:8px 10px">${eur(p.c)}</button>`}</div>`).join("")}`;
+BIND.shop=()=>{document.querySelectorAll("[data-u]").forEach(b=>b.onclick=()=>{const s=SETUP.find(x=>x.k===b.dataset.u),l=S.up[s.k];if(!pay(s.c[l+1]))return;S.up[s.k]++;toast(`${s.ic} ${s.lv[l+1]} !`);open("shop",true)});
+ document.querySelectorAll("[data-pl]").forEach(b=>b.onclick=()=>{const i=+b.dataset.pl;if(!pay(PLACES[i].c))return;S.places.push(i);toast(`📍 ${PLACES[i].n} débloqué`);open("shop",true)})};
+function pay(n){if(S.money<n){toast("💸 Pas assez d'argent");return false}S.money-=n;return true}
+VIEWS.stats=()=>{const fm=fame();const R=[[0,"Inconnu"],[500,"Petit créateur"],[5000,"Créateur"],[50000,"Influenceur"],[500000,"Star du web"],[5e6,"Méga star"],[5e7,"Légende du téléphone"]];let r=R[0];for(const x of R)if(fm>=x[0])r=x;const nx=R.find(x=>x[0]>fm);
+ return `<div class="card" style="text-align:center"><div style="font-size:40px">${S.av}</div><b>@${esc(S.name)}${S.verified?" ✅":""}</b><div class="mut">${r[1]}</div><div style="font-size:30px;font-weight:900;margin:6px 0">${fmt(fm)}</div><div class="mut">followers au total${nx?` · prochain rang à ${fmt(nx[0])}`:""}</div></div>
+ ${Object.keys(S.f).map(k=>`<div class="it"><div class="av" style="background:${APPS[k].bg}">${APPS[k].ic}</div><div class="inf"><b>${APPS[k].n}</b></div><b>${fmt(S.f[k])}</b></div>`).join("")}
+ <div class="card"><div class="mut">🔴 ${S.lives} lives · record ${fmt(S.bestV)} viewers<br>💜 ${fmt(S.subs)} abonnés payants<br>🔥 Plus grosse flamme : ${Math.max(...S.flames.map(f=>f.fl))}<br>✅ Certifié : ${S.verified?"oui":"à 100k followers"}</div></div>`};
+function checkV(){if(!S.verified&&fame()>=100000){S.verified=true;log("✅ Compte certifié");setTimeout(()=>{if($("#ov"))return;popup(`<div class="bigi">✅</div><h3>COMPTE CERTIFIÉ</h3><div class="mut">Tu as le badge sur toutes tes applis !</div>${okB("Trop bien")}`)},600)}}
+/* ---------- RÉGLAGES + PANEL ADMIN ---------- */
+VIEWS.settings=()=>`<div class="it" id="admB" style="cursor:pointer"><div class="av" style="background:#7c3aed">🛠️</div><div class="inf"><b>Panel admin</b><small class="mut">Triches et commandes</small></div>›</div>
+ <div class="it" id="chgB" style="cursor:pointer"><div class="av">🔌</div><div class="inf"><b>Recharger le téléphone</b><small class="mut">Batterie ${Math.round(S.bat)}%</small></div>›</div>
+ <div class="it" id="nmB" style="cursor:pointer"><div class="av">✏️</div><div class="inf"><b>Changer de pseudo</b></div>›</div>
+ <div class="it" id="rzB" style="cursor:pointer"><div class="av" style="background:#7f1d1d">🗑️</div><div class="inf"><b>Réinitialiser le téléphone</b><small class="mut">Tout effacer</small></div>›</div>`;
+BIND.settings=()=>{$("#admB").onclick=admin;$("#chgB").onclick=()=>{charge();open("settings",true)};$("#nmB").onclick=()=>{const n=prompt("Nouveau pseudo :",S.name);if(n&&n.trim().length>=2){S.name=n.trim().replace(/[^a-zA-Z0-9._-]/g,"").toLowerCase().slice(0,16);open("settings",true)}};
+ $("#rzB").onclick=()=>{popup(`<h3>Tout effacer ?</h3><div class="opts"><button id="rzY" style="color:#f87171">🗑️ Oui, tout effacer</button><button onclick="this.closest('.ov').remove()">Annuler</button></div>`);$("#rzY").onclick=()=>{S=NEW();closePop();OPEN=null;render()}}};
+document.addEventListener("keydown",()=>{});
+function admin(){const a=A();const T=(k,l)=>`<button class="chip ${a[k]?"on":""}" data-tg="${k}">${a[k]?"✅":"⬜"} ${l}</button>`;
+ popup(`<div class="adm"><h3 style="font-size:18px;color:#fff;margin-top:0">🛠️ Panel admin</h3>
+ <h3>💶 Argent</h3><div class="chips">${[1e3,1e5,1e6,1e9].map(v=>`<button class="chip" data-mo="${v}">+${fmt(v)} €</button>`).join("")}</div>
+ <h3>👥 Followers (toutes les applis)</h3><div class="chips">${[1e3,1e5,1e6,1e8].map(v=>`<button class="chip" data-fo="${v}">+${fmt(v)}</button>`).join("")}<button class="chip" id="asub">💜 +1000 abonnés</button></div>
+ <h3>🔋 Batterie & temps</h3><div class="chips">${T("infBat","Batterie infinie")}<button class="chip" id="abat">🔋 100 %</button><button class="chip" id="aday">⏩ Jour suivant</button></div>
+ <h3>🎬 Contenu</h3><div class="chips">${T("viral","Vidéos toujours virales")}${T("autoWin","Mini-jeux réussis")}${T("keepFl","Ne jamais perdre les flammes")}<button class="chip" id="afl">🔥 +100 à toutes les flammes</button></div>
+ <h3>🖥️ Setup & lieux</h3><div class="chips"><button class="chip" id="aset">Setup au max</button><button class="chip" id="apl">Tous les lieux</button><button class="chip" id="aver">✅ Certifié</button></div>
+ <h3>✉️ Messages</h3><div class="chips"><button class="chip" id="adm1">📩 Nouveau message</button><button class="chip" id="anot">🔔 Notification test</button></div>
+ <h3>🙂 Photo de profil</h3><div class="chips">${AVS.map(x=>`<button class="chip" data-av="${x}">${x}</button>`).join("")}</div>
+ ${okB("Fermer")}</div>`);
+ const re=m=>{if(m)toast(m);checkV();OPEN?open(OPEN,true):render();admin()};
+ document.querySelectorAll("[data-mo]").forEach(b=>b.onclick=()=>{S.money+=+b.dataset.mo;re("💶 Ajouté")});
+ document.querySelectorAll("[data-fo]").forEach(b=>b.onclick=()=>{const v=+b.dataset.fo;for(const k in S.f)S.f[k]+=Math.round(v/5);re("👥 Ajoutés")});
+ document.querySelectorAll("[data-tg]").forEach(b=>b.onclick=()=>{a[b.dataset.tg]=!a[b.dataset.tg];re()});
+ document.querySelectorAll("[data-av]").forEach(b=>b.onclick=()=>{S.av=b.dataset.av;re("Photo changée")});
+ $("#asub").onclick=()=>{S.subs+=1000;re("💜 +1000")};$("#abat").onclick=()=>{S.bat=100;re("🔋 100 %")};$("#aday").onclick=()=>{closePop();sleep()};
+ $("#afl").onclick=()=>{S.flames.forEach(f=>f.fl+=100);re("🔥 Flammes +100")};
+ $("#aset").onclick=()=>{SETUP.forEach(s=>S.up[s.k]=s.c.length-1);re("🖥️ Setup max")};$("#apl").onclick=()=>{S.places=PLACES.map((_,i)=>i);re("📍 Tous les lieux")};$("#aver").onclick=()=>{S.verified=true;re("✅ Certifié")};
+ $("#adm1").onclick=()=>{closePop();newDM()};$("#anot").onclick=()=>{closePop();notify("snapo",pick(S.flames).n,"t'a envoyé un snap 👻")}}
+/* notifs aléatoires */
+setInterval(()=>{if(!S.name||$("#ov")||$("#live"))return;const r=Math.random();
+ if(r<.25)notify("snapo",pick(S.flames).n,pick(["t'a envoyé un snap 👻","a posté une story","t'a mentionné"]));
+ else if(r<.4&&fame()>50)notify("insta",user(),"a aimé ta photo ❤️");
+ else if(r<.5&&S.f.disko>0)notify("disko","# général",`${user()} : ${pick(DK)}`);
+ else if(r<.58)newDM();
+ if(!OPEN)render()},22000);
+render();
+Object.defineProperty(window,"__T",{get:()=>S});
+})();
+</script>
+</body>
+</html>
