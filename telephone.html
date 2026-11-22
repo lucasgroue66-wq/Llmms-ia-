@@ -92,7 +92,8 @@ const APPS={
  bank:{n:"Banque",ic:"💳",bg:"linear-gradient(135deg,#0ea5e9,#2563eb)"},
  shop:{n:"Boutique",ic:"🛍️",bg:"linear-gradient(135deg,#f97316,#ef4444)"},
  stats:{n:"Stats",ic:"📊",bg:"linear-gradient(135deg,#14b8a6,#0d9488)"},
- settings:{n:"Réglages",ic:"⚙️",bg:"#6b7280"}
+ settings:{n:"Réglages",ic:"⚙️",bg:"#6b7280"},
+ panel:{n:"Panel",ic:"🛠️",bg:"linear-gradient(135deg,#111,#7c3aed)"}
 };
 const GAMES=[["Fortnite-like","🔫"],["Jeu de foot","⚽"],["Minecraft-like","⛏️"],["Horreur","👻"],["Just Chatting","💬"],["Course","🏎️"],["Roblox-like","🧱"]];
 const NAMES=["sam","lina","yanis","ines","noah","jade","rayan","emma","adam","lou","nael","maya","ilyes","sara","enzo","zoe","kenzo","nour","mehdi","lea"];
@@ -151,7 +152,7 @@ function render(keep){save();sbar();if(!S.name){$("#scr").innerHTML=setupHTML();
  if(OPEN&&!keep)open(OPEN,true)}
 function homeHTML(){const fm=fame();const ap=k=>`<button class="app" data-app="${k}"><div class="ic" style="background:${APPS[k].bg}">${APPS[k].ic}</div>${APPS[k].n}${S.notifs[k]?`<span class="bd">${S.notifs[k]}</span>`:""}</button>`;
  return `<div class="home"><div class="wid"><div class="row"><div style="font-size:40px">${S.av}</div><div style="flex:1"><b>@${esc(S.name)}${S.verified?" ✅":""}</b><div class="mut" style="color:#ddd">${fmt(fm)} followers au total</div></div><div style="text-align:right"><div class="big">${eur(S.money)}</div></div></div></div>
- <div class="apps">${["streamo","snapo","toktok","insta","disko","bank","shop","stats"].map(ap).join("")}</div>
+ <div class="apps">${["streamo","snapo","toktok","insta","disko","bank","shop","stats","panel"].map(ap).join("")}</div>
  <div class="wid" style="margin-top:18px"><b>🔥 Tendance du jour : ${S.trend}</b><div class="mut" style="color:#ddd">Poste sur TokTok avec la tendance = ×3 vues</div></div>
  <button class="wid" id="sleepB" style="width:100%;text-align:left"><b>😴 Dormir → jour ${S.day+1}</b><div class="mut" style="color:#ddd">Envoie tes snaps avant, sinon tu perds tes flammes 🔥</div></button></div>
  <div class="dock">${["msg","streamo","snapo","settings"].map(ap).join("")}</div>`}
@@ -252,6 +253,8 @@ VIEWS.stats=()=>{const fm=fame();const R=[[0,"Inconnu"],[500,"Petit créateur"],
  <div class="card"><div class="mut">🔴 ${S.lives} lives · record ${fmt(S.bestV)} viewers<br>💜 ${fmt(S.subs)} abonnés payants<br>🔥 Plus grosse flamme : ${Math.max(...S.flames.map(f=>f.fl))}<br>✅ Certifié : ${S.verified?"oui":"à 100k followers"}</div></div>`};
 function checkV(){if(!S.verified&&fame()>=100000){S.verified=true;log("✅ Compte certifié");setTimeout(()=>{if($("#ov"))return;popup(`<div class="bigi">✅</div><h3>COMPTE CERTIFIÉ</h3><div class="mut">Tu as le badge sur toutes tes applis !</div>${okB("Trop bien")}`)},600)}}
 /* ---------- RÉGLAGES + PANEL ADMIN ---------- */
+VIEWS.panel=()=>`<div class="adm">${adminBody()}</div>`;
+BIND.panel=()=>bindAdmin(m=>{if(m)toast(m);checkV();open("panel",true)},false);
 VIEWS.settings=()=>`<div class="it" id="admB" style="cursor:pointer"><div class="av" style="background:#7c3aed">🛠️</div><div class="inf"><b>Panel admin</b><small class="mut">Triches et commandes</small></div>›</div>
  <div class="it" id="chgB" style="cursor:pointer"><div class="av">🔌</div><div class="inf"><b>Recharger le téléphone</b><small class="mut">Batterie ${Math.round(S.bat)}%</small></div>›</div>
  <div class="it" id="nmB" style="cursor:pointer"><div class="av">✏️</div><div class="inf"><b>Changer de pseudo</b></div>›</div>
@@ -259,8 +262,7 @@ VIEWS.settings=()=>`<div class="it" id="admB" style="cursor:pointer"><div class=
 BIND.settings=()=>{$("#admB").onclick=admin;$("#chgB").onclick=()=>{charge();open("settings",true)};$("#nmB").onclick=()=>{const n=prompt("Nouveau pseudo :",S.name);if(n&&n.trim().length>=2){S.name=n.trim().replace(/[^a-zA-Z0-9._-]/g,"").toLowerCase().slice(0,16);open("settings",true)}};
  $("#rzB").onclick=()=>{popup(`<h3>Tout effacer ?</h3><div class="opts"><button id="rzY" style="color:#f87171">🗑️ Oui, tout effacer</button><button onclick="this.closest('.ov').remove()">Annuler</button></div>`);$("#rzY").onclick=()=>{S=NEW();closePop();OPEN=null;render()}}};
 document.addEventListener("keydown",()=>{});
-function admin(){const a=A();const T=(k,l)=>`<button class="chip ${a[k]?"on":""}" data-tg="${k}">${a[k]?"✅":"⬜"} ${l}</button>`;
- popup(`<div class="adm"><h3 style="font-size:18px;color:#fff;margin-top:0">🛠️ Panel admin</h3>
+function adminBody(){const a=A();const T=(k,l)=>`<button class="chip ${a[k]?"on":""}" data-tg="${k}">${a[k]?"✅":"⬜"} ${l}</button>`;return `<div class="adm"><h3 style="font-size:18px;color:#fff;margin-top:0">🛠️ Panel admin</h3><div class="mut">Tout le téléphone est sous ton contrôle 😈</div>
  <h3>💶 Argent</h3><div class="chips">${[1e3,1e5,1e6,1e9].map(v=>`<button class="chip" data-mo="${v}">+${fmt(v)} €</button>`).join("")}</div>
  <h3>👥 Followers (toutes les applis)</h3><div class="chips">${[1e3,1e5,1e6,1e8].map(v=>`<button class="chip" data-fo="${v}">+${fmt(v)}</button>`).join("")}<button class="chip" id="asub">💜 +1000 abonnés</button></div>
  <h3>🔋 Batterie & temps</h3><div class="chips">${T("infBat","Batterie infinie")}<button class="chip" id="abat">🔋 100 %</button><button class="chip" id="aday">⏩ Jour suivant</button></div>
@@ -268,16 +270,23 @@ function admin(){const a=A();const T=(k,l)=>`<button class="chip ${a[k]?"on":""}
  <h3>🖥️ Setup & lieux</h3><div class="chips"><button class="chip" id="aset">Setup au max</button><button class="chip" id="apl">Tous les lieux</button><button class="chip" id="aver">✅ Certifié</button></div>
  <h3>✉️ Messages</h3><div class="chips"><button class="chip" id="adm1">📩 Nouveau message</button><button class="chip" id="anot">🔔 Notification test</button></div>
  <h3>🙂 Photo de profil</h3><div class="chips">${AVS.map(x=>`<button class="chip" data-av="${x}">${x}</button>`).join("")}</div>
- ${okB("Fermer")}</div>`);
- const re=m=>{if(m)toast(m);checkV();OPEN?open(OPEN,true):render();admin()};
+ 
+ <h3>💬 Disko (serveur actuel)</h3><div class="chips"><button class="chip" id="dkm">👥 +1 000 membres</button><button class="chip" id="dkm2">👥 +100 000 membres</button><button class="chip" id="dkb">💜 +7 boosts</button><button class="chip" id="dkt">💎 Turbo gratuit</button><button class="chip" id="dkr">🚨 Lancer un raid</button></div>
+</div>`}
+function dkEdit(f,msg){try{const d=JSON.parse(localStorage.getItem("disko1")||"null");if(!d||!d.servers||!d.servers.length){toast("Crée d'abord un serveur dans Disko");return}f(d,d.servers[d.cur||0]);localStorage.setItem("disko1",JSON.stringify(d));syncDisko();toast(msg)}catch(e){toast("Erreur Disko")}}
+function bindAdmin(re,inPop){const a=A();
  document.querySelectorAll("[data-mo]").forEach(b=>b.onclick=()=>{S.money+=+b.dataset.mo;re("💶 Ajouté")});
  document.querySelectorAll("[data-fo]").forEach(b=>b.onclick=()=>{const v=+b.dataset.fo;for(const k in S.f)S.f[k]+=Math.round(v/5);re("👥 Ajoutés")});
  document.querySelectorAll("[data-tg]").forEach(b=>b.onclick=()=>{a[b.dataset.tg]=!a[b.dataset.tg];re()});
  document.querySelectorAll("[data-av]").forEach(b=>b.onclick=()=>{S.av=b.dataset.av;re("Photo changée")});
- $("#asub").onclick=()=>{S.subs+=1000;re("💜 +1000")};$("#abat").onclick=()=>{S.bat=100;re("🔋 100 %")};$("#aday").onclick=()=>{closePop();sleep()};
+ $("#asub").onclick=()=>{S.subs+=1000;re("💜 +1000")};$("#abat").onclick=()=>{S.bat=100;re("🔋 100 %")};$("#aday").onclick=()=>{if(inPop)closePop();sleep()};
  $("#afl").onclick=()=>{S.flames.forEach(f=>f.fl+=100);re("🔥 Flammes +100")};
  $("#aset").onclick=()=>{SETUP.forEach(s=>S.up[s.k]=s.c.length-1);re("🖥️ Setup max")};$("#apl").onclick=()=>{S.places=PLACES.map((_,i)=>i);re("📍 Tous les lieux")};$("#aver").onclick=()=>{S.verified=true;re("✅ Certifié")};
- $("#adm1").onclick=()=>{closePop();newDM()};$("#anot").onclick=()=>{closePop();notify("snapo",pick(S.flames).n,"t'a envoyé un snap 👻")}}
+ $("#adm1").onclick=()=>{if(inPop)closePop();newDM()};$("#anot").onclick=()=>{if(inPop)closePop();notify("snapo",pick(S.flames).n,"t'a envoyé un snap 👻")}
+ const dn=()=>{};$("#dkm").onclick=()=>dkEdit((d,s)=>s.members+=1000,"👥 +1 000 membres Disko");$("#dkm2").onclick=()=>dkEdit((d,s)=>s.members+=100000,"👥 +100 000 membres Disko");
+ $("#dkb").onclick=()=>dkEdit((d,s)=>{s.boosts+=7;for(let i=0;i<7;i++)s.boosters.push(user())},"💜 +7 boosts");$("#dkt").onclick=()=>dkEdit(d=>{d.turbo=true;d.turboB=(d.turboB||0)+2},"💎 Turbo activé");
+ $("#dkr").onclick=()=>dkEdit((d,s)=>{s.raid={n:20,left:20,t:Date.now()}},"🚨 Raid lancé sur ton serveur");}
+function admin(){popup(adminBody().replace(/<\/div>$/,"")+okB("Fermer")+"</div>");bindAdmin(m=>{if(m)toast(m);checkV();if(OPEN&&OPEN!=="panel")open(OPEN,true);else if(!OPEN)render();admin()},true)}
 /* notifs aléatoires */
 setInterval(()=>{if(!S.name||$("#ov")||$("#live"))return;const r=Math.random();
  if(r<.25)notify("snapo",pick(S.flames).n,pick(["t'a envoyé un snap 👻","a posté une story","t'a mentionné"]));
