@@ -93,7 +93,11 @@ const APPS={
  shop:{n:"Boutique",ic:"🛍️",bg:"linear-gradient(135deg,#f97316,#ef4444)"},
  stats:{n:"Stats",ic:"📊",bg:"linear-gradient(135deg,#14b8a6,#0d9488)"},
  settings:{n:"Réglages",ic:"⚙️",bg:"#6b7280"},
- panel:{n:"Panel",ic:"🛠️",bg:"linear-gradient(135deg,#111,#7c3aed)"}
+ panel:{n:"Panel",ic:"🛠️",bg:"linear-gradient(135deg,#111,#7c3aed)"},
+ sonify:{n:"Sonify",ic:"🎧",bg:"linear-gradient(135deg,#16a34a,#065f46)"},
+ mode:{n:"Shopping",ic:"👕",bg:"linear-gradient(135deg,#f472b6,#be185d)"},
+ market:{n:"Bourse",ic:"📈",bg:"linear-gradient(135deg,#0f172a,#16a34a)"},
+ phone:{n:"Téléphone",ic:"📞",bg:"#22c55e"}
 };
 const GAMES=[["Fortnite-like","🔫"],["Jeu de foot","⚽"],["Minecraft-like","⛏️"],["Horreur","👻"],["Just Chatting","💬"],["Course","🏎️"],["Roblox-like","🧱"]];
 const NAMES=["sam","lina","yanis","ines","noah","jade","rayan","emma","adam","lou","nael","maya","ilyes","sara","enzo","zoe","kenzo","nour","mehdi","lea"];
@@ -122,7 +126,7 @@ function toast(t){document.querySelectorAll(".toast").forEach(e=>e.remove());con
 function popup(h,close=true){closePop();const o=document.createElement("div");o.className="ov";o.id="ov";o.innerHTML=`<div class="pop">${h}</div>`;if(close)o.onclick=e=>{if(e.target===o)closePop()};P().appendChild(o)}
 function closePop(){const o=$("#ov");if(o)o.remove()}
 const okB=(t="OK",id="")=>`<button class="btn full" style="margin-top:12px" ${id?`id="${id}"`:`onclick="this.closest('.ov').remove()"`}>${t}</button>`;
-function notify(app,title,text){const a=APPS[app];document.querySelectorAll(".notif").forEach(e=>e.remove());const d=document.createElement("div");d.className="notif";d.innerHTML=`<div class="ni" style="background:${a.bg}">${a.ic}</div><div style="flex:1"><b>${a.n.toUpperCase()} · maintenant</b><div><b>${esc(title)}</b> ${esc(text)}</div></div>`;d.onclick=()=>{d.remove();open(app)};P().appendChild(d);setTimeout(()=>d.remove(),3500);S.notifs[app]=(S.notifs[app]||0)+1}
+function notify(app,title,text){const a=APPS[app];if(LOCKED){S.lockN.unshift({app,title,text,h:hh()});S.lockN=S.lockN.slice(0,8);S.notifs[app]=(S.notifs[app]||0)+1;drawLock();return}document.querySelectorAll(".notif").forEach(e=>e.remove());const d=document.createElement("div");d.className="notif";d.innerHTML=`<div class="ni" style="background:${a.bg}">${a.ic}</div><div style="flex:1"><b>${a.n.toUpperCase()} · maintenant</b><div><b>${esc(title)}</b> ${esc(text)}</div></div>`;d.onclick=()=>{d.remove();open(app)};P().appendChild(d);setTimeout(()=>d.remove(),3500);S.notifs[app]=(S.notifs[app]||0)+1}
 function useBat(n,h=1){if(A().infBat){S.hour+=h*.5;return true}if(S.bat<n){popup(`<div class="bigi">🪫</div><h3>Batterie faible</h3><div class="mut">Il te reste ${Math.round(S.bat)}%. Recharge ton téléphone ou va dormir.</div><div class="opts"><button id="chg">🔌 Recharger (+2 h)</button><button id="slp">😴 Dormir → jour suivant</button></div>`);$("#chg").onclick=()=>{closePop();charge()};$("#slp").onclick=()=>{closePop();sleep()};return false}
  S.bat-=n;S.hour+=h;if(S.hour>=24){sleep(true);return false}return true}
 function charge(){S.bat=100;S.hour+=2;if(S.hour>=24){sleep(true);return}toast("🔌 Batterie 100 %");render()}
@@ -152,10 +156,10 @@ function render(keep){save();sbar();if(!S.name){$("#scr").innerHTML=setupHTML();
  if(OPEN&&!keep)open(OPEN,true)}
 function homeHTML(){const fm=fame();const ap=k=>`<button class="app" data-app="${k}"><div class="ic" style="background:${APPS[k].bg}">${APPS[k].ic}</div>${APPS[k].n}${S.notifs[k]?`<span class="bd">${S.notifs[k]}</span>`:""}</button>`;
  return `<div class="home"><div class="wid"><div class="row"><div style="font-size:40px">${S.av}</div><div style="flex:1"><b>@${esc(S.name)}${S.verified?" ✅":""}</b><div class="mut" style="color:#ddd">${fmt(fm)} followers au total</div></div><div style="text-align:right"><div class="big">${eur(S.money)}</div></div></div></div>
- <div class="apps">${["streamo","snapo","toktok","insta","disko","bank","shop","stats","panel"].map(ap).join("")}</div>
+ <div class="apps">${["streamo","snapo","toktok","insta","disko","sonify","mode","market","bank","shop","stats","panel"].map(ap).join("")}</div>
  <div class="wid" style="margin-top:18px"><b>🔥 Tendance du jour : ${S.trend}</b><div class="mut" style="color:#ddd">Poste sur TokTok avec la tendance = ×3 vues</div></div>
  <button class="wid" id="sleepB" style="width:100%;text-align:left"><b>😴 Dormir → jour ${S.day+1}</b><div class="mut" style="color:#ddd">Envoie tes snaps avant, sinon tu perds tes flammes 🔥</div></button></div>
- <div class="dock">${["msg","streamo","snapo","settings"].map(ap).join("")}</div>`}
+ <div class="dock">${["phone","msg","snapo","settings"].map(ap).join("")}</div>`}
 function shell(k,body){const a=APPS[k];return `<div class="appv"><div class="ah" style="background:${k==="snapo"?"#fde047;color:#000":"#0e0e14"}"><button class="bk" id="bk">‹</button><span>${a.ic} ${a.n}</span></div><div class="ab">${body}</div></div>`}
 function open(k,re){if(k==="disko"||OPEN==="disko")syncDisko();OPEN=k;S.notifs[k]=0;const el=document.createElement("div");el.id="appwrap";document.querySelectorAll("#appwrap").forEach(e=>e.remove());el.innerHTML=shell(k,VIEWS[k]());$("#scr").appendChild(el);$("#bk").onclick=goHome;(BIND[k]||(()=>{}))();save();sbar()}
 function goHome(){if(OPEN==="disko")syncDisko();OPEN=null;document.querySelectorAll("#appwrap").forEach(e=>e.remove());render()}
@@ -224,7 +228,7 @@ VIEWS.insta=()=>`<div class="card" style="text-align:center"><div style="font-si
  <button class="btn full" id="post" style="margin-top:8px;background:linear-gradient(135deg,#f59e0b,#ec4899)">📸 Poster une photo (10 %, 1 h)</button></div>
  <div class="grid3">${S.posts.map(p=>`<div style="background:linear-gradient(135deg,#1f2937,#4c1d95)"><span>${p.ic}</span><small>❤️ ${fmt(p.l)}</small></div>`).join("")}</div>`;
 BIND.insta=()=>{let pl=0;document.querySelectorAll("#pl .chip").forEach(b=>b.onclick=()=>{document.querySelectorAll("#pl .chip").forEach(x=>x.classList.remove("on"));b.classList.add("on");pl=+b.dataset.p});
- $("#post").onclick=()=>{if(!useBat(10,1))return;const p=PLACES[pl];const l=Math.round((S.f.insta*rnd(.08,.2)+ri(5,30))*p.m*(1+S.up.cam*.25));const g=Math.round(l*rnd(.05,.15)*p.m);S.f.insta+=g;S.posts.unshift({ic:p.ic,l});S.posts=S.posts.slice(0,30);
+ $("#post").onclick=()=>{if(!useBat(10,1))return;const p=PLACES[pl];const l=Math.round((S.f.insta*rnd(.08,.2)+ri(5,30))*p.m*(1+(S.style||0)/100)*(1+S.up.cam*.25));const g=Math.round(l*rnd(.05,.15)*p.m);S.f.insta+=g;S.posts.unshift({ic:p.ic,l});S.posts=S.posts.slice(0,30);
   log(`📸 Photo à ${p.n} : ${fmt(l)} likes`);toast(`📸 ${fmt(l)} ❤️ · +${fmt(g)} abonnés`);checkV();open("insta",true)}};
 /* ---------- DISKO ---------- */
 const DK=["salut tout le monde","quand le prochain live ?","GG pour hier","qui joue ?","le boss est là 👀","@everyone ???","trop bien ce serveur","on fait un event ?"];
@@ -294,7 +298,95 @@ setInterval(()=>{if(!S.name||$("#ov")||$("#live"))return;const r=Math.random();
  else if(r<.5&&S.f.disko>0)notify("disko","# général",`${user()} : ${pick(DK)}`);
  else if(r<.58)newDM();
  if(!OPEN)render()},22000);
-syncDisko();render();
+
+/* ================= NOUVEAUTÉS ================= */
+for(const [k,v] of Object.entries({pin:null,lockN:[],songs:[],port:{},items:[],style:0,calls:[]}))if(S[k]==null)S[k]=v;
+let LOCKED=false;
+/* ---- Écran de verrouillage ---- */
+function lockNow(){LOCKED=true;drawLock()}
+function drawLock(){let L=$("#lock");if(!LOCKED){if(L)L.remove();return}if(!L){L=document.createElement("div");L.id="lock";P().appendChild(L)}
+ const d=new Date();const days=["dimanche","lundi","mardi","mercredi","jeudi","vendredi","samedi"];
+ L.style.cssText="position:absolute;inset:0;z-index:66;background:radial-gradient(120% 80% at 50% 0%,#4c1d95,#0b0614 70%);display:flex;flex-direction:column;align-items:center;padding:60px 16px 30px";
+ L.innerHTML=`<div style="font-size:14px;opacity:.8">🔒 Jour ${S.day}</div><div style="font-size:78px;font-weight:300;line-height:1">${hh()}</div><div style="opacity:.85;margin-bottom:16px">${days[d.getDay()]}</div>
+ <div style="width:100%;flex:1;overflow:auto">${S.lockN.map(n=>`<div style="background:rgba(255,255,255,.13);backdrop-filter:blur(10px);border-radius:18px;padding:10px 12px;margin-bottom:8px;display:flex;gap:10px;align-items:center"><div style="width:36px;height:36px;border-radius:9px;display:grid;place-items:center;font-size:20px;background:${APPS[n.app].bg}">${APPS[n.app].ic}</div><div style="flex:1;font-size:13px"><b>${APPS[n.app].n}</b> <span style="opacity:.6">${n.h}</span><div><b>${esc(n.title)}</b> ${esc(n.text)}</div></div></div>`).join("")||`<div style="text-align:center;opacity:.6;margin-top:30px">Aucune notification</div>`}</div>
+ ${S.pin?`<div id="pinD" style="font-size:28px;letter-spacing:12px;margin:8px 0">○○○○</div><div style="display:grid;grid-template-columns:repeat(3,70px);gap:12px">${[1,2,3,4,5,6,7,8,9,"",0,"⌫"].map(k=>k===""?"<span></span>":`<button data-k="${k}" style="width:70px;height:70px;border-radius:50%;background:rgba(255,255,255,.15);font-size:26px">${k}</button>`).join("")}</div>`:`<button id="unl" style="background:rgba(255,255,255,.18);border-radius:999px;padding:14px 30px;font-weight:800;margin-top:10px">🔓 Déverrouiller</button>`}`;
+ let code="";const upd=()=>{const e=$("#pinD");if(e)e.textContent="●".repeat(code.length)+"○".repeat(4-code.length)};
+ L.querySelectorAll("[data-k]").forEach(b=>b.onclick=()=>{const k=b.dataset.k;if(k==="⌫")code=code.slice(0,-1);else if(code.length<4)code+=k;upd();if(code.length===4){if(code===S.pin)unlock();else{const e=$("#pinD");e.textContent="❌ Mauvais code";code="";setTimeout(upd,700)}}});
+ const u=$("#unl");if(u)u.onclick=unlock}
+function unlock(){LOCKED=false;S.lockN=[];drawLock();render()}
+const _sleep0=sleep;sleep=function(f){songsNight();_sleep0(f);lockNow()};
+/* ---- Appels ---- */
+const CALLERS={maman:{n:"Maman ❤️",ic:"👩"},kenzo:{n:"Kenzo",ic:"🧑🏾"},brand:{n:"GameNova (marque)",ic:"🎮"},unk:{n:"Numéro inconnu",ic:"❓"}};
+function incomingCall(k){if($("#call")||LOCKED&&k!=="unk"&&false)return;const C=CALLERS[k];const el=document.createElement("div");el.id="call";
+ el.style.cssText="position:absolute;inset:0;z-index:68;background:linear-gradient(180deg,#1f2937,#030712);display:flex;flex-direction:column;align-items:center;padding:90px 20px 50px";
+ el.innerHTML=`<div style="opacity:.7">Appel entrant…</div><div style="font-size:90px;margin:20px 0;animation:op 1s infinite alternate">${C.ic}</div><div style="font-size:28px;font-weight:800">${C.n}</div><div style="flex:1"></div><div style="display:flex;gap:70px"><button id="cR" style="width:74px;height:74px;border-radius:50%;background:#ef4444;font-size:30px">📵</button><button id="cA" style="width:74px;height:74px;border-radius:50%;background:#22c55e;font-size:30px">📞</button></div>`;
+ P().appendChild(el);const done=(t)=>{el.remove();S.calls.unshift({k,t,h:hh(),d:S.day});S.calls=S.calls.slice(0,20);save()};
+ $("#cR").onclick=()=>{done("manqué");if(k==="unk")setTimeout(()=>notify("msg","Numéro inconnu","Pourquoi tu réponds pas ?"),1500)};
+ $("#cA").onclick=()=>{done("décroché");callTalk(k)}}
+function callTalk(k){const C=CALLERS[k];
+ const step=(txt,opts)=>{popup(`<div class="bigi">${C.ic}</div><h3>${C.n}</h3><div class="mut" style="font-size:15px;color:#eee">« ${esc(txt)} »</div><div class="opts">${opts.map((o,i)=>`<button data-o="${i}">${esc(o[0])}</button>`).join("")}</div>`,false);document.querySelectorAll("#ov [data-o]").forEach(b=>b.onclick=()=>{closePop();opts[+b.dataset.o][1]()})};
+ const end=(t,ic="📞")=>{popup(`<div class="bigi">${ic}</div><h3>Appel terminé</h3><div class="mut">${t}</div>${okB()}`);render(true)};
+ if(k==="maman")step("T'as mangé ? Et tes devoirs, ils sont faits ?",[["Oui maman 😇",()=>{const g=ri(20,80);S.money+=g;end(`Elle est fière de toi. Elle t'envoie ${g} € 💶`,"❤️")}],["Euh… presque 😅",()=>end("« Pas de téléphone avant d'avoir fini ! » 😤","😤")]]);
+ if(k==="kenzo")step("Frère, on fait un live ensemble ce soir ?",[["Grave ! 🔥",()=>{const g=Math.round(fame()*.03+30);S.f.streamo+=g;end(`Live à deux : +${fmt(g)} followers 🔥`,"🎮")}],["Pas ce soir",()=>end("« Ok, une prochaine fois frère »")]]);
+ if(k==="brand"){const p=Math.round(300+fame()*.02);step(`On adore ton contenu. Tu fais une vidéo pour nous ? ${eur(p)}.`,[["✅ Accepter",()=>{S.money+=p;end(`Contrat signé : +${eur(p)} 💸`,"💸")}],["Non merci",()=>end("« Pas de souci, à bientôt »")]])}
+ if(k==="unk")step("…tu entends ?… Ne raccroche pas.",[["Qui est là ?",()=>step("Je suis juste… derrière ta porte.",[["🚪 Je vais voir",()=>step("…Pourquoi t'as ouvert ?",[["😱 RACCROCHER",()=>{S.bat=Math.max(1,S.bat-30);end("Ton téléphone a perdu 30 % de batterie d'un coup… 👀","👻")}]])],["🔒 Je ferme à clé",()=>{end("Le numéro t'envoie : « Bonne idée. » 🙂","👻");setTimeout(()=>notify("msg","Numéro inconnu","Je t'observe 👁️"),2500)}]])],["😤 Arrête de m'appeler",()=>end("*bip… bip… bip*","📵")]]);}
+VIEWS.phone=()=>`<div class="card"><b>👥 Contacts</b></div>${["maman","kenzo","brand"].map(k=>`<div class="it"><div class="av">${CALLERS[k].ic}</div><div class="inf"><b>${CALLERS[k].n}</b></div><button class="btn" data-call="${k}" style="background:#22c55e;padding:8px 12px">📞</button></div>`).join("")}
+ <div class="card" style="margin-top:10px"><b>🕒 Récents</b>${S.calls.map(c=>`<div style="padding:6px 0;border-bottom:1px solid #26262f;display:flex;justify-content:space-between"><span style="color:${c.t==="manqué"?"#f87171":"#fff"}">${CALLERS[c.k].ic} ${CALLERS[c.k].n}</span><span class="mut">${c.t} · J${c.d} ${c.h}</span></div>`).join("")||`<div class="mut">Aucun appel</div>`}</div>`;
+BIND.phone=()=>document.querySelectorAll("[data-call]").forEach(b=>b.onclick=()=>{if(!useBat(5,.3))return;S.calls.unshift({k:b.dataset.call,t:"sortant",h:hh(),d:S.day});goHome();callTalk(b.dataset.call)});
+/* ---- Sonify ---- */
+const STY=[["Rap","🎤"],["Drill","🔪"],["Trap","💎"],["Edit","🎬"],["Classique","🎻"],["Love","💔"]];
+function songsNight(){let tot=0;for(const so of S.songs){const st=Math.round(so.daily);so.streams+=st;tot+=st;so.daily*=so.hit?.96:.85}const g=Math.round(tot*.01);if(g){S.money+=g;S.f.sonify=(S.f.sonify||0)+Math.round(tot*.002)}}
+VIEWS.sonify=()=>`<div class="card" style="background:linear-gradient(135deg,#14532d,#0e0e14)"><b>🎧 Sonify for Artists</b><div class="mut" style="color:#ddd">${S.songs.length} titre(s) · ${fmt(S.songs.reduce((a,x)=>a+x.streams,0))} écoutes · ${fmt(S.f.sonify||0)} auditeurs</div></div>
+ <div class="card"><b>🎹 Nouveau son</b><div class="chips" id="sty">${STY.map((x,i)=>`<button class="chip ${i?"":"on"}" data-i="${i}">${x[1]} ${x[0]}</button>`).join("")}</div><input type="text" id="stt" maxlength="22" placeholder="Titre du son"><button class="btn full" id="rec" style="margin-top:8px;background:#16a34a">🎙️ Enregistrer et sortir (15 %, 1 h)</button></div>
+ ${S.songs.map(x=>`<div class="it"><div class="av" style="border-radius:10px;background:#14532d">${x.ic}</div><div class="inf"><b>${esc(x.t)} ${x.hit?'<span class="tag">HIT</span>':""}</b><small class="mut">${x.st} · ${x.q}/100 · ${fmt(x.streams)} écoutes · ~${fmt(x.daily)}/jour</small></div></div>`).join("")}`;
+BIND.sonify=()=>{let st=0;document.querySelectorAll("#sty .chip").forEach(b=>b.onclick=()=>{document.querySelectorAll("#sty .chip").forEach(x=>x.classList.remove("on"));b.classList.add("on");st=+b.dataset.i});
+ $("#rec").onclick=()=>{const t=($("#stt").value.trim()||pick(["Nuit blanche","Glacé","Kaelith","Pas le temps","Vide","Billets"])).replace(/[<>]/g,"");if(!useBat(15,1))return;tapGame("🎙️ En studio","Tape vite pour poser ton flow !",sc=>{
+  const q=Math.round(clamp(sc*55+gear()*3+rnd(0,35),1,100));const hit=A().viral||(q>78&&Math.random()<.4);const d=Math.round((fame()*.05+40)*(q/50)**2*(hit?6:1));
+  S.songs.unshift({t,st:STY[st][0],ic:STY[st][1],q,hit,streams:0,daily:d});S.f.sonify=(S.f.sonify||0)+Math.round(d*.05);log(`🎧 Son « ${t} » sorti (${q}/100)`);
+  popup(`<div class="bigi">${hit?"💥":"🎧"}</div><h3>${hit?"C'EST UN HIT !":"Son sorti !"}</h3><div class="mut">« ${esc(t)} » · ${q}/100 · ~${fmt(d)} écoutes par jour</div>${okB()}`);open("sonify",true)})}};
+/* ---- Snapo Map ---- */
+const EVT=[["🎉","Soirée chez Lina",25,"flammes"],["⚽","Match au city",20,"sport"],["🎬","Tournage TikTok",20,"vues"],["🍔","Grec avec les potes",10,"amis"],["🛹","Skatepark",15,"amis"]];
+const _vs=VIEWS.snapo;VIEWS.snapo=()=>{const seed=S.day*7;const ev=[0,1,2,3,4].filter((_,i)=>(seed+i*3)%5<3).map(i=>EVT[i]);
+ return _vs()+`<div class="card" style="margin-top:10px"><b>🗺️ Snapo Map</b><div style="position:relative;height:220px;border-radius:14px;margin-top:8px;overflow:hidden;background:#cfe8c4">
+ <div style="position:absolute;left:0;right:0;top:45%;height:22px;background:#f5f5f4"></div><div style="position:absolute;top:0;bottom:0;left:38%;width:22px;background:#f5f5f4"></div><div style="position:absolute;left:62%;top:8%;width:30%;height:28%;background:#93c5fd;border-radius:40%"></div>
+ ${S.flames.map((f,i)=>`<div style="position:absolute;left:${(seed*13+i*29)%85+3}%;top:${(seed*7+i*37)%75+5}%;text-align:center;font-size:11px;color:#111;font-weight:800"><div style="font-size:26px">${f.ic}</div>${f.n}</div>`).join("")}
+ <div style="position:absolute;left:46%;top:52%;text-align:center;font-size:11px;color:#111;font-weight:900"><div style="font-size:28px">${S.av}</div>Moi</div></div>
+ <div style="margin-top:8px">${ev.map((e,i)=>`<div class="it"><div class="av">${e[0]}</div><div class="inf"><b>${e[1]}</b><small class="mut">${e[2]} % batterie</small></div><button class="btn" data-ev="${EVT.indexOf(e)}" style="background:#facc15;color:#000;padding:8px 12px">Y aller</button></div>`).join("")}</div></div>`};
+const _bs=BIND.snapo;BIND.snapo=()=>{_bs();document.querySelectorAll("[data-ev]").forEach(b=>b.onclick=()=>{const e=EVT[+b.dataset.ev];if(!useBat(e[2],2))return;
+ if(e[3]==="flammes")S.flames.forEach(f=>{f.sent=true;f.fl++});const g=Math.round(fame()*.02+ri(10,40));S.f.snapo+=g;if(e[3]==="vues")S.f.toktok+=g;if(e[3]==="sport")S.f.insta+=g;
+ log(`${e[0]} ${e[1]}`);popup(`<div class="bigi">${e[0]}</div><h3>${e[1]}</h3><div class="mut">Trop bien ! +${fmt(g)} amis${e[3]==="flammes"?" · 🔥 snaps envoyés à tout le monde":""}</div>${okB()}`);open("snapo",true)})};
+/* ---- Shopping ---- */
+const ITEMS=[["🧢","Casquette",40,2],["👟","Sneakers rares",220,6],["🧥","Doudoune",350,8],["🕶️","Lunettes de luxe",600,10],["⌚","Montre de luxe",4000,20],["💍","Chaîne en or",12000,30],["🏍️","Moto",25000,35],["🚗","Voiture de sport",150000,60],["🏎️","Hypercar",900000,100]];
+VIEWS.mode=()=>`<div class="card" style="background:linear-gradient(135deg,#831843,#0e0e14)"><b>✨ Ton style : ${S.style}</b><div class="mut" style="color:#ddd">+${S.style} % de likes sur Instaflo</div></div>${ITEMS.map((x,i)=>`<div class="it"><div class="av">${x[0]}</div><div class="inf"><b>${x[1]}${S.items.includes(i)?'<span class="tag">✔ à toi</span>':""}</b><small class="mut">+${x[3]} style</small></div>${S.items.includes(i)?"":`<button class="btn" data-it="${i}" style="background:#be185d;padding:8px 10px">${eur(x[2])}</button>`}</div>`).join("")}`;
+BIND.mode=()=>document.querySelectorAll("[data-it]").forEach(b=>b.onclick=()=>{const i=+b.dataset.it,x=ITEMS[i];if(!pay(x[2]))return;S.items.push(i);S.style+=x[3];toast(`${x[0]} ${x[1]} acheté !`);open("mode",true)});
+/* ---- Bourse ---- */
+const ASSETS=[["nova","NovaCoin","🪙",50,.08],["moon","DogeMoon","🐕",2,.15],["gnv","GameNova","🎮",120,.03],["bul","Bulle Soda","🥤",30,.02]];
+S.px=S.px||{};for(const a of ASSETS){if(!S.px[a[0]])S.px[a[0]]=a[3];S.port[a[0]]=S.port[a[0]]||0}
+let PH={};ASSETS.forEach(a=>PH[a[0]]=[S.px[a[0]]]);
+setInterval(()=>{for(const a of ASSETS){let p=S.px[a[0]]*(1+(Math.random()-.49)*a[4]*2);if(A().boom)p*=1.05;p=Math.max(a[3]*.05,p);S.px[a[0]]=+p.toFixed(2);PH[a[0]].push(p);if(PH[a[0]].length>30)PH[a[0]].shift()}if(OPEN==="market"&&!$("#ov"))open("market",true)},3000);
+const spark=h=>{const mn=Math.min(...h),mx=Math.max(...h),r=mx-mn||1;return `<svg viewBox="0 0 100 30" style="width:90px;height:28px"><polyline fill="none" stroke="${h[h.length-1]>=h[0]?"#22c55e":"#ef4444"}" stroke-width="2" points="${h.map((v,i)=>`${i/(Math.max(1,h.length-1))*100},${28-(v-mn)/r*26}`).join(" ")}"/></svg>`};
+VIEWS.market=()=>{const val=ASSETS.reduce((t,a)=>t+S.port[a[0]]*S.px[a[0]],0);return `<div class="card" style="background:linear-gradient(135deg,#052e16,#0e0e14)"><b>💼 Portefeuille : ${eur(val)}</b><div class="mut" style="color:#ddd">Les prix bougent toutes les 3 s. Achète bas, revends haut. (Faux argent du jeu)</div></div>
+ ${ASSETS.map(a=>`<div class="it"><div class="av">${a[2]}</div><div class="inf"><b>${a[1]} <span class="tag">×${fmt(S.port[a[0]])}</span></b><small class="mut">${S.px[a[0]].toLocaleString("fr-FR")} €</small></div>${spark(PH[a[0]])}<div style="display:flex;flex-direction:column;gap:4px"><button class="btn" data-by="${a[0]}" style="background:#16a34a;padding:5px 9px;font-size:12px">Acheter</button><button class="btn" data-sl="${a[0]}" style="background:#b91c1c;padding:5px 9px;font-size:12px">Vendre</button></div></div>`).join("")}
+ <div class="mut">Acheter = 25 % de ton argent · Vendre = tout vendre</div>`};
+BIND.market=()=>{document.querySelectorAll("[data-by]").forEach(b=>b.onclick=()=>{const k=b.dataset.by,p=S.px[k];const q=Math.floor(S.money*.25/p);if(q<1){toast("💸 Pas assez d'argent");return}S.money-=q*p;S.port[k]+=q;toast(`📈 +${fmt(q)} achetés`);open("market",true)});
+ document.querySelectorAll("[data-sl]").forEach(b=>b.onclick=()=>{const k=b.dataset.sl,q=S.port[k];if(!q){toast("Tu n'en as pas");return}const g=q*S.px[k];S.money+=g;S.port[k]=0;toast(`💶 Vendu : +${eur(g)}`);log(`📈 Vente ${k} : +${eur(g)}`);open("market",true)})};
+/* ---- Banque : argent de tes autres jeux ---- */
+const GAMES_W=[["rapempire1","🎤","RAP EMPIRE"],["viral1","📱","VIRAL"],["gangcity1","🌆","GANG CITY"],["vie1","👶","DE ZÉRO À MILLIARDAIRE"],["footlegende1","⚽","FOOT LÉGENDE"]];
+const _vb=VIEWS.bank;VIEWS.bank=()=>{const rows=GAMES_W.map(([k,ic,n])=>{let m=0;try{const d=JSON.parse(localStorage.getItem(k)||"null");m=d&&d.money>0?d.money:0}catch(e){}return [k,ic,n,m]});
+ return _vb()+`<div class="card"><b>🔗 Argent de tes autres jeux</b><div class="mut">Transfère l'argent gagné dans tes jeux vers ton téléphone.</div>${rows.map(r=>`<div class="it" style="margin-top:8px"><div class="av">${r[1]}</div><div class="inf"><b>${r[2]}</b><small class="mut">${r[3]?eur(r[3]):"Pas de partie / 0 €"}</small></div>${r[3]>=1?`<button class="btn" data-tr="${r[0]}" style="padding:8px 10px">Transférer</button>`:""}</div>`).join("")}</div>`};
+const _bb=BIND.bank||(()=>{});BIND.bank=()=>{_bb();document.querySelectorAll("[data-tr]").forEach(b=>b.onclick=()=>{try{const k=b.dataset.tr;const d=JSON.parse(localStorage.getItem(k));const m=Math.floor(d.money);d.money=0;localStorage.setItem(k,JSON.stringify(d));S.money+=m;log(`🔗 Transfert depuis ${k} : +${eur(m)}`);toast(`💸 +${eur(m)} sur ton téléphone`);open("bank",true)}catch(e){toast("Erreur de transfert")}})};
+/* ---- Réglages : code ---- */
+const _vst=VIEWS.settings;VIEWS.settings=()=>`<div class="it" id="pinB" style="cursor:pointer"><div class="av">🔐</div><div class="inf"><b>Code de verrouillage</b><small class="mut">${S.pin?"Activé · touche pour retirer":"Aucun · touche pour en créer un"}</small></div>›</div><div class="it" id="lkB" style="cursor:pointer"><div class="av">🔒</div><div class="inf"><b>Verrouiller maintenant</b></div>›</div>`+_vst();
+const _bst=BIND.settings;BIND.settings=()=>{_bst();$("#lkB").onclick=()=>{goHome();lockNow()};$("#pinB").onclick=()=>{if(S.pin){S.pin=null;toast("🔓 Code retiré");open("settings",true);return}const c=prompt("Choisis un code à 4 chiffres :","");if(c&&/^\d{4}$/.test(c)){S.pin=c;toast("🔐 Code enregistré");open("settings",true)}else if(c)toast("Il faut 4 chiffres")}};
+/* ---- Panel : en plus ---- */
+const _ab=adminBody;adminBody=()=>_ab().replace(/<\/div>$/,"")+`<h3>📞 Appels & verrouillage</h3><div class="chips"><button class="chip" id="cu">📞 Appel numéro inconnu</button><button class="chip" id="cm">📞 Appel de maman</button><button class="chip" id="cb">📞 Appel d'une marque</button><button class="chip" id="np">🔓 Retirer le code</button></div>
+ <h3>📈 Bourse & musique</h3><div class="chips">${(()=>{const a=A();return `<button class="chip ${a.boom?"on":""}" data-tg="boom">${a.boom?"✅":"⬜"} Bourse qui monte toujours</button>`})()}<button class="chip" id="crash">📉 Krach</button><button class="chip" id="items">👕 Tout le shopping</button></div></div>`;
+const _bA=bindAdmin;bindAdmin=(re,inPop)=>{_bA(re,inPop);const on=(id,f)=>{const e=$("#"+id);if(e)e.onclick=f};
+ on("cu",()=>{closePop();goHome();incomingCall("unk")});on("cm",()=>{closePop();goHome();incomingCall("maman")});on("cb",()=>{closePop();goHome();incomingCall("brand")});on("np",()=>{S.pin=null;re("🔓 Code retiré")});
+ on("crash",()=>{ASSETS.forEach(a=>S.px[a[0]]=+(S.px[a[0]]*.4).toFixed(2));re("📉 Krach !")});on("items",()=>{ITEMS.forEach((x,i)=>{if(!S.items.includes(i)){S.items.push(i);S.style+=x[3]}});re("👕 Tout acheté")})};
+/* appels aléatoires */
+setInterval(()=>{if(!S.name||LOCKED||$("#ov")||$("#live")||$("#call"))return;if(Math.random()<.35)incomingCall(pick(["maman","kenzo","brand","unk","unk"]))},70000);
+syncDisko();render();if(S.name&&S.pin)lockNow();
 Object.defineProperty(window,"__T",{get:()=>S});window.__saveT=()=>{save();sbar()};
 })();
 </script>
