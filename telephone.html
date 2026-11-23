@@ -100,6 +100,11 @@ const APPS={
  phone:{n:"Téléphone",ic:"📞",bg:"#22c55e"},
  promo:{n:"Promo",ic:"📣",bg:"linear-gradient(135deg,#ea580c,#facc15)"},
  games:{n:"Jeux",ic:"🎮",bg:"linear-gradient(135deg,#0ea5e9,#22c55e)"},
+ toklive:{n:"TokTok LIVE",ic:"🎁",bg:"linear-gradient(135deg,#fe2c55,#25f4ee)"},
+ studio:{n:"Studio Montage",ic:"🎬",bg:"linear-gradient(135deg,#1f2937,#f59e0b)"},
+ tube:{n:"Tube",ic:"▶️",bg:"#dc2626"},
+ podcast:{n:"Podcast",ic:"🎙️",bg:"linear-gradient(135deg,#4c1d95,#c026d3)"},
+ arena:{n:"Arena",ic:"🏟️",bg:"linear-gradient(135deg,#0f172a,#2563eb)"},
  cam:{n:"Appareil photo",ic:"📷",bg:"linear-gradient(135deg,#374151,#111827)"},
  defis:{n:"Défis",ic:"🎯",bg:"linear-gradient(135deg,#dc2626,#f59e0b)"},
  events:{n:"Events",ic:"🎤",bg:"linear-gradient(135deg,#7c3aed,#ec4899)"},
@@ -167,12 +172,12 @@ function render(keep){save();sbar();if(!S.name){$("#scr").innerHTML=setupHTML();
  if(OPEN&&!keep)open(OPEN,true)}
 function homeHTML(){const fm=fame();const ap=k=>`<button class="app" data-app="${k}"><div class="ic" style="background:${APPS[k].bg}">${APPS[k].ic}</div>${APPS[k].n}${S.notifs[k]?`<span class="bd">${S.notifs[k]}</span>`:""}</button>`;
  return `<div class="home"><div class="wid"><div class="row"><div style="font-size:40px">${S.av}</div><div style="flex:1"><b>@${esc(S.name)}${S.verified?" ✅":""}</b><div class="mut" style="color:#ddd">${fmt(fm)} followers au total</div></div><div style="text-align:right"><div class="big">${eur(S.money)}</div></div></div></div>
- <div class="apps">${["streamo","snapo","toktok","insta","disko","sonify","cam","defis","events","brand","mode","market","promo","games","immo","ia","match","story","troph","bank","shop","stats","panel"].map(ap).join("")}</div>
+ <div class="apps">${["streamo","snapo","toktok","insta","disko","toklive","tube","studio","podcast","arena","sonify","cam","defis","events","brand","mode","market","promo","games","immo","ia","match","story","troph","bank","shop","stats","panel"].map(ap).join("")}</div>
  <div class="wid" style="margin-top:18px"><b>🔥 Tendance du jour : ${S.trend}</b><div class="mut" style="color:#ddd">Poste sur TokTok avec la tendance = ×3 vues</div></div>
  <button class="wid" id="sleepB" style="width:100%;text-align:left"><b>😴 Dormir → jour ${S.day+1}</b><div class="mut" style="color:#ddd">Envoie tes snaps avant, sinon tu perds tes flammes 🔥</div></button></div>
  <div class="dock">${["phone","msg","snapo","settings"].map(ap).join("")}</div>`}
 function shell(k,body){const a=APPS[k];return `<div class="appv"><div class="ah" style="background:${k==="snapo"?"#fde047;color:#000":"#0e0e14"}"><button class="bk" id="bk">‹</button><span>${a.ic} ${a.n}</span></div><div class="ab">${body}</div></div>`}
-function open(k,re){if(k==="disko"||OPEN==="disko")syncDisko();OPEN=k;S.notifs[k]=0;const el=document.createElement("div");el.id="appwrap";document.querySelectorAll("#appwrap").forEach(e=>e.remove());el.innerHTML=shell(k,VIEWS[k]());$("#scr").appendChild(el);$("#bk").onclick=goHome;(BIND[k]||(()=>{}))();save();sbar()}
+function open(k,re){if(k==="disko"||OPEN==="disko")syncDisko();const wasK=OPEN;OPEN=k;S.notifs[k]=0;const prev=document.querySelector("#appwrap .ab");const sy=re&&prev&&wasK===k?prev.scrollTop:0;const el=document.createElement("div");el.id="appwrap";document.querySelectorAll("#appwrap").forEach(e=>e.remove());el.innerHTML=shell(k,VIEWS[k]());if(re)el.querySelector(".appv").style.animation="none";$("#scr").appendChild(el);if(sy)el.querySelector(".ab").scrollTop=sy;$("#bk").onclick=goHome;(BIND[k]||(()=>{}))();save();sbar()}
 function goHome(){if(OPEN==="disko")syncDisko();OPEN=null;document.querySelectorAll("#appwrap").forEach(e=>e.remove());render()}
 $("#hb").onclick=goHome;
 /* Démarrage */
@@ -652,6 +657,116 @@ const _ab3=adminBody;adminBody=()=>_ab3().replace(/<\/div>$/,"")+`<h3>⭐ Saison
 const _bA3=bindAdmin;bindAdmin=(re,inPop)=>{_bA3(re,inPop);const on=(id,f)=>{const e=$("#"+id);if(e)e.onclick=f};
  on("r100",()=>{S.rep=100;re("⭐ 100")});on("r0",()=>{S.rep=0;re("💀 0")});on("drm",()=>{closePop();goHome();drama()});on("bfree",()=>{A().brandFree=true;re("🏷️ Débloqué")});on("sp1k",()=>{S.sp+=1000;re("🏆 +1000")});
  on("dcall",()=>{dcInit();S.dc.base={fame:-1e9,chat:-1e9};S.flames.forEach(f=>f.sent=true);re("🎯 Défis finis (va les récupérer)")});on("gold0",()=>{S.day=Math.ceil(S.day/10)*10;re("🏆 Jour de cérémonie")});on("palsL",()=>{S.pals.forEach(p=>p.rel=90);re("💛 Meilleurs potes")})};
+
+/* ================= SAISON 5 : LIVE, MONTAGE, TUBE, PODCAST, ARENA ================= */
+for(const [k,v] of Object.entries({diam:0,tl:{best:0,lives:0},tube:{subs:0,vids:[],plaques:[]},clips:[],pods:0,arena:{t:0,won:0}}))if(S[k]==null)S[k]=v;
+if(S.f.tube==null)S.f.tube=S.tube.subs||0;
+/* ---- 1. TokTok LIVE ---- */
+const TGIFT=[["🌹",1],["🍩",5],["💌",20],["🦁",100],["🚀",500],["🌌",3000]];
+VIEWS.toklive=()=>`<div class="card" style="background:linear-gradient(135deg,#831843,#134e4a)"><b>🎁 TokTok LIVE</b><div class="mut" style="color:#eee">💎 ${fmt(S.diam)} diamants · ${S.tl.lives} lives · record ${fmt(S.tl.best)} viewers</div><button class="btn full" id="wd" style="margin-top:8px;background:#0f766e">💸 Retirer mes diamants (${eur(S.diam*.5)})</button></div>
+ <div class="card"><b>🔴 Lancer un live</b><div class="mut">Tape sur l'écran pour les ❤️, réponds au chat, fais des défis… et lance une ⚔️ battle de cadeaux !</div>
+ <div class="chips" id="tlg">${["1 000 ❤️","5 000 ❤️","20 000 ❤️"].map((g,i)=>`<button class="chip ${i?"":"on"}" data-gl="${i}">🎯 Objectif ${g}</button>`).join("")}</div>
+ <button class="btn full" id="tlgo" style="background:#fe2c55;padding:14px">🔴 PASSER EN LIVE (25 %)</button></div>`;
+BIND.toklive=()=>{let gl=0;document.querySelectorAll("[data-gl]").forEach(b=>b.onclick=()=>{document.querySelectorAll("[data-gl]").forEach(x=>x.classList.remove("on"));b.classList.add("on");gl=+b.dataset.gl});
+ $("#wd").onclick=()=>{if(!S.diam){toast("Pas de diamants");return}const g=Math.round(S.diam*.5);S.money+=g;S.diam=0;log(`💸 Retrait TokTok LIVE : +${eur(g)}`);toast(`💸 +${eur(g)}`);open("toklive",true)};
+ $("#tlgo").onclick=()=>{if(!useBat(25,2))return;tokLive([1000,5000,20000][gl])}};
+function tokLive(goal){S.tl.lives++;let v=Math.max(3,Math.round((S.f.toktok+fame()*.1)*rnd(.01,.03)+ri(2,8))),hearts=0,dia=0,t=60,hype=50,bat=null,T;
+ const el=document.createElement("div");el.className="live";el.id="live";el.style.background="linear-gradient(180deg,#1f0a1a,#000)";
+ el.innerHTML=`<div id="tlz" style="position:relative;flex:1;overflow:hidden;display:flex;flex-direction:column">
+  <div style="display:flex;justify-content:space-between;padding:10px;z-index:3"><span><b style="background:#fe2c55;padding:2px 7px;border-radius:5px">LIVE</b> @${esc(S.name)}</span><span>👁️ <b id="tv">${v}</b> · ⏱️ <b id="tt">${t}</b>s</span></div>
+  <div style="padding:0 10px;z-index:3"><div style="font-size:12px">🎯 Objectif : <b id="th">0</b>/${fmt(goal)} ❤️ · 💎 <b id="td">0</b></div><div style="height:7px;background:#ffffff22;border-radius:5px;overflow:hidden;margin-top:3px"><i id="tgb" style="display:block;height:100%;width:0;background:linear-gradient(90deg,#fe2c55,#25f4ee)"></i></div></div>
+  <div id="tbat" style="display:none;padding:8px 10px;z-index:3"></div>
+  <div style="flex:1;display:grid;place-items:center;font-size:110px;z-index:1">${S.av}</div>
+  <div class="chat" id="tch" style="position:absolute;left:0;right:30%;bottom:0;height:42%;z-index:3"></div>
+  <div id="tfx" style="position:absolute;inset:0;pointer-events:none;z-index:4"></div></div>
+  <div class="lacts"><button data-t="talk">💬 Répondre au chat</button><button data-t="dare">🎯 Défi du chat</button><button data-t="bat">⚔️ Battle de cadeaux</button><button data-t="dance">💃 Danse</button><button data-t="end" style="grid-column:span 2;background:#3a0d18;border-color:#fe2c55">⏹️ Terminer le live</button></div>`;
+ P().appendChild(el);
+ const fx=(e,x,big)=>{const d=document.createElement("div");d.textContent=e;d.style.cssText=`position:absolute;left:${x}%;bottom:30%;font-size:${big?60:26}px;transition:all 1.4s ease-out;opacity:1`;$("#tfx").appendChild(d);requestAnimationFrame(()=>{d.style.transform=`translateY(-${big?260:180}px) translateX(${ri(-30,30)}px) scale(${big?1.4:1})`;d.style.opacity=0});setTimeout(()=>d.remove(),1500)};
+ const chat=(h,c="")=>{const x=$("#tch");if(!x)return;const d=document.createElement("div");d.className=c;d.innerHTML=h;x.appendChild(d);while(x.children.length>8)x.firstChild.remove()};
+ const gift=(mine=true)=>{const p=Math.random()*100;let g=TGIFT[0];for(const x of TGIFT)if(p<120/(x[1]**.5))g=x;const val=g[1];if(mine){dia+=val;chat(`🎁 <b>${user()}</b> a envoyé ${g[0]} ×1`,"sub");fx(g[0],ri(55,85),val>=100);if(bat)bat.me+=val}return val};
+ const upd=()=>{$("#tv").textContent=fmt(v);$("#tt").textContent=t;$("#th").textContent=fmt(hearts);$("#td").textContent=fmt(dia);$("#tgb").style.width=Math.min(100,hearts/goal*100)+"%";
+  if(bat){$("#tbat").style.display="block";const tot=bat.me+bat.op||1;$("#tbat").innerHTML=`<div style="display:flex;justify-content:space-between;font-size:12px;font-weight:800"><span>${S.av} ${fmt(bat.me)}</span><span>⚔️ ${bat.t}s</span><span>${fmt(bat.op)} ${bat.ic} ${bat.n}</span></div><div style="display:flex;height:12px;border-radius:6px;overflow:hidden;margin-top:3px"><i style="width:${bat.me/tot*100}%;background:#fe2c55"></i><i style="flex:1;background:#2563eb"></i></div>`}};
+ $("#tlz").onpointerdown=e=>{if(e.target.closest("button"))return;const r=$("#tlz").getBoundingClientRect();hearts+=1+Math.floor(v/40);hype=clamp(hype+.6,0,100);fx("❤️",(e.clientX-r.left)/r.width*100-3);upd()};
+ el.querySelectorAll("[data-t]").forEach(b=>b.onclick=()=>{const a=b.dataset.t;if(a==="end"){end();return}b.disabled=true;setTimeout(()=>b.disabled=false,a==="bat"?40000:3000);
+  if(a==="talk"){hype=clamp(hype+10,0,100);chat(`<b style="color:#25f4ee">${esc(S.name)}</b> : merci à tous d'être là ❤️`)}
+  if(a==="dance"){hype=clamp(hype+14,0,100);for(let i=0;i<4;i++)setTimeout(gift,i*250);chat("💃 <b>DANSE !</b> les cadeaux pleuvent")}
+  if(a==="dare"){hype=clamp(hype+18,0,100);chat(`🎯 Défi de ${user()} : ${pick(["chanter","faire une grimace","imiter un chat","dire un secret"])} ✅`);for(let i=0;i<6;i++)setTimeout(gift,i*200)}
+  if(a==="bat"){const o=pick([["@lina.vlog","📸"],["@kuro.gaming","🎮"],["@mega.ryan","🦁"],["@nina.vlog","💃"]]);bat={n:o[0],ic:o[1],me:0,op:0,t:30,pow:rnd(.6,1.4)*(1+v/150)};chat(`⚔️ <b>BATTLE</b> contre ${o[0]} ! Envoyez des cadeaux !!`,"sub")}upd()});
+ T=setInterval(()=>{t--;hype=clamp(hype-rnd(1.5,3),0,100);v=Math.max(1,Math.round(v*(1+(hype-40)/900)+(hype>60?ri(0,3):0)));if(Math.random()<.8)chat(`<b style="color:${pick(["#25f4ee","#fe2c55","#facc15","#a78bfa"])}">${user()}</b> ${esc(pick(CHAT))}`);
+  hearts+=Math.round(v*rnd(.2,.6)*(hype/60));if(Math.random()<.15+v/400+hype/400)gift();
+  if(bat){bat.t--;bat.op+=Math.round(rnd(0,30)*bat.pow*(1+v/80));if(Math.random()<.35)gift();if(bat.t<=0){const win=bat.me>=bat.op||A().viral;chat(win?"🏆 <b>BATTLE GAGNÉE !</b>":"💀 battle perdue…","sub");if(win){dia+=Math.round(bat.op*.3);v=Math.round(v*1.3)}else hype=clamp(hype-15,0,100);bat=null;$("#tbat").style.display="none"}}
+  upd();if(t<=0)end()},1000);
+ const end=()=>{clearInterval(T);const goalOk=hearts>=goal;if(goalOk)dia+=Math.round(goal/20);const f=Math.round(v*.15*(hype/60)+hearts/500);S.f.toktok+=f;S.diam+=dia;S.tl.best=Math.max(S.tl.best,v);log(`🔴 Live TokTok : ${v} viewers, ${fmt(dia)} 💎`);
+  el.remove();popup(`<div class="bigi">🎁</div><h3>Live terminé !</h3><div class="mut">👁️ ${fmt(v)} viewers · ❤️ ${fmt(hearts)} cœurs ${goalOk?"· 🎯 objectif réussi !":""}</div><div style="font-size:22px;font-weight:900;margin:8px 0">+${fmt(dia)} 💎 · +${fmt(f)} abonnés</div>${okB()}`);open("toklive",true)}}
+/* ---- 2. Studio Montage ---- */
+const CLIPS=[["🏃","Course","sport"],["⚽","But","sport"],["😂","Fou rire","humour"],["🤡","Fail","humour"],["🌅","Paysage","vlog"],["🍔","Repas","vlog"],["🎮","Clutch","gaming"],["💥","Explosion","gaming"],["💃","Danse","danse"],["🕺","Pas de danse","danse"]];
+const TRANS=["Coupe sèche","Zoom","Glitch","Swipe","Flash"],FXS=["Aucun","Ralenti","Accéléré","Shake","VHS"],SNDS=["Phonk 🔥","Son viral 📈","Lo-fi","Drill","Aucun"];
+let ED={tl:[],tr:0,fx:0,snd:0,sub:false,job:null};
+const JOBS=()=>[{n:pick(["@nina.vlog","@kuro.gaming","@maxfoot10","@lina.vlog"]),need:ri(3,5),sub:Math.random()<.6,snd:ri(0,3),pay:ri(40,400)*(1+Math.floor(fame()/20000))}];
+VIEWS.studio=()=>`<div class="card" style="background:linear-gradient(135deg,#78350f,#0e0e14)"><b>🎬 Studio Montage</b><div class="mut" style="color:#ddd">Choisis tes clips (5 max), une transition, un effet, un son, des sous-titres… puis exporte.${ED.job?`<br>💼 Commande de <b>${ED.job.n}</b> : ${ED.job.need} clips${ED.job.sub?" + sous-titres":""} + son « ${SNDS[ED.job.snd]} » → <b>${eur(ED.job.pay)}</b>`:""}</div></div>
+ <div class="card"><b>🎞️ Timeline</b><div style="display:flex;gap:6px;margin:8px 0;min-height:58px;background:#0b0b10;border-radius:10px;padding:6px">${ED.tl.map((c,i)=>`<button data-rm="${i}" style="font-size:30px;width:52px;height:46px;background:#26263a;border-radius:8px">${CLIPS[c][0]}</button>`).join("")||`<span class="mut" style="padding:12px">Touche des clips en dessous</span>`}</div>
+ <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:6px">${CLIPS.map((c,i)=>`<button data-ad="${i}" style="font-size:26px;background:#1e1e28;border-radius:10px;padding:6px 0">${c[0]}<div style="font-size:9px">${c[1]}</div></button>`).join("")}</div></div>
+ <div class="card"><b>✨ Transition</b><div class="chips">${TRANS.map((x,i)=>`<button class="chip ${ED.tr===i?"on":""}" data-tr2="${i}">${x}</button>`).join("")}</div><b>🎛️ Effet</b><div class="chips">${FXS.map((x,i)=>`<button class="chip ${ED.fx===i?"on":""}" data-fx="${i}">${x}</button>`).join("")}</div>
+ <b>🎵 Son</b><div class="chips">${SNDS.map((x,i)=>`<button class="chip ${ED.snd===i?"on":""}" data-sn="${i}">${x}</button>`).join("")}</div><button class="chip ${ED.sub?"on":""}" id="sub">💬 Sous-titres ${ED.sub?"ON":"OFF"}</button></div>
+ <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px"><button class="btn" id="exT" style="background:#111">🎵 Exporter sur TokTok</button><button class="btn" id="exY" style="background:#dc2626">▶️ Exporter sur Tube</button></div>
+ <button class="btn full" id="job" style="margin-top:8px;background:#a16207">${ED.job?"💼 Livrer la commande":"💼 Chercher un client (montage payé)"}</button>`;
+function edScore(){const tl=ED.tl;if(!tl.length)return 0;const cats=new Set(tl.map(i=>CLIPS[i][2]));let q=20+tl.length*9+(cats.size===1?15:cats.size*3)+(ED.tr?8:0)+(ED.fx?6:0)+(ED.snd<2?14:ED.snd<4?6:0)+(ED.sub?10:0)+teamB("monteur")*6;return clamp(Math.round(q+rnd(-5,5)),1,100)}
+BIND.studio=()=>{const re=()=>open("studio",true);document.querySelectorAll("[data-ad]").forEach(b=>b.onclick=()=>{if(ED.tl.length<5){ED.tl.push(+b.dataset.ad);re()}});document.querySelectorAll("[data-rm]").forEach(b=>b.onclick=()=>{ED.tl.splice(+b.dataset.rm,1);re()});
+ document.querySelectorAll("[data-tr2]").forEach(b=>b.onclick=()=>{ED.tr=+b.dataset.tr2;re()});document.querySelectorAll("[data-fx]").forEach(b=>b.onclick=()=>{ED.fx=+b.dataset.fx;re()});document.querySelectorAll("[data-sn]").forEach(b=>b.onclick=()=>{ED.snd=+b.dataset.sn;re()});$("#sub").onclick=()=>{ED.sub=!ED.sub;re()};
+ const exp=to=>{if(!ED.tl.length){toast("Ajoute des clips");return}if(!useBat(10,1))return;const q=edScore();const ic=CLIPS[ED.tl[0]][0];
+  if(to==="tok"){const v=Math.round((S.f.toktok*rnd(.5,1.5)+ri(50,300))*(q/55)**2*(ED.snd===1?1.5:1));const g=Math.round(v*.015);S.f.toktok+=g;S.tok.unshift({ic,col:"#78350f",v,vir:q>85});log(`🎵 Vidéo TokTok : ${fmt(v)} vues (montage ${q}/100)`);popup(`<div class="bigi">🎬</div><h3>Montage ${q}/100</h3><div class="mut">Exporté sur TokTok : 👁️ ${fmt(v)} vues · +${fmt(g)} abonnés</div>${okB()}`)}
+  else{tubePublish({type:"Montage",title:"MON MEILLEUR MONTAGE "+ic,q,thumb:{bg:"#78350f",em:ic,txt:"FOU 😱"}})}ED.tl=[];re()};
+ $("#exT").onclick=()=>exp("tok");$("#exY").onclick=()=>exp("tube");
+ $("#job").onclick=()=>{if(!ED.job){ED.job=JOBS()[0];toast(`💼 Nouvelle commande de ${ED.job.n}`);re();return}const J=ED.job;const ok=ED.tl.length>=J.need&&(!J.sub||ED.sub)&&ED.snd===J.snd;if(!ok){toast("❌ La commande n'est pas respectée");return}const q=edScore();const p=Math.round(J.pay*(.6+q/100));S.money+=p;log(`💼 Montage vendu à ${J.n} : +${eur(p)}`);popup(`<div class="bigi">💼</div><h3>Commande livrée !</h3><div class="mut">${J.n} adore ton montage (${q}/100) · +${eur(p)}</div>${okB()}`);ED.job=null;ED.tl=[];re()}};
+/* ---- 3. Tube ---- */
+const PLQ=[[1e5,"🥈","Bouton Argent"],[1e6,"🥇","Bouton Or"],[1e7,"💎","Bouton Diamant"]];
+const TTYPES=[["Vlog","📸"],["Tuto","📚"],["Réaction","😱"],["Gaming","🎮"],["Défi 24h","⏰"],["Storytime","🗣️"]];
+const TTITLES=["JE SUIS ALLÉ À DUBAÏ 😱","J'AI TESTÉ LE PIRE RESTO","24H DANS MA VOITURE","JE RÉAGIS À VOS VIDÉOS","MA ROUTINE DU MATIN","J'AI TOUT PERDU…"];
+let TH={type:0,title:0,bg:"#dc2626",em:"😱",txt:"INCROYABLE"};
+VIEWS.tube=()=>{const T=S.tube;return `<div class="card" style="background:linear-gradient(135deg,#7f1d1d,#0e0e14)"><b>▶️ Ta chaîne Tube</b><div class="mut" style="color:#ddd">${fmt(T.subs)} abonnés · ${T.vids.length} vidéos · ${fmt(T.vids.reduce((a,x)=>a+x.v,0))} vues · revenus pub ${eur(T.earn||0)}</div>${T.plaques.length?`<div style="margin-top:6px;font-size:26px">${T.plaques.map(i=>PLQ[i][1]).join(" ")}</div>`:""}</div>
+ <div class="card"><b>🎬 Nouvelle vidéo</b><div class="chips">${TTYPES.map((x,i)=>`<button class="chip ${TH.type===i?"on":""}" data-ty="${i}">${x[1]} ${x[0]}</button>`).join("")}</div>
+ <b>🖼️ Ta miniature</b><div style="display:flex;gap:10px;align-items:center;margin:8px 0"><div style="width:150px;aspect-ratio:16/9;border-radius:8px;background:${TH.bg};position:relative;display:grid;place-items:center;font-size:40px;overflow:hidden">${TH.em}<b style="position:absolute;bottom:3px;left:5px;font-size:14px;color:#fff;-webkit-text-stroke:1px #000;text-shadow:0 2px 0 #000">${esc(TH.txt)}</b><span style="position:absolute;right:4px;top:2px;font-size:22px">${S.av}</span></div>
+ <div style="flex:1"><div class="chips" style="margin:0">${["#dc2626","#facc15","#2563eb","#16a34a","#111"].map(c=>`<button data-bg="${c}" style="width:26px;height:26px;border-radius:50%;background:${c};border:2px solid #fff"></button>`).join("")}</div><div class="chips" style="margin:4px 0 0">${["😱","🤯","💰","🔥","😭","🏎️"].map(e=>`<button class="chip" data-em="${e}" style="padding:4px 8px;font-size:18px">${e}</button>`).join("")}</div></div></div>
+ <input type="text" id="ttx" maxlength="14" value="${esc(TH.txt)}" placeholder="Texte de la miniature">
+ <b style="display:block;margin-top:8px">📝 Titre</b><div class="chips">${TTITLES.map((x,i)=>`<button class="chip ${TH.title===i?"on":""}" data-ti="${i}">${x}</button>`).join("")}</div>
+ <button class="btn full" id="tpub" style="background:#dc2626;padding:14px">⬆️ Publier (20 %, 2 h)</button></div>
+ ${T.vids.slice(0,8).map(x=>`<div class="it"><div style="width:76px;aspect-ratio:16/9;border-radius:6px;background:${x.th.bg};display:grid;place-items:center;font-size:22px;flex:none">${x.th.em}</div><div class="inf"><b style="font-size:13px">${esc(x.title)}</b><small class="mut">${fmt(x.v)} vues · ${x.q}/100${x.live?" · 🔴 en train de monter":""}</small></div></div>`).join("")}`};
+function tubePublish(o){const T=S.tube;const q=o.q||Math.round(clamp(rnd(30,70)+(o.thumb.txt.length>3?8:0)+gear()*2+teamB("monteur")*4,1,100));
+ const tot=Math.round((T.subs*rnd(.3,.9)+fame()*.02+ri(100,800))*(q/50)**2*(Math.random()<q/400?rnd(5,15):1));const vid={title:o.title,type:o.type,th:o.thumb,q,v:0,goal:tot,live:1};T.vids.unshift(vid);T.vids=T.vids.slice(0,40);
+ log(`▶️ Vidéo Tube « ${o.title} »`);popup(`<div class="bigi">▶️</div><h3>Vidéo en ligne !</h3><div class="mut">Qualité ${q}/100 · regarde les vues monter en direct dans Tube</div>${okB()}`)}
+BIND.tube=()=>{const re=()=>open("tube",true);document.querySelectorAll("[data-ty]").forEach(b=>b.onclick=()=>{TH.type=+b.dataset.ty;re()});document.querySelectorAll("[data-ti]").forEach(b=>b.onclick=()=>{TH.title=+b.dataset.ti;re()});
+ document.querySelectorAll("[data-bg]").forEach(b=>b.onclick=()=>{TH.bg=b.dataset.bg;re()});document.querySelectorAll("[data-em]").forEach(b=>b.onclick=()=>{TH.em=b.dataset.em;re()});$("#ttx").onchange=e=>{TH.txt=e.target.value.replace(/[<>]/g,"")};
+ $("#tpub").onclick=()=>{TH.txt=$("#ttx").value.replace(/[<>]/g,"")||TH.txt;if(!useBat(20,2))return;tubePublish({type:TTYPES[TH.type][0],title:TTITLES[TH.title],thumb:{bg:TH.bg,em:TH.em,txt:TH.txt}});re()}};
+setInterval(()=>{const T=S.tube;let ch=false;for(const x of T.vids){if(!x.live)continue;const add=Math.max(1,Math.round((x.goal-x.v)*rnd(.04,.09)));x.v+=add;const ns=Math.round(add*.012);T.subs+=ns;S.f.tube=T.subs;const e=add*.003;T.earn=(T.earn||0)+e;S.money+=e;if(x.v>=x.goal*.97){x.live=0;x.v=x.goal}ch=true}
+ PLQ.forEach((p,i)=>{if(T.subs>=p[0]&&!T.plaques.includes(i)){T.plaques.push(i);log(`${p[1]} ${p[2]} reçu !`);if(!$("#ov")&&!LOCKED)popup(`<div class="bigi">${p[1]}</div><h3>📦 Tu reçois le ${p[2]} !</h3><div class="mut">${fmt(p[0])} abonnés sur Tube. Félicitations !</div>${okB("Le poser sur l'étagère")}`)}});
+ if(ch&&OPEN==="tube"&&!$("#ov")&&document.activeElement?.id!=="ttx")open("tube",true)},2000);
+/* ---- 4. Podcast ---- */
+const PTOP=[["💸","L'argent","Tu dis combien tu gagnes vraiment ?",[["Dire la vérité",4,1],["Exagérer 💰",-3,1.4],["Refuser de répondre",0,.8]]],["😱","Les dramas","Ton avis sur le dernier drama ?",[["Rester neutre",2,.9],["Balancer des noms 👀",-6,1.8],["En rire",0,1.2]]],["🧒","Ton enfance","Un souvenir d'enfance ?",[["Histoire touchante",5,1.1],["Histoire drôle",2,1.3]]],["🚀","Tes projets","Tes prochains projets ?",[["Annoncer un gros projet",2,1.3],["Teaser mystérieux",0,1.5]]],["💘","L'amour","T'es en couple ?",[["Esquiver avec humour",1,1.2],["Révéler un secret",-2,1.7]]]];
+VIEWS.podcast=()=>{const guests=[...S.pals.slice(0,3).map(p=>({n:p.n,ic:p.ic,f:p.fp})),{n:"@mega.ryan",ic:"🦁",f:2e6,need:1e5},{n:"@lou.trend",ic:"✨",f:15e6,need:1e6}];return `<div class="card" style="background:linear-gradient(135deg,#4c1d95,#0e0e14)"><b>🎙️ Ton podcast</b><div class="mut" style="color:#ddd">${S.pods} épisode(s). Invite quelqu'un, choisis les sujets… et crée le buzz.</div></div>
+ ${guests.map((g,i)=>`<div class="it"><div class="av">${g.ic}</div><div class="inf"><b>${esc(g.n)}</b><small class="mut">${fmt(g.f)} followers${g.need&&fame()<g.need?` · 🔒 ${fmt(g.need)} followers`:""}</small></div>${g.need&&fame()<g.need?"":`<button class="btn" data-gu="${i}" style="background:#a21caf;padding:8px 10px">🎙️ Inviter</button>`}</div>`).join("")}`};
+BIND.podcast=()=>document.querySelectorAll("[data-gu]").forEach(b=>b.onclick=()=>{const guests=[...S.pals.slice(0,3).map(p=>({n:p.n,ic:p.ic,f:p.fp})),{n:"@mega.ryan",ic:"🦁",f:2e6},{n:"@lou.trend",ic:"✨",f:15e6}];const G=guests[+b.dataset.gu];if(!useBat(25,2))return;
+ const tops=[...PTOP].sort(()=>Math.random()-.5).slice(0,3);let k=0,buzz=1,rp=0;const step=()=>{if(k>=tops.length){const v=Math.round((fame()*.05+G.f*.02+200)*buzz);const g=Math.round(v*.02);S.f.toktok+=g;S.f.tube=(S.tube.subs+=Math.round(g*.5));repAdd(rp);S.pods++;log(`🎙️ Podcast avec ${G.n} : ${fmt(v)} vues`);
+   popup(`<div class="bigi">🎙️</div><h3>Épisode terminé !</h3><div class="mut">Les extraits avec ${esc(G.n)} tournent partout : 👁️ ${fmt(v)} vues · +${fmt(g)} abonnés · réputation ${rp>=0?"+":""}${rp}</div>${okB()}`);open("podcast",true);return}
+  const T=tops[k];popup(`<div class="mut">Sujet ${k+1}/3 · avec ${G.ic} ${esc(G.n)}</div><div class="bigi">${T[0]}</div><h3>${T[1]}</h3><div class="mut">« ${T[2]} »</div><div class="opts">${T[3].map((o,i)=>`<button data-po="${i}">${o[0]}</button>`).join("")}</div>`,false);
+  document.querySelectorAll("#ov [data-po]").forEach(x=>x.onclick=()=>{const o=T[3][+x.dataset.po];rp+=o[1];buzz*=o[2];if(o[2]>=1.5)toast("🔥 Ce moment va devenir viral !");k++;step()})};step()});
+/* ---- 5. Arena (tournois en live) ---- */
+const AGAMES=[["⚽","Foot"],["🥊","Combat"],["🏎️","Course"],["🔫","Battle royale"]];
+VIEWS.arena=()=>`<div class="card" style="background:linear-gradient(135deg,#1e3a8a,#0e0e14)"><b>🏟️ Arena — tournois en live</b><div class="mut" style="color:#ddd">${S.arena.t} tournoi(s) organisé(s). Tu commentes, le chat parie, les sponsors paient.</div></div>
+ <div class="card"><b>🎮 Choisis le jeu</b><div class="chips" id="ag">${AGAMES.map((g,i)=>`<button class="chip ${i?"":"on"}" data-ag="${i}">${g[0]} ${g[1]}</button>`).join("")}</div><button class="btn full" id="ago" style="background:#2563eb;padding:14px">🏆 Lancer un tournoi à 8 (30 %, 3 h)</button>${fame()>=50000?`<div class="mut" style="margin-top:6px">💼 Sponsor disponible pour ce tournoi : +${eur(Math.round(fame()*.01))}</div>`:""}</div>`;
+BIND.arena=()=>{let gi=0;document.querySelectorAll("[data-ag]").forEach(b=>b.onclick=()=>{document.querySelectorAll("[data-ag]").forEach(x=>x.classList.remove("on"));b.classList.add("on");gi=+b.dataset.ag});
+ $("#ago").onclick=()=>{if(!useBat(30,3))return;const G=AGAMES[gi];let pl=Array.from({length:8},()=>({n:user(),s:ri(40,95)}));let round=0,hype=40,bets=0;const RN=["Quarts de finale","Demi-finales","FINALE"];
+  const show=()=>{if(pl.length===1){const sp=fame()>=50000?Math.round(fame()*.01):0;const v=Math.round(fame()*.03*(hype/50)+100);S.f.streamo+=v;S.money+=sp+bets;S.arena.t++;S.sp+=40;log(`🏟️ Tournoi ${G[1]} : +${fmt(v)} followers`);
+    popup(`<div class="bigi">🏆</div><h3>${esc(pl[0].n)} gagne la Coupe ${esc(S.name)} !</h3><div class="mut">Hype ${Math.round(hype)} % · +${fmt(v)} followers Streamo${sp?` · sponsor +${eur(sp)}`:""}${bets?` · commission paris +${eur(bets)}`:""}</div>${okB()}`);open("arena",true);return}
+   const m=[];for(let i=0;i<pl.length;i+=2)m.push([pl[i],pl[i+1]]);
+   popup(`<div class="mut">${G[0]} ${G[1]} · ${RN[round]}</div><h3>🏟️ Bracket</h3>${m.map(x=>`<div class="it" style="justify-content:space-between"><span>${esc(x[0].n)}</span><b>VS</b><span>${esc(x[1].n)}</span></div>`).join("")}
+    <div class="mut">Comment tu commentes ?</div><div class="opts"><button data-cm="hype">🔥 À fond, je hurle chaque action</button><button data-cm="pro">🧠 Commentaire pro et analyse</button><button data-cm="fun">😂 Blagues et vannes</button></div>`,false);
+   document.querySelectorAll("#ov [data-cm]").forEach(b=>b.onclick=()=>{const c=b.dataset.cm;hype=clamp(hype+{hype:ri(8,18),pro:ri(4,10),fun:ri(5,15)}[c],0,100);bets+=Math.round(m.length*ri(5,25)*(hype/50));
+    const winners=m.map(x=>{const a=x[0].s*rnd(.6,1.4),b2=x[1].s*rnd(.6,1.4);return a>=b2?x[0]:x[1]});const upset=Math.random()<.3;
+    popup(`<h3>${RN[round]} — résultats</h3>${m.map((x,i)=>`<div class="it" style="justify-content:space-between"><span style="${winners[i]===x[0]?"color:#86efac;font-weight:800":"opacity:.5"}">${esc(x[0].n)}</span><span>${ri(1,4)}-${ri(0,3)}</span><span style="${winners[i]===x[1]?"color:#86efac;font-weight:800":"opacity:.5"}">${esc(x[1].n)}</span></div>`).join("")}<div class="mut">${upset?"😱 ÉNORME SURPRISE dans ce tour ! Le chat explose":"Le chat est en feu 🔥"} · hype ${Math.round(hype)} %</div>${okB("Tour suivant","nx")}`,false);
+    $("#nx").onclick=()=>{pl=winners;round++;show()}})};show()}};
+/* ---- Panel ---- */
+const _ab4=adminBody;adminBody=()=>_ab4().replace(/<\/div>$/,"")+`<h3>🎁 Saison 5</h3><div class="chips"><button class="chip" id="dia">💎 +10 000 diamants</button><button class="chip" id="tsub">▶️ +1M abonnés Tube</button><button class="chip" id="tplq">💎 Bouton Diamant</button><button class="chip" id="tjob">💼 Commande de montage</button></div></div>`;
+const _bA4=bindAdmin;bindAdmin=(re,inPop)=>{_bA4(re,inPop);const on=(id,f)=>{const e=$("#"+id);if(e)e.onclick=f};on("dia",()=>{S.diam+=10000;re("💎 +10 000")});on("tsub",()=>{S.tube.subs+=1e6;S.f.tube=S.tube.subs;re("▶️ +1M")});on("tplq",()=>{S.tube.subs=Math.max(S.tube.subs,1e7);S.f.tube=S.tube.subs;re("💎 Bientôt livré…")});on("tjob",()=>{ED.job=JOBS()[0];re("💼 Commande ajoutée (Studio)")})};
 syncDisko();render();if(S.name&&S.pin)lockNow();
 Object.defineProperty(window,"__T",{get:()=>S});window.__saveT=()=>{save();sbar()};
 })();
