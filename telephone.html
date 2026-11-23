@@ -320,7 +320,7 @@ function drawLock(){let L=$("#lock");if(!LOCKED){if(L)L.remove();return}if(!L){L
  let code="";const upd=()=>{const e=$("#pinD");if(e)e.textContent="●".repeat(code.length)+"○".repeat(4-code.length)};
  L.querySelectorAll("[data-k]").forEach(b=>b.onclick=()=>{const k=b.dataset.k;if(k==="⌫")code=code.slice(0,-1);else if(code.length<4)code+=k;upd();if(code.length===4){if(code===S.pin)unlock();else{const e=$("#pinD");e.textContent="❌ Mauvais code";code="";setTimeout(upd,700)}}});
  const u=$("#unl");if(u)u.onclick=unlock;
- const fg=$("#forgot");if(fg)fg.onclick=()=>{const n=prompt("Code oublié ? Écris ton pseudo du téléphone pour le réinitialiser :","");if(n==null)return;if(n.trim().toLowerCase().replace(/^@/,"")===S.name){S.pin=null;save();toast("🔓 Code supprimé. Tu peux en remettre un dans Réglages.");unlock()}else toast("❌ Ce n'est pas ton pseudo")}}
+ const fg=$("#forgot");if(fg)fg.onclick=()=>{popup(`<div class="bigi">🔑</div><h3>Code oublié ?</h3><div class="mut">Ton pseudo est <b style="color:#fde047">@${esc(S.name)}</b>.<br>Tu peux supprimer le code : tu ne perds rien de ta partie.</div><div class="opts"><button id="fgy">🔓 Supprimer le code et déverrouiller</button><button onclick="this.closest('.ov').remove()">Annuler</button></div>`);$("#fgy").onclick=()=>{S.pin=null;save();closePop();toast("🔓 Code supprimé");unlock()}}}
 function unlock(){LOCKED=false;S.lockN=[];drawLock();render()}
 const _sleep0=sleep;sleep=function(f){songsNight();_sleep0(f);lockNow()};
 /* ---- Appels ---- */
