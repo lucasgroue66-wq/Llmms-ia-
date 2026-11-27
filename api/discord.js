@@ -194,10 +194,11 @@ async function run(i) {
         components: [{ type: 1, components: [{ type: 2, style: 3, label: "🎁 Récupérer", custom_id: `nitro:${uid}:${(() => { let t = troll; while (Buffer.byteLength(t) > 54) t = [...t].slice(0, -1).join(""); return Buffer.from(t).toString("base64url"); })()}` }] }] } }; }
     case "faketiktok": { const ty = opt(i, "type") || "cadeau", troll = String(opt(i, "message") || "non je t'ai troll mdr 😂").slice(0, 150);
       const enc = (() => { let t = troll; while (Buffer.byteLength(t) > 50) t = [...t].slice(0, -1).join(""); return Buffer.from(t).toString("base64url"); })();
-      const V = { cadeau: ["🎁 Cadeau TikTok", `**${name}** t'a envoyé un **Univers 🌌** (34 999 pièces) sur TikTok !\nRécupère-le avant qu'il expire ⏳`, "🎁 Récupérer", 0x25f4ee],
-        pieces: ["🪙 Pièces TikTok", `**${name}** t'offre **50 000 pièces TikTok** 🪙\nClique pour les ajouter à ton compte !`, "🪙 Récupérer", 0xfe2c55],
-        live: ["🔴 TikTok LIVE", `**${name}** est passé en **LIVE** et t'a invité à co-animer 🎥\nRejoins vite, il y a déjà 12,4 k spectateurs !`, "🔴 Rejoindre le live", 0xfe2c55] }[ty];
-      return { type: 4, data: { content: "📱", embeds: [{ author: { name: "TikTok" }, title: V[0], description: V[1], color: V[3] }],
+      const TT = "https://cdn.jsdelivr.net/gh/twitter/twemoji@14.0.2/assets/72x72/1f381.png";
+      const V = { cadeau: ["🎁  CADEAU TIKTOK", `✨ **${name}** t'a envoyé un **Univers 🌌** sur TikTok !\n\n💎 Valeur : **34 999 pièces**\n⏳ *Récupère-le avant qu'il expire…*`, "🎁 Récupérer", 0x25f4ee, "https://cdn.jsdelivr.net/gh/twitter/twemoji@14.0.2/assets/72x72/1f381.png"],
+        pieces: ["🪙  PIÈCES TIKTOK", `✨ **${name}** t'offre **50 000 pièces TikTok** 🪙\n\n💰 Direct sur ton compte\n⏳ *Clique vite pour les récupérer…*`, "🪙 Récupérer", 0xfe2c55, "https://cdn.jsdelivr.net/gh/twitter/twemoji@14.0.2/assets/72x72/1fa99.png"],
+        live: ["🔴  TIKTOK LIVE", `🎥 **${name}** est passé en **LIVE** et t'a invité à co-animer !\n\n👀 Déjà **12,4 k** spectateurs\n⏳ *Rejoins vite avant que ça ferme…*`, "🔴 Rejoindre le live", 0xfe2c55, "https://cdn.jsdelivr.net/gh/twitter/twemoji@14.0.2/assets/72x72/1f534.png"] }[ty];
+      return { type: 4, data: { content: "📱 **TikTok**", embeds: [{ author: { name: "TikTok" }, title: V[0], description: V[1], color: V[3], thumbnail: { url: V[4] }, footer: { text: "Expire bientôt • récupère maintenant" } }],
         components: [{ type: 1, components: [{ type: 2, style: 3, label: V[2], custom_id: `tiktok:${uid}:${enc}` }] }] } }; }
     case "warn": {
       const raison = String(opt(i, "raison")).slice(0, 200), key = `llmms:dc:${g}:warn:${target}`; const [n] = await kv([["RPUSH", key, JSON.stringify({ r: raison, by: uid, t: now })]]);
