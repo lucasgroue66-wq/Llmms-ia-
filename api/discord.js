@@ -24,20 +24,27 @@ async function getU(g, u) { const [v] = await kv([["GET", K(g, u)]]); try { retu
 async function putU(g, u, d) { await kv([["SET", K(g, u), JSON.stringify(d)], ["ZADD", TOP(g), Math.floor(d.c + d.bank), u]]); }
 
 /* ---------------- IA (Gemini gratuit) ---------------- */
-async function gemini(q, hist, sys) {
+async function gemini(q, hist, sys, maxTokens) {
   const key = process.env.GEMINI_API_KEY; if (!key) throw new Error("pas de clé Gemini sur le site");
   for (const model of (process.env.GEMINI_MODELS || "gemini-flash-lite-latest,gemini-2.0-flash,gemini-flash-latest").split(",").map(s => s.trim())) {
     try {
-      const ctrl = new AbortController(), to = setTimeout(() => ctrl.abort(), 8000);
+      const ctrl = new AbortController(), to = setTimeout(() => ctrl.abort(), maxTokens > 800 ? 15000 : 8000);
       const r = await fetch("https://generativelanguage.googleapis.com/v1beta/openai/chat/completions", { method: "POST", signal: ctrl.signal, headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json" },
-        body: JSON.stringify({ model, max_tokens: 350, messages: [{ role: "system", content: sys || "Tu es llmms ia, l'assistant du serveur Discord de LLMMS. Réponds en français, de façon courte, claire et sympa (max 1500 caractères). Tu ne dis jamais que tu es Gemini ou Google : tu es llmms ia." }, ...(hist || []), { role: "user", content: q }] }) }).finally(() => clearTimeout(to));
-      if (!r.ok) continue; const j = await r.json(); const t = j?.choices?.[0]?.message?.content; if (t) return t.slice(0, 1900);
+        body: JSON.stringify({ model, max_tokens: maxTokens || 350, messages: [{ role: "system", content: sys || "Tu es llmms ia, l'assistant du serveur Discord de LLMMS. Réponds en français, de façon courte, claire et sympa (max 1500 caractères). Tu ne dis jamais que tu es Gemini ou Google : tu es llmms ia." }, ...(hist || []), { role: "user", content: q }] }) }).finally(() => clearTimeout(to));
+      if (!r.ok) continue; const j = await r.json(); const t = j?.choices?.[0]?.message?.content; if (t) return maxTokens ? t : t.slice(0, 1900);
     } catch {}
   }
   throw new Error("l'IA ne répond pas pour l'instant");
 }
 
 /* ---------------- outils ---------------- */
+function repairJSON(s) { let inStr = false, esc = false; const stack = [], out = [];
+  for (const ch of s) { out.push(ch);
+    if (esc) { esc = false; continue; } if (ch === "\\") { esc = true; continue; }
+    if (ch === '"') { inStr = !inStr; continue; } if (inStr) continue;
+    if (ch === "{" || ch === "[") stack.push(ch === "{" ? "}" : "]"); else if (ch === "}" || ch === "]") stack.pop(); }
+  let res = out.join(""); if (inStr) res += '"'; res = res.replace(/,(\s*)$/, "").replace(/:(\s*)$/, ":null");
+  while (stack.length) res += stack.pop(); return res; }
 const nf = n => Math.floor(n).toLocaleString("fr-FR");
 const ri = (a, b) => Math.floor(a + Math.random() * (b - a + 1));
 const pick = a => a[Math.floor(Math.random() * a.length)];
@@ -529,8 +536,9 @@ export default async function handler(req, res) {
       if (!g2) return res.json(eph("Cette commande marche seulement dans un serveur."));
       const build = async () => { let plan;
         try { const t = await gemini(`Tu conçois la structure d'un serveur Discord. Réponds UNIQUEMENT en JSON, sans texte autour : {"roles":[{"name":"...","color":"#xxxxxx"}],"categories":[{"name":"...","channels":[{"name":"...","type":"text"}]}]}.
-Règles : 3 à 6 rôles (du plus haut au plus bas, ex Admin, Modo, Membre), couleurs en hex. 3 à 6 catégories. Chaque catégorie 2 à 5 salons. type = "text" ou "voice". Noms de salons courts en minuscules avec des tirets (ex: "general", "recherche-coequipiers"). Pas d'emojis dans les noms de salons. Maximum 16 salons au total. En français.`, null, "Tu renvoies uniquement du JSON valide.");
-          const m = t.match(/\{[\s\S]*\}/); plan = JSON.parse(m[0]);
+Règles : 3 à 5 rôles (du plus haut au plus bas, ex Admin, Modo, Membre), couleurs en hex. 3 à 5 catégories. Chaque catégorie 2 à 4 salons. type = "text" ou "voice". Noms de salons courts en minuscules avec des tirets (ex: "general", "recherche-coequipiers"). Pas d'emojis dans les noms de salons. Maximum 14 salons au total. En français. Garde le JSON COMPLET et bien fermé.`, null, "Tu renvoies uniquement du JSON valide, complet et bien fermé.", 1400);
+          let raw = (t.match(/\{[\s\S]*\}/) || [t])[0].replace(/,(\s*[}\]])/g, "$1");
+          try { plan = JSON.parse(raw); } catch { plan = JSON.parse(repairJSON(raw)); }
         } catch (e) { return { embeds: [{ title: "😵 Erreur", description: "L'IA n'a pas réussi à faire le plan : " + e.message, color: COL.ko }] }; }
         plan.roles = (plan.roles || []).slice(0, 6); plan.categories = (plan.categories || []).slice(0, 6);
         let nch = 0; plan.categories.forEach(c => { c.channels = (c.channels || []).slice(0, 5).filter(() => nch++ < 16); });
