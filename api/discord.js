@@ -102,21 +102,39 @@ const CMDS = [
   { name: "mute", description: "Rendre muet un membre (timeout)", default_member_permissions: MOD, options: [{ type: 6, name: "membre", description: "Le membre", required: true }, { type: 4, name: "minutes", description: "Durée en minutes", required: true, min_value: 1, max_value: 40320 }, { type: 3, name: "raison", description: "Pourquoi", required: false }] },
   { name: "unmute", description: "Rendre la parole à un membre", default_member_permissions: MOD, options: [{ type: 6, name: "membre", description: "Le membre", required: true }] },
   { name: "ban", description: "Bannir un membre", default_member_permissions: BAN, options: [{ type: 6, name: "membre", description: "Le membre", required: true }, { type: 3, name: "raison", description: "Pourquoi", required: false }] },
-  { name: "give", description: "(Admin) Donner des pièces à un membre", default_member_permissions: "8", options: [{ type: 6, name: "membre", description: "À qui", required: true }, { type: 4, name: "montant", description: "Combien", required: true }] }
+  { name: "give", description: "(Admin) Donner des pièces à un membre", default_member_permissions: "8", options: [{ type: 6, name: "membre", description: "À qui", required: true }, { type: 4, name: "montant", description: "Combien", required: true }] },
+  { name: "roast", description: "🔥 L'IA balance une vanne (gentille) sur un pote", options: [{ type: 6, name: "membre", description: "La victime", required: true }] },
+  { name: "histoire", description: "📖 L'IA invente une histoire", options: [{ type: 3, name: "theme", description: "Le thème (facultatif)", required: false }] },
+  { name: "traduire", description: "🌍 Traduire un texte", options: [{ type: 3, name: "texte", description: "Le texte à traduire", required: true }, { type: 3, name: "langue", description: "Vers quelle langue", required: false, choices: [{ name: "Anglais", value: "anglais" }, { name: "Espagnol", value: "espagnol" }, { name: "Français", value: "français" }, { name: "Arabe", value: "arabe" }, { name: "Italien", value: "italien" }, { name: "Allemand", value: "allemand" }, { name: "Japonais", value: "japonais" }] }] },
+  { name: "resume", description: "📝 L'IA résume un texte", options: [{ type: 3, name: "texte", description: "Le texte à résumer", required: true }] },
+  { name: "avatar", description: "🖼️ Affiche la photo de profil d'un membre", options: [{ type: 6, name: "membre", description: "Le membre (toi par défaut)", required: false }] },
+  { name: "userinfo", description: "👤 Infos sur un membre", options: [{ type: 6, name: "membre", description: "Le membre (toi par défaut)", required: false }] },
+  { name: "serveur", description: "🏠 Infos sur le serveur" },
+  { name: "niveau", description: "📊 Ton niveau sur le serveur (ou celui d'un membre)", options: [{ type: 6, name: "membre", description: "Le membre", required: false }] },
+  { name: "roulette", description: "🎰 Machine à sous : parie tes pièces", options: [{ type: 4, name: "mise", description: "Combien tu paries", required: true, min_value: 10 }] },
+  { name: "devine", description: "🔢 Devine le nombre entre 1 et 100" },
+  { name: "morpion", description: "⭕ Morpion (tic-tac-toe) contre un pote", options: [{ type: 6, name: "adversaire", description: "Ton adversaire", required: true }] },
+  { name: "duel", description: "⚔️ Duel pierre-feuille-ciseaux contre un pote", options: [{ type: 6, name: "adversaire", description: "Ton adversaire", required: true }, { type: 4, name: "mise", description: "Mise en pièces (facultatif)", required: false, min_value: 1 }] },
+  { name: "sondage", description: "📊 Crée un sondage", options: [{ type: 3, name: "question", description: "La question", required: true }, { type: 3, name: "choix", description: "Les choix séparés par des ; (ex: Oui;Non;Peut-être)", required: true }] },
+  { name: "giveaway", description: "🎉 Lance un giveaway", options: [{ type: 3, name: "lot", description: "Ce qu'on peut gagner", required: true }] }
 ];
 
-const ANY = ["aide", "ia", "discute", "idee", "pfc", "de", "8ball", "quiz", "fakenitro", "faketiktok", "fakeboost", "bloxy", "profil", "classement"];
+const ANY = ["aide", "ia", "discute", "idee", "pfc", "de", "8ball", "quiz", "fakenitro", "faketiktok", "fakeboost", "bloxy", "profil", "classement", "roast", "histoire", "traduire", "resume", "avatar", "userinfo", "roulette", "devine", "duel"];
 for (const c of CMDS) if (ANY.includes(c.name)) { c.integration_types = [0, 1]; c.contexts = [0, 1, 2]; }
 async function run(i) {
   const g = i.guild_id || "dm", me = i.member?.user || i.user, uid = me.id, name = i.member?.nick || me.global_name || me.username, cmd = i.data.name;
   const target = opt(i, "membre"), tUser = target && i.data.resolved?.users?.[target];
   const tName = target && (i.data.resolved?.members?.[target]?.nick || tUser?.global_name || tUser?.username);
   const now = Date.now();
+  if (g !== "dm") { try { const xu = await getU(g, uid); xu.xp = (xu.xp || 0) + 5; await putU(g, uid, xu); } catch {} }
   switch (cmd) {
     case "aide": return emb("🤖 Le bot de LLMMS", [
-      "**💰 Économie** : `/daily` `/work` `/solde` `/pay` `/vol` `/banque` `/shop` `/acheter` `/top`",
-      "**🎮 BLOXY** : `/bloxy` `/profil` `/classement`", "**🤖 IA** : `/ia` `/discute` (conversation) `/idee` (propose des idées)",
-      "**🎲 Mini-jeux** : `/pfc` `/pile` `/de` `/8ball` `/quiz`",
+      "**💰 Économie** : `/daily` `/work` `/solde` `/pay` `/vol` `/banque` `/shop` `/acheter` `/top` `/niveau`",
+      "**🤖 IA** : `/ia` `/discute` `/idee` `/roast` `/histoire` `/traduire` `/resume`",
+      "**🎲 Jeux** : `/pfc` `/pile` `/de` `/8ball` `/quiz` `/devine` `/morpion` `/duel` `/roulette`",
+      "**😈 Troll** : `/fakenitro` `/faketiktok` `/fakeboost`",
+      "**🎉 Serveur** : `/sondage` `/giveaway` `/avatar` `/userinfo` `/serveur`",
+      "**🎮 BLOXY** : `/bloxy` `/profil` `/classement`",
       "**🛡️ Modération** : `/warn` `/warns` `/mute` `/unmute` `/ban`"].join("\n"), COL.info, { footer: { text: "Créé avec llmms ia" } });
     case "daily": {
       const u = await getU(g, uid); if (u.daily && now - u.daily < 864e5) return eph(`⏳ Reviens dans ${wait(864e5 - (now - u.daily))} pour ton daily.`);
@@ -217,12 +235,87 @@ async function run(i) {
     case "unmute": await bot(`/guilds/${g}/members/${target}`, "PATCH", { communication_disabled_until: null }); return emb("🔊 Parole rendue", `<@${target}> peut de nouveau parler.`, COL.ok);
     case "ban": { const raison = opt(i, "raison") || "aucune raison"; await bot(`/guilds/${g}/bans/${target}`, "PUT", { delete_message_seconds: 0 }); return emb("🔨 Membre banni", `**${tName}** a été banni.\nRaison : ${raison}`, COL.ko); }
     case "give": { const n = Math.floor(opt(i, "montant")), t = await getU(g, target); t.c = Math.max(0, t.c + n); await putU(g, target, t); return emb("🛠️ Give admin", `<@${target}> reçoit **${nf(n)}** ${PIECE} (solde : ${nf(t.c)})`, COL.ok); }
+    case "avatar": { const id = target || uid, u2 = tUser || me, av = u2.avatar ? `https://cdn.discordapp.com/avatars/${id}/${u2.avatar}.${u2.avatar.startsWith("a_") ? "gif" : "png"}?size=1024` : `https://cdn.discordapp.com/embed/avatars/${(BigInt(id) >> 22n) % 6n}.png`;
+      return { type: 4, data: { embeds: [{ title: `🖼️ ${target ? tName : name}`, image: { url: av }, color: COL.info }] } }; }
+    case "userinfo": { const id = target || uid, u2 = tUser || me, created = Math.floor(Number((BigInt(id) >> 22n) + 1420070400000n) / 1000), ja = i.member?.resolved ? null : null, joined = i.data.resolved?.members?.[id]?.joined_at;
+      const lines = [`🆔 \`${id}\``, `📅 Compte créé <t:${created}:D> (<t:${created}:R>)`];
+      if (joined) lines.push(`📥 A rejoint <t:${Math.floor(new Date(joined).getTime() / 1000)}:R>`);
+      return { type: 4, data: { embeds: [{ title: `👤 ${target ? tName : name}`, thumbnail: { url: u2.avatar ? `https://cdn.discordapp.com/avatars/${id}/${u2.avatar}.png?size=256` : `https://cdn.discordapp.com/embed/avatars/0.png` }, description: lines.join("\n"), color: COL.info }] } }; }
+    case "serveur": { if (g === "dm") return eph("Cette commande marche seulement dans un serveur."); let gd = {}; try { gd = await bot(`/guilds/${g}?with_counts=true`); } catch {}
+      const created = Math.floor(Number((BigInt(g) >> 22n) + 1420070400000n) / 1000);
+      return { type: 4, data: { embeds: [{ title: `🏠 ${gd.name || "Serveur"}`, thumbnail: gd.icon ? { url: `https://cdn.discordapp.com/icons/${g}/${gd.icon}.png?size=256` } : undefined, description: [`👥 **${nf(gd.approximate_member_count || 0)}** membres`, `🟢 **${nf(gd.approximate_presence_count || 0)}** en ligne`, `🚀 **${gd.premium_subscription_count || 0}** boosts (niveau ${gd.premium_tier || 0})`, `📅 Créé <t:${created}:D>`].join("\n"), color: COL.gold }] } }; }
+    case "niveau": { const id = target || uid, u = await getU(g, id), xp = u.xp || 0, lvl = Math.floor(Math.sqrt(xp / 20)), need = (lvl + 1) * (lvl + 1) * 20, prev = lvl * lvl * 20, bar = Math.round((xp - prev) / (need - prev) * 12);
+      return { type: 4, data: { embeds: [{ title: `📊 Niveau de ${target ? tName : name}`, description: `⭐ Niveau **${lvl}**\n✨ ${nf(xp)} XP\n\`${"█".repeat(bar)}${"░".repeat(12 - bar)}\`\nProchain niveau dans ${nf(need - xp)} XP`, color: COL.info }] } }; }
+    case "roulette": { const mise = Math.floor(opt(i, "mise")), u = await getU(g, uid); if (u.c < mise) return eph(`Tu n'as que ${nf(u.c)} ${PIECE}`);
+      const S = ["🍒", "🍋", "🍊", "🍇", "⭐", "💎", "7️⃣"], r = [pick(S), pick(S), pick(S)]; let gain = -mise;
+      if (r[0] === r[1] && r[1] === r[2]) gain = mise * (r[0] === "7️⃣" ? 10 : r[0] === "💎" ? 7 : 5); else if (r[0] === r[1] || r[1] === r[2] || r[0] === r[2]) gain = mise;
+      u.c = Math.max(0, u.c + gain); await putU(g, uid, u);
+      return emb(`🎰  ${r.join("  ")}`, `${gain > 0 ? `🎉 **Gagné +${nf(gain)}** ${PIECE} !` : gain === 0 ? "😐 Remboursé" : `💸 **Perdu ${nf(-gain)}** ${PIECE}`}\nSolde : **${nf(u.c)}** ${PIECE}`, gain > 0 ? COL.ok : COL.ko); }
+    case "devine": { const secret = ri(1, 100); await kv([["SET", `llmms:dc:dev:${g}:${uid}`, JSON.stringify({ n: secret, t: 0 }), "EX", 600]]);
+      return { type: 4, data: { embeds: [{ title: "🔢 Devine le nombre", description: "Je pense à un nombre entre **1 et 100**. À toi de le trouver !", color: COL.info }], components: [{ type: 1, components: [{ type: 2, style: 1, label: "✍️ Proposer", custom_id: `dev:${uid}` }] }] } }; }
+    case "morpion": { if (target === uid || tUser?.bot) return eph("Choisis un vrai adversaire 😅");
+      return { type: 4, data: { content: `⭕ **Morpion** : <@${uid}> (❌) · <@${target}> (⭕)\n➡️ À <@${uid}> de jouer.`, components: mpBoard("123456789"), allowed_mentions: { users: [uid, target] } } }; }
+    case "duel": { if (target === uid || tUser?.bot) return eph("Choisis un vrai adversaire 😅"); const mise = Math.floor(opt(i, "mise") || 0);
+      if (mise) { const a = await getU(g, uid); if (a.c < mise) return eph(`Tu n'as que ${nf(a.c)} ${PIECE}`); }
+      return { type: 4, data: { content: `⚔️ **Duel** : <@${uid}> contre <@${target}>${mise ? ` · mise **${nf(mise)}** ${PIECE}` : ""}\nChacun choisit en secret 👇`, allowed_mentions: { users: [uid, target] }, components: [{ type: 1, components: [["pierre", "🪨"], ["feuille", "📄"], ["ciseaux", "✂️"]].map(([v, e]) => ({ type: 2, style: 2, label: e, custom_id: `duel:${v}:${mise}` })) }] } }; }
+    case "sondage": { const q = String(opt(i, "question")).slice(0, 200), choix = String(opt(i, "choix")).split(";").map(s => s.trim()).filter(Boolean).slice(0, 5);
+      if (choix.length < 2) return eph("Donne au moins 2 choix séparés par des ; (ex: Oui;Non)");
+      const E = ["🇦", "🇧", "🇨", "🇩", "🇪"];
+      return { type: 4, data: { embeds: [{ title: "📊 " + q, description: choix.map((c, j) => `${E[j]} **${c}**\n\`░░░░░░░░░░\` 0`).join("\n\n"), color: COL.info, footer: { text: "0 vote • clique pour voter" } }], components: [{ type: 1, components: choix.map((c, j) => ({ type: 2, style: 1, label: E[j], custom_id: `poll:${j}` })) }] } }; }
+    case "giveaway": { const lot = String(opt(i, "lot")).slice(0, 200);
+      return { type: 4, data: { embeds: [{ title: "🎉 GIVEAWAY 🎉", description: `**Lot : ${lot}**\n\nClique sur 🎉 pour participer !\n\n👥 **0** participant(s)`, color: COL.gold, footer: { text: "L'organisateur clique sur « Tirer » pour désigner le gagnant" } }], components: [{ type: 1, components: [{ type: 2, style: 3, label: "🎉 Participer", custom_id: "gw:join" }, { type: 2, style: 1, label: "🎲 Tirer au sort", custom_id: `gw:draw:${uid}` }] }], allowed_mentions: { parse: [] } } }; }
   }
   return eph("Commande inconnue");
 }
+const mpBoard = b => { const r = []; for (let row = 0; row < 3; row++) r.push({ type: 1, components: [0, 1, 2].map(c => { const k = row * 3 + c, v = b[k]; return { type: 2, style: v === "X" ? 4 : v === "O" ? 1 : 2, label: v === "X" ? "❌" : v === "O" ? "⭕" : "​", custom_id: `mp:${k}`, disabled: v !== String(k + 1) }; }) }); return r; };
+const mpWin = b => { const L = [[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]]; for (const [a,c,d] of L) if (b[a] !== String(a+1) && b[a] === b[c] && b[c] === b[d]) return b[a]; return b.split("").every(x => x === "X" || x === "O") ? "=" : null; };
 
+const mentionIds = s => [...String(s || "").matchAll(/<@!?(\d+)>/g)].map(m => m[1]);
 async function button(i) {
-  const [kind, k, j, owner] = String(i.data.custom_id).split(":"), uid = (i.member?.user || i.user).id, g = i.guild_id || "dm";
+  const [kind, k, j, owner] = String(i.data.custom_id).split(":"), uid = (i.member?.user || i.user).id, g = i.guild_id || "dm", mid = i.message?.id;
+  const who = i.member?.nick || (i.member?.user || i.user)?.global_name || (i.member?.user || i.user)?.username;
+  if (kind === "dev") { if (uid !== k) return eph("Ce jeu n'est pas le tien : lance `/devine` 😉");
+    return { type: 9, data: { custom_id: "devg:" + uid, title: "Devine le nombre (1-100)", components: [{ type: 1, components: [{ type: 4, custom_id: "n", label: "Ton nombre", style: 1, min_length: 1, max_length: 3, required: true }] }] } }; }
+  if (kind === "mp") { const ids = mentionIds(i.message?.content), x = ids[0], o = ids[1]; if (!x || !o) return eph("Partie expirée.");
+    let st; try { const [v] = await kv([["GET", `llmms:dc:mp:${mid}`]]); st = JSON.parse(v || "null"); } catch {}
+    const board = st?.board || "123456789", turn = st?.turn || x;
+    if (uid !== x && uid !== o) return eph("Tu n'es pas dans cette partie 😅");
+    if (uid !== turn) return eph("Ce n'est pas ton tour ⏳");
+    const cell = +k; if (board[cell] === "X" || board[cell] === "O") return eph("Case déjà prise !");
+    const mark = uid === x ? "X" : "O", nb = board.slice(0, cell) + mark + board.slice(cell + 1), w = mpWin(nb), next = uid === x ? o : x;
+    await kv([["SET", `llmms:dc:mp:${mid}`, JSON.stringify({ board: nb, turn: next }), "EX", 3600]]);
+    const content = w === "X" || w === "O" ? `🏆 <@${w === "X" ? x : o}> a gagné le morpion !` : w === "=" ? "🤝 Match nul !" : `⭕ **Morpion** : <@${x}> (❌) · <@${o}> (⭕)\n➡️ À <@${next}> de jouer.`;
+    const comps = mpBoard(nb).map(row => ({ ...row, components: row.components.map(b => ({ ...b, disabled: w ? true : b.disabled })) }));
+    return { type: 7, data: { content, components: comps, allowed_mentions: { parse: [] } } }; }
+  if (kind === "duel") { const ids = mentionIds(i.message?.content), a = ids[0], b = ids[1], mise = +j || 0; if (!a || !b) return eph("Duel expiré.");
+    if (uid !== a && uid !== b) return eph("Tu n'es pas dans ce duel 😅");
+    let st = {}; try { const [v] = await kv([["GET", `llmms:dc:duel:${mid}`]]); st = JSON.parse(v || "{}"); } catch {}
+    if (st[uid]) return eph("Tu as déjà choisi 😏 attends l'autre !");
+    st[uid] = k; await kv([["SET", `llmms:dc:duel:${mid}`, JSON.stringify(st), "EX", 600]]);
+    if (!st[a] || !st[b]) return eph(`✅ Choix enregistré (${k === "pierre" ? "🪨" : k === "feuille" ? "📄" : "✂️"}) ! On attend l'autre joueur…`);
+    const beats = { pierre: "ciseaux", feuille: "pierre", ciseaux: "feuille" }, E = { pierre: "🪨", feuille: "📄", ciseaux: "✂️" };
+    let win = st[a] === st[b] ? null : beats[st[a]] === st[b] ? a : b;
+    let extra = "";
+    if (mise && win) { const wu = await getU(g, win), lu = await getU(g, win === a ? b : a); wu.c += mise; lu.c = Math.max(0, lu.c - mise); await putU(g, win, wu); await putU(g, win === a ? b : a, lu); extra = `\n💰 <@${win}> remporte **${nf(mise)}** ${PIECE} !`; }
+    const res2 = win ? `🏆 <@${win}> gagne !` : "🤝 Égalité !";
+    return { type: 7, data: { content: `⚔️ **Duel terminé**\n<@${a}> : ${E[st[a]]}  vs  ${E[st[b]]} : <@${b}>\n${res2}${extra}`, components: [], allowed_mentions: { parse: [] } } }; }
+  if (kind === "poll") { const idx = +k; let votes = {}; try { const [v] = await kv([["GET", `llmms:dc:poll:${mid}`]]); votes = JSON.parse(v || "{}"); } catch {}
+    votes[uid] = idx; await kv([["SET", `llmms:dc:poll:${mid}`, JSON.stringify(votes), "EX", 2592000]]);
+    const emb0 = i.message.embeds[0], E = ["🇦", "🇧", "🇨", "🇩", "🇪"], choix = emb0.description.split("\n\n").map(blk => (blk.split("\n")[0].match(/\*\*(.+)\*\*/) || [, "?"])[1]);
+    const counts = choix.map((_, j2) => Object.values(votes).filter(x => x === j2).length), total = counts.reduce((a, b) => a + b, 0);
+    const desc = choix.map((c, j2) => { const pct = total ? counts[j2] / total : 0, bar = Math.round(pct * 10); return `${E[j2]} **${c}**\n\`${"█".repeat(bar)}${"░".repeat(10 - bar)}\` ${counts[j2]} (${Math.round(pct * 100)}%)`; }).join("\n\n");
+    return { type: 7, data: { embeds: [{ ...emb0, description: desc, footer: { text: `${total} vote${total > 1 ? "s" : ""} • clique pour voter` } }] } }; }
+  if (kind === "gw") { if (k === "join") { let p = []; try { const [v] = await kv([["GET", `llmms:dc:gw:${mid}`]]); p = JSON.parse(v || "[]"); } catch {}
+      if (p.includes(uid)) return eph("Tu participes déjà 🎉");
+      p.push(uid); await kv([["SET", `llmms:dc:gw:${mid}`, JSON.stringify(p), "EX", 2592000]]);
+      const emb0 = i.message.embeds[0], d = emb0.description.replace(/👥 \*\*\d+\*\*/, `👥 **${p.length}**`);
+      return { type: 7, data: { embeds: [{ ...emb0, description: d }] } }; }
+    if (k === "draw") { if (uid !== j) return eph("Seul l'organisateur peut tirer au sort 😉");
+      let p = []; try { const [v] = await kv([["GET", `llmms:dc:gw:${mid}`]]); p = JSON.parse(v || "[]"); } catch {}
+      if (!p.length) return eph("Personne n'a participé 😢");
+      const winner = p[Math.floor(Math.random() * p.length)], emb0 = i.message.embeds[0];
+      return { type: 7, data: { content: `🎊 Félicitations <@${winner}> !`, embeds: [{ ...emb0, description: emb0.description.replace(/\n\nClique[\s\S]*/, `\n\n🎊 **Gagnant : <@${winner}>** parmi ${p.length} participant(s) !`), color: 0x22c55e }], components: [], allowed_mentions: { users: [winner] } } }; }
+    return eph("?"); }
   if (kind === "nitro") { let troll = "non je t'ai troll mdr 😂"; try { troll = Buffer.from(j || "", "base64url").toString("utf8") || troll; } catch {}
     if (uid === k) return eph("C'est toi qui l'as envoyé 😏 attends que ta victime clique !");
     return { type: 7, data: { content: "", embeds: [{ title: "🤡 " + troll, description: `<@${uid}> a cru au Nitro gratuit 😂😂
@@ -278,6 +371,27 @@ export default async function handler(req, res) {
     const who = i.member?.nick || (i.member?.user || i.user)?.global_name || (i.member?.user || i.user)?.username, uid = (i.member?.user || i.user)?.id;
     if (i.type === 3 && String(i.data.custom_id).startsWith("idee:")) { const [, t, ...pr] = String(i.data.custom_id).split(":"); const prec = pr.join(":"); return await late(ideas(t, prec).then(x => ideaMsg(t, prec, x)), 6); }
     if (i.type === 5 && String(i.data.custom_id).startsWith("chatm:")) { const msg = String(i.data.components?.[0]?.components?.[0]?.value || "").slice(0, 600); return await late(chat(uid, who, msg), 5); }
+    if (i.type === 5 && String(i.data.custom_id).startsWith("devg:")) {
+      const guess = parseInt(String(i.data.components?.[0]?.components?.[0]?.value || "").replace(/\D/g, "")) || 0, g2 = i.guild_id || "dm";
+      let st; try { const [v] = await kv([["GET", `llmms:dc:dev:${g2}:${uid}`]]); st = JSON.parse(v || "null"); } catch {}
+      if (!st) return res.json(eph("Partie expirée, relance `/devine`."));
+      st.t = (st.t || 0) + 1;
+      if (guess === st.n) { await kv([["DEL", `llmms:dc:dev:${g2}:${uid}`]]); const u = await getU(g2, uid); u.c += 300; await putU(g2, uid, u);
+        return res.json({ type: 4, data: { embeds: [{ title: "🎉 Gagné !", description: `C'était bien **${st.n}** ! Trouvé en **${st.t}** essai(s).\n+300 ${PIECE} (solde : ${nf(u.c)})`, color: COL.ok }] } }); }
+      await kv([["SET", `llmms:dc:dev:${g2}:${uid}`, JSON.stringify(st), "EX", 600]]);
+      return res.json({ type: 4, data: { embeds: [{ title: "🔢 Devine le nombre", description: `**${guess}** → c'est ${guess < st.n ? "plus grand ⬆️" : "plus petit ⬇️"}\nEssai n°${st.t}`, color: COL.gold }], components: [{ type: 1, components: [{ type: 2, style: 1, label: "✍️ Réessayer", custom_id: `dev:${uid}` }] }] } }); }
+    if (i.type === 2 && ["roast", "histoire", "traduire", "resume"].includes(i.data.name)) {
+      const n2 = i.data.name;
+      const build = async () => { let txt, title;
+        try {
+          if (n2 === "roast") { const t = opt(i, "membre"), tn = i.data.resolved?.members?.[t]?.nick || i.data.resolved?.users?.[t]?.global_name || i.data.resolved?.users?.[t]?.username || "lui"; title = "🔥 Roast"; txt = `<@${t}>\n\n` + await gemini(`Écris une petite vanne drôle et gentille (pas méchante, pas d'insulte) sur ${tn}, en français, 1 à 2 phrases, pour rigoler entre potes.`); }
+          else if (n2 === "histoire") { const th = String(opt(i, "theme") || "").slice(0, 100); title = "📖 Histoire"; txt = await gemini(`Écris une courte histoire fun et originale en français (10 lignes max)${th ? " sur le thème : " + th : ""}.`); }
+          else if (n2 === "traduire") { const tx = String(opt(i, "texte") || "").slice(0, 800), lg = opt(i, "langue") || "anglais"; title = "🌍 Traduction (" + lg + ")"; txt = `> ${tx.slice(0, 300)}\n\n` + await gemini(`Traduis ce texte en ${lg}, donne UNIQUEMENT la traduction sans rien d'autre :\n${tx}`); }
+          else { const tx = String(opt(i, "texte") || "").slice(0, 2000); title = "📝 Résumé"; txt = await gemini(`Résume ce texte en français, en 2-3 phrases claires :\n${tx}`); }
+        } catch (e) { title = "😵"; txt = e.message; }
+        return { embeds: [{ title, description: txt.slice(0, 4000), color: COL.info, footer: { text: "llmms ia" } }] }; };
+      return await late(build(), 5);
+    }
     if (i.type === 2 && i.data.name === "discute") return await late(chat(uid, who, String(opt(i, "message") || "").slice(0, 600)), 5);
     if (i.type === 2 && i.data.name === "idee") { const t = opt(i, "sujet"), prec = String(opt(i, "precision") || "").replace(/:/g, " ").slice(0, 60); return await late(ideas(t, prec).then(x => ideaMsg(t, prec, x)), 5); }
     if (i.type === 3) return res.json(await button(i));
