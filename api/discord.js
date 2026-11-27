@@ -116,10 +116,26 @@ const CMDS = [
   { name: "morpion", description: "⭕ Morpion (tic-tac-toe) contre un pote", options: [{ type: 6, name: "adversaire", description: "Ton adversaire", required: true }] },
   { name: "duel", description: "⚔️ Duel pierre-feuille-ciseaux contre un pote", options: [{ type: 6, name: "adversaire", description: "Ton adversaire", required: true }, { type: 4, name: "mise", description: "Mise en pièces (facultatif)", required: false, min_value: 1 }] },
   { name: "sondage", description: "📊 Crée un sondage", options: [{ type: 3, name: "question", description: "La question", required: true }, { type: 3, name: "choix", description: "Les choix séparés par des ; (ex: Oui;Non;Peut-être)", required: true }] },
-  { name: "giveaway", description: "🎉 Lance un giveaway", options: [{ type: 3, name: "lot", description: "Ce qu'on peut gagner", required: true }] }
+  { name: "giveaway", description: "🎉 Lance un giveaway", options: [{ type: 3, name: "lot", description: "Ce qu'on peut gagner", required: true }] },
+  { name: "fakeban", description: "😈 Faux bannissement pour troller un pote", options: [{ type: 6, name: "membre", description: "La victime", required: true }, { type: 3, name: "message", description: "Révélation au clic (défaut: non je t'ai troll mdr)", required: false, max_length: 50 }] },
+  { name: "fakehack", description: "😈 Faux « compte piraté » pour troller un pote", options: [{ type: 6, name: "membre", description: "La victime", required: true }, { type: 3, name: "message", description: "Révélation au clic (défaut: non je t'ai troll mdr)", required: false, max_length: 50 }] },
+  { name: "fakeleave", description: "😈 Faux « a quitté le serveur »", options: [{ type: 6, name: "membre", description: "La victime", required: true }] },
+  { name: "fakeannonce", description: "😈 Fausse annonce rigolote", options: [{ type: 3, name: "texte", description: "Le texte de l'annonce", required: true }] },
+  { name: "pickup", description: "💘 Une phrase de drague drôle (par l'IA)" },
+  { name: "verite", description: "🙊 Une question Vérité" },
+  { name: "action", description: "🎯 Un défi Action" },
+  { name: "complot", description: "🛸 Une fausse théorie du complot marrante (par l'IA)" },
+  { name: "insulte", description: "😜 Une vanne gentille (par l'IA)", options: [{ type: 6, name: "membre", description: "Pour qui (facultatif)", required: false }] },
+  { name: "say", description: "🗣️ Le bot répète ton message", options: [{ type: 3, name: "texte", description: "Le message", required: true }] },
+  { name: "embed", description: "✨ Crée un joli message", options: [{ type: 3, name: "titre", description: "Le titre", required: true }, { type: 3, name: "texte", description: "Le contenu", required: true }, { type: 3, name: "couleur", description: "Couleur", required: false, choices: [{ name: "Bleu", value: "info" }, { name: "Vert", value: "ok" }, { name: "Rouge", value: "ko" }, { name: "Or", value: "gold" }] }] },
+  { name: "tirage", description: "🎲 Choisit un gagnant dans une liste", options: [{ type: 3, name: "liste", description: "Les noms séparés par des ; ", required: true }] },
+  { name: "compteur", description: "📆 Jours sans clash sur le serveur" },
+  { name: "ouinon", description: "👍 Sondage rapide oui/non", options: [{ type: 3, name: "question", description: "La question", required: true }] },
+  { name: "rank", description: "🏅 Ta carte de niveau", options: [{ type: 6, name: "membre", description: "Le membre", required: false }] },
+  { name: "succes", description: "🏆 Tes succès débloqués", options: [{ type: 6, name: "membre", description: "Le membre", required: false }] }
 ];
 
-const ANY = ["aide", "ia", "discute", "idee", "pfc", "de", "8ball", "quiz", "fakenitro", "faketiktok", "fakeboost", "bloxy", "profil", "classement", "roast", "histoire", "traduire", "resume", "avatar", "userinfo", "roulette", "devine", "duel"];
+const ANY = ["aide", "ia", "discute", "idee", "pfc", "de", "8ball", "quiz", "fakenitro", "faketiktok", "fakeboost", "bloxy", "profil", "classement", "roast", "histoire", "traduire", "resume", "avatar", "userinfo", "roulette", "devine", "duel", "fakeban", "fakehack", "fakeleave", "fakeannonce", "pickup", "verite", "action", "complot", "insulte", "say", "embed", "tirage", "ouinon", "rank", "succes"];
 for (const c of CMDS) if (ANY.includes(c.name)) { c.integration_types = [0, 1]; c.contexts = [0, 1, 2]; }
 async function run(i) {
   const g = i.guild_id || "dm", me = i.member?.user || i.user, uid = me.id, name = i.member?.nick || me.global_name || me.username, cmd = i.data.name;
@@ -130,10 +146,11 @@ async function run(i) {
   switch (cmd) {
     case "aide": return emb("🤖 Le bot de LLMMS", [
       "**💰 Économie** : `/daily` `/work` `/solde` `/pay` `/vol` `/banque` `/shop` `/acheter` `/top` `/niveau`",
-      "**🤖 IA** : `/ia` `/discute` `/idee` `/roast` `/histoire` `/traduire` `/resume`",
+      "**🤖 IA** : `/ia` `/discute` `/idee` `/roast` `/histoire` `/traduire` `/resume` `/pickup` `/verite` `/action` `/complot` `/insulte`",
       "**🎲 Jeux** : `/pfc` `/pile` `/de` `/8ball` `/quiz` `/devine` `/morpion` `/duel` `/roulette`",
-      "**😈 Troll** : `/fakenitro` `/faketiktok` `/fakeboost`",
-      "**🎉 Serveur** : `/sondage` `/giveaway` `/avatar` `/userinfo` `/serveur`",
+      "**😈 Troll** : `/fakenitro` `/faketiktok` `/fakeboost` `/fakeban` `/fakehack` `/fakeleave` `/fakeannonce`",
+      "**🎉 Serveur** : `/sondage` `/ouinon` `/giveaway` `/tirage` `/say` `/embed` `/compteur` `/avatar` `/userinfo` `/serveur`",
+      "**🏅 Profil** : `/niveau` `/rank` `/succes`",
       "**🎮 BLOXY** : `/bloxy` `/profil` `/classement`",
       "**🛡️ Modération** : `/warn` `/warns` `/mute` `/unmute` `/ban`"].join("\n"), COL.info, { footer: { text: "Créé avec llmms ia" } });
     case "daily": {
@@ -264,9 +281,36 @@ async function run(i) {
       return { type: 4, data: { embeds: [{ title: "📊 " + q, description: choix.map((c, j) => `${E[j]} **${c}**\n\`░░░░░░░░░░\` 0`).join("\n\n"), color: COL.info, footer: { text: "0 vote • clique pour voter" } }], components: [{ type: 1, components: choix.map((c, j) => ({ type: 2, style: 1, label: E[j], custom_id: `poll:${j}` })) }] } }; }
     case "giveaway": { const lot = String(opt(i, "lot")).slice(0, 200);
       return { type: 4, data: { embeds: [{ title: "🎉 GIVEAWAY 🎉", description: `**Lot : ${lot}**\n\nClique sur 🎉 pour participer !\n\n👥 **0** participant(s)`, color: COL.gold, footer: { text: "L'organisateur clique sur « Tirer » pour désigner le gagnant" } }], components: [{ type: 1, components: [{ type: 2, style: 3, label: "🎉 Participer", custom_id: "gw:join" }, { type: 2, style: 1, label: "🎲 Tirer au sort", custom_id: `gw:draw:${uid}` }] }], allowed_mentions: { parse: [] } } }; }
+    case "fakeban": { const tr = encTroll(opt(i, "message"));
+      return { type: 4, data: { content: `🔨 <@${target}>`, embeds: [{ author: { name: "Modération" }, title: "🔨 Membre banni", description: `**${tName}** a été **banni** du serveur.\n📋 Raison : comportement toxique\n\nTu penses que c'est une erreur ?`, color: 0xef4444 }], components: [{ type: 1, components: [{ type: 2, style: 2, label: "📋 Faire appel", custom_id: `trl:${uid}:ban:${tr}` }] }], allowed_mentions: { users: [target] } } }; }
+    case "fakehack": { const tr = encTroll(opt(i, "message"));
+      return { type: 4, data: { content: `⚠️ <@${target}>`, embeds: [{ author: { name: "Sécurité" }, title: "⚠️ Connexion suspecte détectée", description: `**${tName}**, une connexion inconnue a été repérée sur ton compte 😨\nSécurise-le tout de suite pour ne pas le perdre.`, color: 0xf59e0b }], components: [{ type: 1, components: [{ type: 2, style: 4, label: "🔒 Sécuriser mon compte", custom_id: `trl:${uid}:hack:${tr}` }] }], allowed_mentions: { users: [target] } } }; }
+    case "fakeleave": return { type: 4, data: { embeds: [{ description: `📤 **${tName}** a quitté le serveur.`, color: 0x747f8d }] } };
+    case "fakeannonce": { const tx = String(opt(i, "texte")).replace(/@(everyone|here)/g, "@​$1").slice(0, 300);
+      return { type: 4, data: { embeds: [{ author: { name: "📢 Annonce" }, description: tx, color: COL.gold }], allowed_mentions: { parse: [] } } }; }
+    case "say": { const tx = String(opt(i, "texte")).replace(/@(everyone|here)/g, "@​$1").slice(0, 400); return { type: 4, data: { content: tx, allowed_mentions: { parse: [] } } }; }
+    case "embed": { const C = { info: COL.info, ok: COL.ok, ko: COL.ko, gold: COL.gold }[opt(i, "couleur") || "info"];
+      return { type: 4, data: { embeds: [{ title: String(opt(i, "titre")).slice(0, 250), description: String(opt(i, "texte")).replace(/@(everyone|here)/g, "@​$1").slice(0, 2000), color: C, footer: { text: "par " + name } }], allowed_mentions: { parse: [] } } }; }
+    case "tirage": { const l = String(opt(i, "liste")).split(";").map(s => s.trim()).filter(Boolean); if (l.length < 2) return eph("Donne au moins 2 choix séparés par des ;");
+      return emb("🎲 Tirage au sort", `Parmi : ${l.join(", ")}\n\n🎉 **Gagnant : ${pick(l)}**`, COL.gold); }
+    case "ouinon": { const q = String(opt(i, "question")).slice(0, 240);
+      return { type: 4, data: { embeds: [{ title: "📊 " + q, description: "👍 **Oui**\n`░░░░░░░░░░` 0\n\n👎 **Non**\n`░░░░░░░░░░` 0", color: COL.info, footer: { text: "0 vote" } }], components: [{ type: 1, components: [{ type: 2, style: 3, label: "👍 Oui", custom_id: "yn:0" }, { type: 2, style: 4, label: "👎 Non", custom_id: "yn:1" }] }] } }; }
+    case "compteur": { if (g === "dm") return eph("Marche seulement dans un serveur."); let last; try { const [v] = await kv([["GET", `llmms:dc:clash:${g}`]]); last = +v || null; } catch {}
+      if (!last) { last = now; await kv([["SET", `llmms:dc:clash:${g}`, String(last)]]); }
+      const days = Math.floor((now - last) / 864e5);
+      return { type: 4, data: { embeds: [{ title: "📆 Compteur sans clash", description: `Ça fait **${days}** jour(s) sans clash sur le serveur 🕊️\n*Record à battre !*`, color: COL.ok }], components: [{ type: 1, components: [{ type: 2, style: 4, label: "💥 Il y a eu un clash (reset)", custom_id: "clash:reset" }] }] } }; }
+    case "rank": { const id = target || uid, u = await getU(g, id), xp = u.xp || 0, lvl = Math.floor(Math.sqrt(xp / 20)), need = (lvl + 1) * (lvl + 1) * 20, prev = lvl * lvl * 20, pc = (xp - prev) / (need - prev), bar = Math.round(pc * 16);
+      return { type: 4, data: { embeds: [{ author: { name: "🏅 Carte de niveau" }, title: `${target ? tName : name}`, description: `**Niveau ${lvl}** • ${nf(xp)} XP\n\n\`${"🟦".repeat(bar)}${"⬜".repeat(16 - bar)}\`\n${Math.round(pc * 100)}% → niveau ${lvl + 1} (${nf(need - xp)} XP restants)\n\n💰 ${nf(u.c + u.bank)} ${PIECE}`, color: COL.info }] } }; }
+    case "succes": { const id = target || uid, u = await getU(g, id), lvl = Math.floor(Math.sqrt((u.xp || 0) / 20)), rich = u.c + u.bank, A = [];
+      A.push([lvl >= 1, "👶 Débutant", "Atteindre le niveau 1"]); A.push([lvl >= 5, "⭐ Habitué", "Atteindre le niveau 5"]); A.push([lvl >= 10, "🌟 Vétéran", "Atteindre le niveau 10"]);
+      A.push([rich >= 1000, "💵 Premier billet", "Avoir 1 000 pièces"]); A.push([rich >= 10000, "💰 Riche", "Avoir 10 000 pièces"]); A.push([rich >= 100000, "🤑 Millionnaire", "Avoir 100 000 pièces"]);
+      A.push([(u.streak || 0) >= 7, "🔥 Assidu", "7 jours de daily d'affilée"]); A.push([!!u.inv?.length, "🛍️ Shopping", "Acheter un objet"]);
+      const done = A.filter(a => a[0]).length;
+      return { type: 4, data: { embeds: [{ title: `🏆 Succès de ${target ? tName : name}`, description: `**${done}/${A.length}** débloqués\n\n` + A.map(a => `${a[0] ? "✅" : "🔒"} **${a[1]}** — ${a[2]}`).join("\n"), color: COL.gold }] } }; }
   }
   return eph("Commande inconnue");
 }
+const encTroll = m => { let t = String(m || "non je t'ai troll mdr 😂").slice(0, 150); while (Buffer.byteLength(t) > 44) t = [...t].slice(0, -1).join(""); return Buffer.from(t).toString("base64url"); };
 const mpBoard = b => { const r = []; for (let row = 0; row < 3; row++) r.push({ type: 1, components: [0, 1, 2].map(c => { const k = row * 3 + c, v = b[k]; return { type: 2, style: v === "X" ? 4 : v === "O" ? 1 : 2, label: v === "X" ? "❌" : v === "O" ? "⭕" : "​", custom_id: `mp:${k}`, disabled: v !== String(k + 1) }; }) }); return r; };
 const mpWin = b => { const L = [[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]]; for (const [a,c,d] of L) if (b[a] !== String(a+1) && b[a] === b[c] && b[c] === b[d]) return b[a]; return b.split("").every(x => x === "X" || x === "O") ? "=" : null; };
 
@@ -299,6 +343,17 @@ async function button(i) {
     if (mise && win) { const wu = await getU(g, win), lu = await getU(g, win === a ? b : a); wu.c += mise; lu.c = Math.max(0, lu.c - mise); await putU(g, win, wu); await putU(g, win === a ? b : a, lu); extra = `\n💰 <@${win}> remporte **${nf(mise)}** ${PIECE} !`; }
     const res2 = win ? `🏆 <@${win}> gagne !` : "🤝 Égalité !";
     return { type: 7, data: { content: `⚔️ **Duel terminé**\n<@${a}> : ${E[st[a]]}  vs  ${E[st[b]]} : <@${b}>\n${res2}${extra}`, components: [], allowed_mentions: { parse: [] } } }; }
+  if (kind === "trl") { let troll = "non je t'ai troll mdr 😂"; try { troll = Buffer.from(owner || "", "base64url").toString("utf8") || troll; } catch {}
+    if (uid === k) return eph("C'est toi qui l'as envoyé 😏 attends ta victime !");
+    const what = j === "hack" ? "au faux piratage" : "au faux ban";
+    return { type: 7, data: { content: "", embeds: [{ title: "🤡 " + troll, description: `<@${uid}> a cru ${what} 😂😂\nPiégé par <@${k}> !`, color: 0xef4444, footer: { text: "le bot de LLMMS" } }], components: [{ type: 1, components: [{ type: 2, style: 4, label: "🤡 Piégé", custom_id: "trl_done", disabled: true }] }], allowed_mentions: { parse: [] } } }; }
+  if (kind === "yn") { const idx = +k; let votes = {}; try { const [v] = await kv([["GET", `llmms:dc:yn:${mid}`]]); votes = JSON.parse(v || "{}"); } catch {}
+    votes[uid] = idx; await kv([["SET", `llmms:dc:yn:${mid}`, JSON.stringify(votes), "EX", 2592000]]);
+    const emb0 = i.message.embeds[0], vals = Object.values(votes), oui = vals.filter(x => x === 0).length, non = vals.filter(x => x === 1).length, total = oui + non;
+    const line = (lbl, n) => { const bar = Math.round((total ? n / total : 0) * 10); return `${lbl}\n\`${"█".repeat(bar)}${"░".repeat(10 - bar)}\` ${n} (${Math.round((total ? n / total : 0) * 100)}%)`; };
+    return { type: 7, data: { embeds: [{ ...emb0, description: `${line("👍 **Oui**", oui)}\n\n${line("👎 **Non**", non)}`, footer: { text: `${total} vote${total > 1 ? "s" : ""}` } }] } }; }
+  if (kind === "clash") { await kv([["SET", `llmms:dc:clash:${g}`, String(Date.now())]]);
+    return { type: 7, data: { embeds: [{ title: "📆 Compteur sans clash", description: "💥 **Compteur remis à zéro !** Allez, on repart à **0** jour 😅", color: COL.ko }], components: [] } }; }
   if (kind === "poll") { const idx = +k; let votes = {}; try { const [v] = await kv([["GET", `llmms:dc:poll:${mid}`]]); votes = JSON.parse(v || "{}"); } catch {}
     votes[uid] = idx; await kv([["SET", `llmms:dc:poll:${mid}`, JSON.stringify(votes), "EX", 2592000]]);
     const emb0 = i.message.embeds[0], E = ["🇦", "🇧", "🇨", "🇩", "🇪"], choix = emb0.description.split("\n\n").map(blk => (blk.split("\n")[0].match(/\*\*(.+)\*\*/) || [, "?"])[1]);
@@ -380,6 +435,19 @@ export default async function handler(req, res) {
         return res.json({ type: 4, data: { embeds: [{ title: "🎉 Gagné !", description: `C'était bien **${st.n}** ! Trouvé en **${st.t}** essai(s).\n+300 ${PIECE} (solde : ${nf(u.c)})`, color: COL.ok }] } }); }
       await kv([["SET", `llmms:dc:dev:${g2}:${uid}`, JSON.stringify(st), "EX", 600]]);
       return res.json({ type: 4, data: { embeds: [{ title: "🔢 Devine le nombre", description: `**${guess}** → c'est ${guess < st.n ? "plus grand ⬆️" : "plus petit ⬇️"}\nEssai n°${st.t}`, color: COL.gold }], components: [{ type: 1, components: [{ type: 2, style: 1, label: "✍️ Réessayer", custom_id: `dev:${uid}` }] }] } }); }
+    if (i.type === 2 && ["pickup", "verite", "action", "complot", "insulte"].includes(i.data.name)) {
+      const n3 = i.data.name;
+      const build = async () => { let txt, title;
+        const P = { pickup: ["💘 Phrase de drague", "Invente une phrase de drague drôle et mignonne en français, une seule phrase, pour rigoler."],
+          verite: ["🙊 Vérité", "Donne une question « Vérité » fun et pas méchante (jeu action ou vérité), en français, une phrase."],
+          action: ["🎯 Action", "Donne un défi « Action » fun, drôle et safe (jeu action ou vérité, rien de dangereux ni gênant), en français, une phrase."],
+          complot: ["🛸 Théorie du complot", "Invente une fausse théorie du complot complètement absurde et drôle (clairement pour rigoler), en français, 2-3 phrases."] };
+        try { if (n3 === "insulte") { const t = opt(i, "membre"), tn = t ? (i.data.resolved?.members?.[t]?.nick || i.data.resolved?.users?.[t]?.username) : null; title = "😜 Vanne"; txt = (t ? `<@${t}>\n\n` : "") + await gemini(`Écris une petite vanne drôle et gentille (jamais méchante, aucune insulte vulgaire, aucune discrimination) ${tn ? "sur " + tn : "sur quelqu'un"}, en français, une phrase, pour taquiner entre potes.`); }
+          else { title = P[n3][0]; txt = await gemini(P[n3][1]); } }
+        catch (e) { title = "😵"; txt = e.message; }
+        return { embeds: [{ title, description: txt.slice(0, 2000), color: COL.info, footer: { text: "llmms ia" } }], allowed_mentions: { parse: [] } }; };
+      return await late(build(), 5);
+    }
     if (i.type === 2 && ["roast", "histoire", "traduire", "resume"].includes(i.data.name)) {
       const n2 = i.data.name;
       const build = async () => { let txt, title;
