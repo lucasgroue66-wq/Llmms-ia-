@@ -24,12 +24,12 @@ async function getU(g, u) { const [v] = await kv([["GET", K(g, u)]]); try { retu
 async function putU(g, u, d) { await kv([["SET", K(g, u), JSON.stringify(d)], ["ZADD", TOP(g), Math.floor(d.c + d.bank), u]]); }
 
 /* ---------------- IA (Gemini gratuit) ---------------- */
-async function gemini(q) {
+async function gemini(q, hist, sys) {
   const key = process.env.GEMINI_API_KEY; if (!key) throw new Error("pas de clé Gemini sur le site");
   for (const model of (process.env.GEMINI_MODELS || "gemini-flash-latest,gemini-flash-lite-latest,gemini-2.0-flash").split(",").map(s => s.trim())) {
     try {
       const r = await fetch("https://generativelanguage.googleapis.com/v1beta/openai/chat/completions", { method: "POST", headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json" },
-        body: JSON.stringify({ model, max_tokens: 700, messages: [{ role: "system", content: "Tu es llmms ia, l'assistant du serveur Discord de LLMMS. Réponds en français, de façon courte, claire et sympa (max 1500 caractères). Tu ne dis jamais que tu es Gemini ou Google : tu es llmms ia." }, { role: "user", content: q }] }) });
+        body: JSON.stringify({ model, max_tokens: 700, messages: [{ role: "system", content: sys || "Tu es llmms ia, l'assistant du serveur Discord de LLMMS. Réponds en français, de façon courte, claire et sympa (max 1500 caractères). Tu ne dis jamais que tu es Gemini ou Google : tu es llmms ia." }, ...(hist || []), { role: "user", content: q }] }) });
       if (!r.ok) continue; const j = await r.json(); const t = j?.choices?.[0]?.message?.content; if (t) return t.slice(0, 1900);
     } catch {}
   }
@@ -52,6 +52,22 @@ async function bot(path, method = "GET", body) {
   if (!r.ok && r.status !== 204) { const t = await r.text().catch(() => ""); throw new Error(`Discord ${r.status} ${t.slice(0, 120)}`); }
   return r.status === 204 ? null : r.json().catch(() => null);
 }
+const IDEES = {
+  jeu: ["Steal a Pizza : vole les pizzas géantes des autres bases", "Obby où le sol change de couleur toutes les 5 s", "Tycoon de fusées : envoie des fusées sur Mars pour gagner", "Survis à la lave qui monte avec tes potes", "Simulateur de chien : deviens le chien le plus fort", "Cache-cache géant dans un supermarché", "Course de karts avec des pièges brainrot", "Escape de l'école avec un prof géant qui te poursuit"],
+  video: ["« J'ai créé mon propre Roblox » avec un time-lapse", "24 h à ne jouer qu'à des jeux brainrot", "Je note les bases de mes abonnés sur Steal a Noflex", "Je donne 1 M de Bloxbux au premier qui trouve le code", "Réaction aux pires jeux Roblox", "Je deviens riche en 1 heure sur EMPIRE MILLIONNAIRE"],
+  serveur: ["Salon #idées-de-jeux avec vote 👍👎", "Concours de la meilleure base chaque semaine", "Rôle spécial pour les 10 plus actifs", "Soirée jeu tous les vendredis", "Salon #montages pour partager ses vidéos", "Événement : le premier qui trouve le code secret gagne un rôle"],
+  business: ["Vendre des miniatures YouTube à des petits créateurs", "Faire des montages vidéo pour des streamers", "Créer des sites pour des commerces avec llmms ia", "Vendre des maps Roblox Studio", "Lancer une chaîne de shorts automatisée", "Proposer des logos et bannières Discord"],
+  defi: ["Finir un obby sans sauter plus de 50 fois", "Le premier qui trouve un Noflex Secret gagne", "Construire la plus belle maison en 10 min", "Parler qu'en emojis pendant 1 heure", "1v1 : le moins de morts sur une tour", "Deviner le jeu avec juste une capture"],
+  nom: ["Noflex King", "LLMMS Studio", "Bloxy Legends", "Turbo Brainrot", "Shadow Obby", "Les Voleurs de Base", "Empire Gaming", "Pixel Fury"] };
+const THEME = { jeu: "jeux Roblox / BLOXY originaux", video: "vidéos TikTok / YouTube", serveur: "idées pour animer un serveur Discord", business: "petits business en ligne réalistes et légaux pour un jeune", defi: "défis fun entre potes", nom: "pseudos / noms stylés" };
+async function ideas(t, prec) { try { const r = await gemini(`Propose 5 ${THEME[t] || "idées"}${prec ? ` sur le thème : ${prec}` : ""}. Une idée par ligne, numérotée, courte et originale, avec un emoji. Pas d'intro.`); return r; } catch { return [...(IDEES[t] || IDEES.jeu)].sort(() => Math.random() - .5).slice(0, 5).map((x, k) => `${k + 1}. ${x}`).join("\n"); } }
+const ideaMsg = (t, prec, txt) => ({ embeds: [{ title: "💡 Idées : " + ({ jeu: "jeu", video: "vidéo", serveur: "serveur", business: "business", defi: "défis", nom: "noms" }[t] || t), description: txt.slice(0, 3800), color: COL.gold, footer: prec ? { text: "Thème : " + prec } : undefined }], components: [{ type: 1, components: [{ type: 2, style: 1, label: "💡 D'autres idées", custom_id: `idee:${t}:${String(prec || "").slice(0, 60)}` }] }] });
+/* conversation avec mémoire */
+const CH = u => `llmms:dc:chat:${u}`;
+async function chat(uid, who, msg) { const [h] = await kv([["LRANGE", CH(uid), -12, -1]]); const hist = (h || []).map(x => { try { return JSON.parse(x); } catch { return null; } }).filter(Boolean);
+  let rep; try { rep = await gemini(msg, hist, `Tu es llmms ia, un pote sympa sur le serveur Discord de LLMMS. Tu discutes avec ${who} comme un ami : naturel, drôle, en français, réponses courtes (2 à 6 phrases). Tu peux proposer des idées si on te le demande. Tu ne dis jamais que tu es Gemini ou Google.`); } catch (e) { rep = "😵 " + e.message; }
+  if (!rep.startsWith("😵")) await kv([["RPUSH", CH(uid), JSON.stringify({ role: "user", content: msg.slice(0, 600) }), JSON.stringify({ role: "assistant", content: rep.slice(0, 1200) })], ["LTRIM", CH(uid), -16, -1], ["EXPIRE", CH(uid), 86400]]);
+  return { embeds: [{ author: { name: who + " : " + msg.slice(0, 200) }, description: rep.slice(0, 3800), color: COL.info, footer: { text: "llmms ia · se souvient de votre discussion pendant 24 h" } }], components: [{ type: 1, components: [{ type: 2, style: 1, label: "💬 Répondre", custom_id: `chatr:${uid}` }, { type: 2, style: 2, label: "🔄 Nouvelle discussion", custom_id: `chatn:${uid}` }] }] }; }
 const QUIZ = [["Quelle est la capitale du Japon ?", ["Tokyo", "Osaka", "Kyoto"], 0], ["Combien font 7 x 8 ?", ["54", "56", "64"], 1], ["Quel est le plus grand océan ?", ["Atlantique", "Indien", "Pacifique"], 2], ["Combien de joueurs dans une équipe de foot ?", ["10", "11", "12"], 1], ["Quelle planète est la plus proche du Soleil ?", ["Vénus", "Mercure", "Mars"], 1], ["En quelle année l'homme a marché sur la Lune ?", ["1969", "1975", "1959"], 0], ["Quel animal est le plus rapide ?", ["Guépard", "Lion", "Cheval"], 0], ["Combien de côtés a un hexagone ?", ["5", "6", "8"], 1]];
 
 /* ---------------- les commandes ---------------- */
@@ -68,6 +84,8 @@ const CMDS = [
   { name: "acheter", description: "Acheter un objet de la boutique", options: [{ type: 3, name: "objet", description: "L'objet", required: true, choices: SHOP.map(([v, n, p]) => ({ name: `${n} · ${p}`, value: v })) }] },
   { name: "top", description: "Les plus riches du serveur" },
   { name: "ia", description: "Pose une question à llmms ia", options: [{ type: 3, name: "question", description: "Ta question", required: true }] },
+  { name: "discute", description: "Discuter avec llmms ia (il se souvient de la conversation)", options: [{ type: 3, name: "message", description: "Ton message", required: true }] },
+  { name: "idee", description: "Le bot te propose des idées", options: [{ type: 3, name: "sujet", description: "Idées de quoi ?", required: true, choices: [{ name: "🧱 Jeu Roblox / BLOXY", value: "jeu" }, { name: "🎬 Vidéo TikTok / YouTube", value: "video" }, { name: "💬 Serveur Discord", value: "serveur" }, { name: "💰 Business / argent", value: "business" }, { name: "🎯 Défi entre potes", value: "defi" }, { name: "🎨 Pseudo / nom stylé", value: "nom" }] }, { type: 3, name: "precision", description: "Précise (facultatif) : thème, style…", required: false }] },
   { name: "bloxy", description: "Lien et infos sur BLOXY" },
   { name: "profil", description: "Profil BLOXY d'un joueur", options: [{ type: 3, name: "pseudo", description: "Pseudo BLOXY (ex : Llmms99587)", required: true }] },
   { name: "classement", description: "Les plus gros créateurs de BLOXY" },
@@ -92,7 +110,7 @@ async function run(i) {
   switch (cmd) {
     case "aide": return emb("🤖 Le bot de LLMMS", [
       "**💰 Économie** : `/daily` `/work` `/solde` `/pay` `/vol` `/banque` `/shop` `/acheter` `/top`",
-      "**🎮 BLOXY** : `/bloxy` `/profil` `/classement`", "**🤖 IA** : `/ia`",
+      "**🎮 BLOXY** : `/bloxy` `/profil` `/classement`", "**🤖 IA** : `/ia` `/discute` (conversation) `/idee` (propose des idées)",
       "**🎲 Mini-jeux** : `/pfc` `/pile` `/de` `/8ball` `/quiz`",
       "**🛡️ Modération** : `/warn` `/warns` `/mute` `/unmute` `/ban`"].join("\n"), COL.info, { footer: { text: "Créé avec llmms ia" } });
     case "daily": {
@@ -185,6 +203,8 @@ async function run(i) {
 
 async function button(i) {
   const [kind, k, j, owner] = String(i.data.custom_id).split(":"), uid = (i.member?.user || i.user).id, g = i.guild_id || "dm";
+  if (kind === "chatr") { if (uid !== k) return eph("Lance ta propre discussion avec `/discute` 😉"); return { type: 9, data: { custom_id: "chatm:" + uid, title: "Répondre à llmms ia", components: [{ type: 1, components: [{ type: 4, custom_id: "msg", label: "Ton message", style: 2, max_length: 600, required: true }] }] } }; }
+  if (kind === "chatn") { if (uid !== k) return eph("Ce n'est pas ta discussion 😉"); await kv([["DEL", CH(uid)]]); return eph("🔄 C'est oublié ! Recommence avec `/discute`."); }
   if (kind !== "quiz") return eph("Bouton inconnu");
   if (uid !== owner) return eph("Ce quiz n'est pas pour toi : lance le tien avec `/quiz` 😉");
   const q = QUIZ[+k], ok = +j === q[2]; let extra = "";
@@ -220,6 +240,12 @@ export default async function handler(req, res) {
   const i = JSON.parse(raw);
   if (i.type === 1) return res.json({ type: 1 });
   try {
+    const late = (p, type) => { const f = async () => { const body = await p; await fetch(`${API}/webhooks/${i.application_id}/${i.token}/messages/@original`, { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) }); }; const q = f().catch(() => {}); if (bg(q)) return res.json({ type }); res.json({ type }); return q; };
+    const who = i.member?.nick || (i.member?.user || i.user)?.global_name || (i.member?.user || i.user)?.username, uid = (i.member?.user || i.user)?.id;
+    if (i.type === 3 && String(i.data.custom_id).startsWith("idee:")) { const [, t, ...pr] = String(i.data.custom_id).split(":"); const prec = pr.join(":"); return await late(ideas(t, prec).then(x => ideaMsg(t, prec, x)), 6); }
+    if (i.type === 5 && String(i.data.custom_id).startsWith("chatm:")) { const msg = String(i.data.components?.[0]?.components?.[0]?.value || "").slice(0, 600); return await late(chat(uid, who, msg), 5); }
+    if (i.type === 2 && i.data.name === "discute") return await late(chat(uid, who, String(opt(i, "message") || "").slice(0, 600)), 5);
+    if (i.type === 2 && i.data.name === "idee") { const t = opt(i, "sujet"), prec = String(opt(i, "precision") || "").replace(/:/g, " ").slice(0, 60); return await late(ideas(t, prec).then(x => ideaMsg(t, prec, x)), 5); }
     if (i.type === 3) return res.json(await button(i));
     if (i.type === 2 && i.data.name === "ia") {
       const q = String(opt(i, "question") || "").slice(0, 500), who = i.member?.user?.username || i.user?.username;
