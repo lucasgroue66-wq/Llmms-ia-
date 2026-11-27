@@ -26,10 +26,11 @@ async function putU(g, u, d) { await kv([["SET", K(g, u), JSON.stringify(d)], ["
 /* ---------------- IA (Gemini gratuit) ---------------- */
 async function gemini(q, hist, sys) {
   const key = process.env.GEMINI_API_KEY; if (!key) throw new Error("pas de clé Gemini sur le site");
-  for (const model of (process.env.GEMINI_MODELS || "gemini-flash-latest,gemini-flash-lite-latest,gemini-2.0-flash").split(",").map(s => s.trim())) {
+  for (const model of (process.env.GEMINI_MODELS || "gemini-flash-lite-latest,gemini-2.0-flash,gemini-flash-latest").split(",").map(s => s.trim())) {
     try {
-      const r = await fetch("https://generativelanguage.googleapis.com/v1beta/openai/chat/completions", { method: "POST", headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json" },
-        body: JSON.stringify({ model, max_tokens: 700, messages: [{ role: "system", content: sys || "Tu es llmms ia, l'assistant du serveur Discord de LLMMS. Réponds en français, de façon courte, claire et sympa (max 1500 caractères). Tu ne dis jamais que tu es Gemini ou Google : tu es llmms ia." }, ...(hist || []), { role: "user", content: q }] }) });
+      const ctrl = new AbortController(), to = setTimeout(() => ctrl.abort(), 8000);
+      const r = await fetch("https://generativelanguage.googleapis.com/v1beta/openai/chat/completions", { method: "POST", signal: ctrl.signal, headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json" },
+        body: JSON.stringify({ model, max_tokens: 350, messages: [{ role: "system", content: sys || "Tu es llmms ia, l'assistant du serveur Discord de LLMMS. Réponds en français, de façon courte, claire et sympa (max 1500 caractères). Tu ne dis jamais que tu es Gemini ou Google : tu es llmms ia." }, ...(hist || []), { role: "user", content: q }] }) }).finally(() => clearTimeout(to));
       if (!r.ok) continue; const j = await r.json(); const t = j?.choices?.[0]?.message?.content; if (t) return t.slice(0, 1900);
     } catch {}
   }
