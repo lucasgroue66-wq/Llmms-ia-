@@ -24,13 +24,13 @@ async function getU(g, u) { const [v] = await kv([["GET", K(g, u)]]); try { retu
 async function putU(g, u, d) { await kv([["SET", K(g, u), JSON.stringify(d)], ["ZADD", TOP(g), Math.floor(d.c + d.bank), u]]); }
 
 /* ---------------- IA (Gemini gratuit) ---------------- */
-async function gemini(q, hist, sys, maxTokens, models) {
+async function gemini(q, hist, sys, maxTokens, models, temp) {
   const key = process.env.GEMINI_API_KEY; if (!key) throw new Error("pas de clé Gemini sur le site");
   for (const model of (models || process.env.GEMINI_MODELS || "gemini-flash-lite-latest,gemini-2.0-flash,gemini-flash-latest").split(",").map(s => s.trim())) {
     try {
       const ctrl = new AbortController(), to = setTimeout(() => ctrl.abort(), maxTokens > 800 ? 15000 : 8000);
       const r = await fetch("https://generativelanguage.googleapis.com/v1beta/openai/chat/completions", { method: "POST", signal: ctrl.signal, headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json" },
-        body: JSON.stringify({ model, max_tokens: maxTokens || 350, messages: [{ role: "system", content: sys || "Tu es llmms ia, l'assistant du serveur Discord de LLMMS. Réponds en français, de façon courte, claire et sympa (max 1500 caractères). Tu ne dis jamais que tu es Gemini ou Google : tu es llmms ia." }, ...(hist || []), { role: "user", content: q }] }) }).finally(() => clearTimeout(to));
+        body: JSON.stringify({ model, max_tokens: maxTokens || 350, temperature: temp == null ? 0.9 : temp, messages: [{ role: "system", content: sys || "Tu es llmms ia, l'assistant du serveur Discord de LLMMS. Réponds en français, de façon courte, claire et sympa (max 1500 caractères). Tu ne dis jamais que tu es Gemini ou Google : tu es llmms ia." }, ...(hist || []), { role: "user", content: q }] }) }).finally(() => clearTimeout(to));
       if (!r.ok) continue; const j = await r.json(); const t = j?.choices?.[0]?.message?.content; if (t) return maxTokens ? t : t.slice(0, 1900);
     } catch {}
   }
@@ -550,20 +550,21 @@ export default async function handler(req, res) {
       const g2 = i.guild_id, uid2 = (i.member?.user || i.user)?.id, desc = String(opt(i, "description") || "").slice(0, 300);
       if (!g2) return res.json(eph("Cette commande marche seulement dans un serveur."));
       const build = async () => { let plan;
-        try { const t = await gemini(`Conçois la structure d'un serveur Discord qui correspond PRÉCISÉMENT à cette demande : « ${desc} ».
+        try { const t = await gemini(`Construis la structure d'un serveur Discord à partir de cette demande de l'utilisateur :
+«${desc}»
+
 Réponds UNIQUEMENT en JSON, sans texte autour : {"roles":[{"name":"...","color":"#xxxxxx"}],"categories":[{"name":"...","channels":[{"name":"...","type":"text"}]}]}.
-RÈGLES IMPORTANTES :
-- Reprends TOUTES les catégories et TOUS les salons demandés dans la description, avec leurs vrais noms (thème, jeux, etc.). N'invente PAS une structure générique « information/discussion/jeu » : colle au sujet demandé.
-- Si la description parle d'un jeu précis (ex: Roblox), les salons doivent parler de ce jeu.
-- 3 à 6 rôles (du plus haut au plus bas, ex Admin, Modo, Membre), couleurs hex variées.
-- 4 à 6 catégories. Chaque catégorie 2 à 5 salons. Mets de vrais salons vocaux ("type":"voice") si demandé.
-- Noms de salons en minuscules avec des tirets, sans emoji (ex: "jeux-roblox", "recherche-coequipiers").
-- Jusqu'à 20 salons au total. En français. JSON COMPLET et bien fermé.`, null, "Tu renvoies uniquement du JSON valide, complet et bien fermé, fidèle à la demande.", 2000, "gemini-2.0-flash,gemini-flash-latest,gemini-flash-lite-latest");
+
+RÈGLE N°1 — OBÉIS À LA LETTRE : si l'utilisateur donne une liste de catégories, de salons ou de rôles, tu les RECOPIES EXACTEMENT, avec les MÊMES noms, dans le MÊME ordre. Tu n'inventes RIEN, tu ne fusionnes RIEN, tu ne renommes RIEN, tu n'en enlèves AUCUN. Garde les noms de catégories tels quels (ex: INFOS, COMMUNAUTÉ, JEUX, BOT, VOCAUX).
+- Les rôles : recopie exactement ceux listés, dans l'ordre donné (du plus haut au plus bas), chacun une couleur hex différente.
+- Pour les salons : "type":"voice" pour les salons vocaux demandés, sinon "text". Noms de salons en minuscules avec des tirets, sans emoji (ex: "jeux-roblox", "rocket-league").
+- Si (et seulement si) l'utilisateur reste vague, alors complète toi-même intelligemment selon le thème.
+- Jusqu'à 25 salons au total. JSON COMPLET et bien fermé.`, null, "Tu recopies fidèlement la structure demandée. Tu renvoies uniquement du JSON valide, complet et bien fermé.", 2200, "gemini-2.0-flash,gemini-flash-latest,gemini-flash-lite-latest", 0.15);
           let raw = (t.match(/\{[\s\S]*\}/) || [t])[0].replace(/,(\s*[}\]])/g, "$1");
           try { plan = JSON.parse(raw); } catch { plan = JSON.parse(repairJSON(raw)); }
         } catch (e) { return { embeds: [{ title: "😵 Erreur", description: "L'IA n'a pas réussi à faire le plan : " + e.message, color: COL.ko }] }; }
-        plan.roles = (plan.roles || []).slice(0, 6); plan.categories = (plan.categories || []).slice(0, 6);
-        let nch = 0; plan.categories.forEach(c => { c.channels = (c.channels || []).slice(0, 5).filter(() => nch++ < 20); });
+        plan.roles = (plan.roles || []).slice(0, 8); plan.categories = (plan.categories || []).slice(0, 8);
+        let nch = 0; plan.categories.forEach(c => { c.channels = (c.channels || []).slice(0, 8).filter(() => nch++ < 25); });
         plan.by = uid2;
         await kv([["SET", `llmms:dc:plan:${g2}:${uid2}`, JSON.stringify(plan), "EX", 900]]);
         const preview = plan.categories.map(c => `**📁 ${c.name}**\n` + (c.channels || []).map(ch => `  ${ch.type === "voice" ? "🔊" : "#"} ${ch.name}`).join("\n")).join("\n\n");
