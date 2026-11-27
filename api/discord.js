@@ -227,7 +227,7 @@ Piégé par <@${k}> !`, color: 0xef4444, footer: { text: "/fakenitro · le bot d
 function readRaw(req) { return new Promise(ok => { let d = "", done = false; const fin = () => { if (done) return; done = true; if (!d) { try { const b = req.body; d = typeof b === "string" ? b : Buffer.isBuffer(b) ? b.toString("utf8") : b ? JSON.stringify(b) : ""; } catch {} } ok(d); };
   if (req.readableEnded) return fin(); req.setEncoding("utf8"); req.on("data", c => d += c); req.on("end", fin); req.on("error", fin); setTimeout(fin, 3000); }); }
 function checkSig(raw, sig, ts) {
-  const pub = process.env.DISCORD_PUBLIC_KEY; if (!pub || !sig || !ts) return false;
+  const pub = (process.env.DISCORD_PUBLIC_KEY || "").trim(); if (!pub || !sig || !ts) return false;
   try { const key = createPublicKey({ key: Buffer.concat([Buffer.from("302a300506032b6570032100", "hex"), Buffer.from(pub, "hex")]), format: "der", type: "spki" });
     return verify(null, Buffer.from(ts + raw), key, Buffer.from(sig, "hex")); } catch { return false; }
 }
@@ -236,14 +236,18 @@ function bg(p) { try { const ctx = globalThis[Symbol.for("@vercel/request-contex
 export const config = { api: { bodyParser: false } };
 export default async function handler(req, res) {
   if (req.method === "GET") {
-    const app = process.env.DISCORD_APP_ID, q = new URL(req.url, "http://x").searchParams;
+    const app = (process.env.DISCORD_APP_ID || "").trim(), q = new URL(req.url, "http://x").searchParams;
     if (q.get("register")) {
       if (!app || q.get("register") !== app) return res.status(403).send("Mets ?register=TON_APPLICATION_ID (et vérifie DISCORD_APP_ID sur Vercel).");
       try { const r = await bot(`/applications/${app}/commands`, "PUT", CMDS); return res.status(200).send(`✅ ${r.length} commandes installées ! Elles apparaissent sur ton serveur en tapant /`); }
       catch (e) { return res.status(500).send("❌ " + e.message); }
     }
-    const ok = !!(process.env.DISCORD_PUBLIC_KEY && app && process.env.DISCORD_BOT_TOKEN);
-    return res.status(200).send(ok ? "🤖 Bot LLMMS prêt." : "Bot pas encore configuré : il manque DISCORD_APP_ID, DISCORD_PUBLIC_KEY ou DISCORD_BOT_TOKEN sur Vercel.");
+    const pk = (process.env.DISCORD_PUBLIC_KEY || "").trim(), tk = (process.env.DISCORD_BOT_TOKEN || "").trim();
+    const lines = [
+      `DISCORD_APP_ID : ${!app ? "❌ manquant" : /^\d{17,20}$/.test(app.trim()) ? "✅ OK" : "❌ doit contenir seulement des chiffres (" + app.trim().length + " caractères)"}`,
+      `DISCORD_PUBLIC_KEY : ${!pk ? "❌ manquant" : /^[0-9a-f]{64}$/i.test(pk) ? "✅ OK" : "❌ ce n'est pas la clé publique (" + pk.length + " caractères au lieu de 64, lettres a-f et chiffres)"}`,
+      `DISCORD_BOT_TOKEN : ${!tk ? "❌ manquant" : tk.split(".").length === 3 ? "✅ OK" : "❌ ne ressemble pas à un token"}`];
+    return res.status(200).setHeader("Content-Type", "text/plain; charset=utf-8").send("🤖 Bot LLMMS — vérification\n\n" + lines.join("\n"));
   }
   if (req.method !== "POST") return res.status(405).end();
   const raw = await readRaw(req);
