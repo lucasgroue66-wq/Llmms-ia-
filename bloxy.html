@@ -547,7 +547,7 @@ function playSteal(g){ S.recent=[g.id,...S.recent.filter(x=>x!==g.id)].slice(0,8
   if(!S.ms.stealTuto){ S.ms.stealTuto=1; save(); msg("👆 Glisse le doigt pour bouger · achète sur le tapis rouge · vole les autres bases !"); msgT=performance.now()+6000; } }
 
 $("tbell").onclick=()=>openBell();
-render(); bell();
+save(); render(); bell();
 })();
 </script>
 </body>
