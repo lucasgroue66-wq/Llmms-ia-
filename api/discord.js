@@ -133,7 +133,22 @@ const CMDS = [
   { name: "compteur", description: "📆 Jours sans clash sur le serveur" },
   { name: "ouinon", description: "👍 Sondage rapide oui/non", options: [{ type: 3, name: "question", description: "La question", required: true }] },
   { name: "rank", description: "🏅 Ta carte de niveau", options: [{ type: 6, name: "membre", description: "Le membre", required: false }] },
-  { name: "succes", description: "🏆 Tes succès débloqués", options: [{ type: 6, name: "membre", description: "Le membre", required: false }] }
+  { name: "succes", description: "🏆 Tes succès débloqués", options: [{ type: 6, name: "membre", description: "Le membre", required: false }] },
+  { name: "clear", description: "🧹 Supprimer des messages", default_member_permissions: "8192", options: [{ type: 4, name: "nombre", description: "Combien (1-100)", required: true, min_value: 1, max_value: 100 }] },
+  { name: "kick", description: "👢 Expulser un membre", default_member_permissions: "2", options: [{ type: 6, name: "membre", description: "Le membre", required: true }, { type: 3, name: "raison", description: "Pourquoi", required: false }] },
+  { name: "slowmode", description: "🐌 Régler le mode lent du salon", default_member_permissions: "16", options: [{ type: 4, name: "secondes", description: "0 pour désactiver", required: true, min_value: 0, max_value: 21600 }] },
+  { name: "lock", description: "🔒 Fermer le salon", default_member_permissions: "16" },
+  { name: "unlock", description: "🔓 Rouvrir le salon", default_member_permissions: "16" },
+  { name: "addrole", description: "➕ Donner un rôle", default_member_permissions: "268435456", options: [{ type: 6, name: "membre", description: "À qui", required: true }, { type: 8, name: "role", description: "Quel rôle", required: true }] },
+  { name: "removerole", description: "➖ Retirer un rôle", default_member_permissions: "268435456", options: [{ type: 6, name: "membre", description: "À qui", required: true }, { type: 8, name: "role", description: "Quel rôle", required: true }] },
+  { name: "membres", description: "👥 Nombre de membres du serveur" },
+  { name: "roles", description: "🎭 Liste des rôles du serveur" },
+  { name: "boosts", description: "🚀 Boosts du serveur" },
+  { name: "annonce", description: "📣 Annonce (admins)", default_member_permissions: "8192", options: [{ type: 3, name: "texte", description: "Le message", required: true }, { type: 5, name: "ping", description: "Ping @everyone ?", required: false }] },
+  { name: "countdown", description: "⏳ Compte à rebours pour un event", options: [{ type: 3, name: "event", description: "Le nom de l'event", required: true }, { type: 4, name: "jours", description: "Dans combien de jours", required: false, min_value: 0 }, { type: 4, name: "heures", description: "+ heures", required: false, min_value: 0 }, { type: 4, name: "minutes", description: "+ minutes", required: false, min_value: 0 }] },
+  { name: "rolereaction", description: "🎭 Message pour choisir un rôle (admins)", default_member_permissions: "268435456", options: [{ type: 8, name: "role", description: "Le rôle à distribuer", required: true }, { type: 3, name: "nom", description: "Texte du bouton", required: false }, { type: 3, name: "message", description: "Texte au-dessus", required: false }] },
+  { name: "reglement", description: "📜 Règlement avec bouton J'accepte (admins)", default_member_permissions: "8192", options: [{ type: 3, name: "texte", description: "Le règlement", required: true }, { type: 8, name: "role", description: "Rôle donné à l'acceptation", required: false }] },
+  { name: "ticket", description: "🎫 Bouton pour ouvrir un ticket d'aide (admins)", default_member_permissions: "16" }
 ];
 
 const ANY = ["aide", "ia", "discute", "idee", "pfc", "de", "8ball", "quiz", "fakenitro", "faketiktok", "fakeboost", "bloxy", "profil", "classement", "roast", "histoire", "traduire", "resume", "avatar", "userinfo", "roulette", "devine", "duel", "fakeban", "fakehack", "fakeleave", "fakeannonce", "pickup", "verite", "action", "complot", "insulte", "say", "embed", "tirage", "ouinon", "rank", "succes"];
@@ -152,6 +167,8 @@ async function run(i) {
       "**😈 Troll** : `/fakenitro` `/faketiktok` `/fakeboost` `/fakeban` `/fakehack` `/fakeleave` `/fakeannonce`",
       "**🎉 Serveur** : `/sondage` `/ouinon` `/giveaway` `/tirage` `/say` `/embed` `/compteur` `/avatar` `/userinfo` `/serveur`",
       "**🏅 Profil** : `/niveau` `/rank` `/succes`",
+      "**🛡️ Modo** : `/clear` `/kick` `/slowmode` `/lock` `/unlock` `/addrole` `/removerole`",
+      "**🏠 Gestion** : `/membres` `/roles` `/boosts` `/annonce` `/countdown` `/rolereaction` `/reglement` `/ticket`",
       "**🎮 BLOXY** : `/bloxy` `/profil` `/classement`",
       "**🛡️ Modération** : `/warn` `/warns` `/mute` `/unmute` `/ban`"].join("\n"), COL.info, { footer: { text: "Créé avec llmms ia" } });
     case "daily": {
@@ -308,6 +325,32 @@ async function run(i) {
       A.push([(u.streak || 0) >= 7, "🔥 Assidu", "7 jours de daily d'affilée"]); A.push([!!u.inv?.length, "🛍️ Shopping", "Acheter un objet"]);
       const done = A.filter(a => a[0]).length;
       return { type: 4, data: { embeds: [{ title: `🏆 Succès de ${target ? tName : name}`, description: `**${done}/${A.length}** débloqués\n\n` + A.map(a => `${a[0] ? "✅" : "🔒"} **${a[1]}** — ${a[2]}`).join("\n"), color: COL.gold }] } }; }
+    case "clear": { if (g === "dm") return eph("Seulement sur un serveur."); const n = Math.min(100, Math.max(1, Math.floor(opt(i, "nombre")))), ch = i.channel_id;
+      try { const msgs = await bot(`/channels/${ch}/messages?limit=${n}`), ids = (msgs || []).map(m => m.id);
+        if (!ids.length) return eph("Aucun message à supprimer."); if (ids.length === 1) await bot(`/channels/${ch}/messages/${ids[0]}`, "DELETE"); else await bot(`/channels/${ch}/messages/bulk-delete`, "POST", { messages: ids });
+        return eph(`🧹 ${ids.length} message(s) supprimé(s). (les messages de +14 jours ne peuvent pas être effacés en masse)`); } catch (e) { return eph("❌ " + e.message + "\nLe bot a-t-il la permission « Gérer les messages » ?"); } }
+    case "kick": { if (g === "dm") return eph("Seulement sur un serveur."); try { await bot(`/guilds/${g}/members/${target}`, "DELETE"); return emb("👢 Expulsé", `**${tName}** a été expulsé du serveur.${opt(i, "raison") ? `\nRaison : ${opt(i, "raison")}` : ""}`, COL.ko); } catch (e) { return eph("❌ " + e.message + "\n(permission « Expulser » ? rôle du bot au-dessus du membre ?)"); } }
+    case "slowmode": { if (g === "dm") return eph("Seulement sur un serveur."); const s = Math.min(21600, Math.max(0, Math.floor(opt(i, "secondes")))); try { await bot(`/channels/${i.channel_id}`, "PATCH", { rate_limit_per_user: s }); return emb("🐌 Mode lent", s ? `Réglé à **${s}s** entre chaque message.` : "Mode lent désactivé.", COL.ok); } catch (e) { return eph("❌ " + e.message); } }
+    case "lock": { if (g === "dm") return eph("Seulement sur un serveur."); try { await bot(`/channels/${i.channel_id}/permissions/${g}`, "PUT", { type: 0, deny: "2048" }); return emb("🔒 Salon fermé", "Les membres ne peuvent plus écrire ici.", COL.ko); } catch (e) { return eph("❌ " + e.message); } }
+    case "unlock": { if (g === "dm") return eph("Seulement sur un serveur."); try { await bot(`/channels/${i.channel_id}/permissions/${g}`, "PUT", { type: 0, deny: "0" }); return emb("🔓 Salon rouvert", "Tout le monde peut réécrire ✅", COL.ok); } catch (e) { return eph("❌ " + e.message); } }
+    case "addrole": case "removerole": { if (g === "dm") return eph("Seulement sur un serveur."); const rid = opt(i, "role"), add = cmd === "addrole";
+      try { await bot(`/guilds/${g}/members/${target}/roles/${rid}`, add ? "PUT" : "DELETE"); return emb(add ? "✅ Rôle ajouté" : "➖ Rôle retiré", `<@&${rid}> ${add ? "donné à" : "retiré de"} **${tName}**`, add ? COL.ok : COL.ko); } catch (e) { return eph("❌ " + e.message + "\n(permission « Gérer les rôles » ? rôle du bot au-dessus du rôle donné ?)"); } }
+    case "membres": { if (g === "dm") return eph("Seulement sur un serveur."); let gd = {}; try { gd = await bot(`/guilds/${g}?with_counts=true`); } catch {}
+      return emb("👥 Membres", `Total : **${nf(gd.approximate_member_count || 0)}**\nEn ligne : **${nf(gd.approximate_presence_count || 0)}**`, COL.info); }
+    case "roles": { if (g === "dm") return eph("Seulement sur un serveur."); let rs = []; try { rs = await bot(`/guilds/${g}/roles`); } catch {}
+      const list = rs.filter(r => r.name !== "@everyone").sort((a, b) => b.position - a.position).slice(0, 40).map(r => `<@&${r.id}>`).join(" ") || "aucun";
+      return { type: 4, data: { embeds: [{ title: `🎭 Rôles (${rs.length - 1})`, description: list, color: COL.info }], allowed_mentions: { parse: [] } } }; }
+    case "boosts": { if (g === "dm") return eph("Seulement sur un serveur."); let gd = {}; try { gd = await bot(`/guilds/${g}?with_counts=true`); } catch {}
+      return emb("🚀 Boosts", `**${gd.premium_subscription_count || 0}** boost(s)\nNiveau du serveur : **${gd.premium_tier || 0}**`, 0xf47fff); }
+    case "annonce": { const tx = String(opt(i, "texte")).slice(0, 1500), ping = opt(i, "ping");
+      return { type: 4, data: { content: ping ? "@everyone" : undefined, embeds: [{ author: { name: "📣 Annonce" }, description: tx, color: COL.gold, footer: { text: "par " + name } }], allowed_mentions: { parse: ping ? ["everyone"] : [] } } }; }
+    case "countdown": { const d = opt(i, "jours") || 0, h = opt(i, "heures") || 0, m = opt(i, "minutes") || 0, ts = Math.floor((now + ((d * 24 + h) * 60 + m) * 60000) / 1000);
+      return emb("⏳ " + String(opt(i, "event")).slice(0, 100), `📅 <t:${ts}:F>\n⏰ **<t:${ts}:R>**`, COL.info); }
+    case "rolereaction": { const r = opt(i, "role"), label = String(opt(i, "nom") || "🎭 Prendre le rôle").slice(0, 40), txt = String(opt(i, "message") || "Clique sur le bouton pour prendre (ou enlever) le rôle :").slice(0, 500);
+      return { type: 4, data: { embeds: [{ title: "🎭 Rôle", description: txt, color: COL.info }], components: [{ type: 1, components: [{ type: 2, style: 1, label, custom_id: `role:${r}` }] }], allowed_mentions: { parse: [] } } }; }
+    case "reglement": { const txt = String(opt(i, "texte")).slice(0, 3500), r = opt(i, "role");
+      return { type: 4, data: { embeds: [{ title: "📜 Règlement", description: txt, color: COL.gold, footer: { text: "Clique sur J'accepte pour valider" } }], components: [{ type: 1, components: [{ type: 2, style: 3, label: "✅ J'accepte", custom_id: `accept:${r || "0"}` }] }] } }; }
+    case "ticket": return { type: 4, data: { embeds: [{ title: "🎫 Support", description: "Besoin d'aide ? Clique sur le bouton pour ouvrir un salon privé avec le staff.", color: COL.info }], components: [{ type: 1, components: [{ type: 2, style: 3, label: "🎫 Ouvrir un ticket", custom_id: "ticket:open" }] }] } };
   }
   return eph("Commande inconnue");
 }
@@ -353,6 +396,12 @@ async function button(i) {
     const emb0 = i.message.embeds[0], vals = Object.values(votes), oui = vals.filter(x => x === 0).length, non = vals.filter(x => x === 1).length, total = oui + non;
     const line = (lbl, n) => { const bar = Math.round((total ? n / total : 0) * 10); return `${lbl}\n\`${"█".repeat(bar)}${"░".repeat(10 - bar)}\` ${n} (${Math.round((total ? n / total : 0) * 100)}%)`; };
     return { type: 7, data: { embeds: [{ ...emb0, description: `${line("👍 **Oui**", oui)}\n\n${line("👎 **Non**", non)}`, footer: { text: `${total} vote${total > 1 ? "s" : ""}` } }] } }; }
+  if (kind === "role") { const rid = k, has = (i.member?.roles || []).includes(rid);
+    try { await bot(`/guilds/${g}/members/${uid}/roles/${rid}`, has ? "DELETE" : "PUT"); return eph(has ? `➖ Rôle <@&${rid}> retiré.` : `✅ Rôle <@&${rid}> ajouté !`); } catch (e) { return eph("❌ " + e.message + "\n(le bot peut-il gérer ce rôle ?)"); } }
+  if (kind === "accept") { if (k && k !== "0") { try { await bot(`/guilds/${g}/members/${uid}/roles/${k}`, "PUT"); } catch (e) { return eph("❌ " + e.message); } } return eph("✅ Merci d'avoir accepté le règlement ! Bienvenue 🎉"); }
+  if (kind === "ticket") { try { const name2 = ("ticket-" + who).toLowerCase().replace(/[^a-z0-9-]/g, "").slice(0, 90) || "ticket";
+      const ch = await bot(`/guilds/${g}/channels`, "POST", { name: name2, type: 0, permission_overwrites: [{ id: g, type: 0, deny: "1024" }, { id: uid, type: 1, allow: "3072" }] });
+      return eph(`🎫 Ton ticket est ouvert : <#${ch.id}>`); } catch (e) { return eph("❌ " + e.message + "\n(le bot a-t-il la permission « Gérer les salons » ?)"); } }
   if (kind === "clash") { await kv([["SET", `llmms:dc:clash:${g}`, String(Date.now())]]);
     return { type: 7, data: { embeds: [{ title: "📆 Compteur sans clash", description: "💥 **Compteur remis à zéro !** Allez, on repart à **0** jour 😅", color: COL.ko }], components: [] } }; }
   if (kind === "poll") { const idx = +k; let votes = {}; try { const [v] = await kv([["GET", `llmms:dc:poll:${mid}`]]); votes = JSON.parse(v || "{}"); } catch {}
