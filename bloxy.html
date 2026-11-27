@@ -316,24 +316,30 @@ function openGame(id){ const g=G(id); const by=g.mine?`${esc(S.user)}${cert()}`:
 /* ================= MINI-JEU (obby) ================= */
 function playGame(g){ S.recent=[g.id,...S.recent.filter(x=>x!==g.id)].slice(0,8); g.vis++; save();
   const pl=$("play"); pl.classList.add("on"); const [c1,c2,c3]=THEMES[g.g]||THEMES.obby;
-  pl.innerHTML=`<div class="load" id="ld"><div style="text-align:center"><div style="width:150px;margin:0 auto;border-radius:16px;overflow:hidden">${thumbSVG(g)}</div><b style="display:block;margin-top:12px;font-size:18px">${esc(g.n)}</b><div class="hint" id="ldt">Chargement…</div></div></div><canvas id="cv"></canvas><div style="position:absolute;top:12px;left:12px;right:12px;display:flex;justify-content:space-between;align-items:center;pointer-events:none"><b id="hud" style="background:#0008;padding:6px 12px;border-radius:10px"></b><button class="btn" id="qx" style="pointer-events:auto">✖ Quitter</button></div>`;
+  pl.innerHTML=`<div class="load" id="ld"><div style="text-align:center"><div style="width:150px;margin:0 auto;border-radius:16px;overflow:hidden">${thumbSVG(g)}</div><b style="display:block;margin-top:12px;font-size:18px">${esc(g.n)}</b><div class="hint" id="ldt">Chargement…</div></div></div><canvas id="cv"></canvas><div style="position:absolute;top:12px;left:12px;right:12px;display:flex;justify-content:space-between;align-items:center;pointer-events:none"><b id="hud" style="background:#0008;padding:6px 12px;border-radius:10px"></b><div style="display:flex;gap:6px;pointer-events:auto"><button class="btn" id="qa">🛠️</button><button class="btn" id="qx">✖ Quitter</button></div></div><div id="qp" style="position:absolute;top:62px;right:12px;width:230px;display:none;background:#151821f2;border:1px solid #7f1d1d;border-radius:16px;padding:12px;z-index:3"></div>`;
   const cv=$("cv"), c=cv.getContext("2d"), dpr=Math.min(2,devicePixelRatio||1), W=innerWidth, H=innerHeight; cv.width=W*dpr; cv.height=H*dpr; cv.style.width=W+"px"; cv.style.height=H+"px"; c.scale(dpr,dpr);
   const plats=[], coins=[]; let x=0; for(let i=0;i<140;i++){ const w=i<2?260:ri(90,200), gap=i<2?0:ri(50,130), y=H*.66+((i%4)-1.5)*H*.06; plats.push({x:x+gap,w,y,c:i%2?c3:"#e5e7eb"}); if(i>1&&Math.random()<.75) coins.push({x:x+gap+w/2,y:y-55,t:0}); x+=gap+w; }
-  const P={x:80,y:H*.4,vy:0,j:0}; let cam=0, got=0, t0=0, last=0, raf, over=false, cp=80, falls=0;
+  const P={x:80,y:H*.4,vy:0,j:0}; let cam=0, got=0, t0=0, last=0, raf, over=false, cp=80, falls=0, paused=false, bonusT=0; const M={fly:0,spd:0,god:0,mag:0};
   const img=new Image(); img.src="data:image/svg+xml;utf8,"+encodeURIComponent(avatarSVG(S));
-  const jump=()=>{ if(over||!t0) return; if(P.j<2){ P.vy=-H*1.2; P.j++; } };
+  const jump=()=>{ if(over||!t0||paused) return; if(M.fly){ P.vy=-H*.75; return; } if(P.j<2){ P.vy=-H*1.2; P.j++; } };
   cv.onpointerdown=e=>{ e.preventDefault(); jump(); }; const kd=e=>{ if(e.key===" "||e.key==="ArrowUp"){ e.preventDefault(); jump(); } }; addEventListener("keydown",kd);
   const end=()=>{ if(over) return; over=true; cancelAnimationFrame(raf); removeEventListener("keydown",kd); const gain=got*5; S.bux+=gain; if(gain) log(`🎮 ${g.n} : +${gain} Bloxbux`); save(); head();
     modal(`<div style="text-align:center"><div style="font-size:46px">🏁</div><b style="font-size:21px">Partie terminée !</b><p class="hint">${got} pièces ramassées · ${falls} chute(s)</p><div class="big" style="display:flex;justify-content:center;align-items:center;gap:6px">+${COIN}${nf(gain)}</div><button class="btn p w" id="ok" style="margin-top:16px">Continuer</button></div>`,()=>{ $("ok").onclick=()=>{ close(); pl.classList.remove("on"); pl.innerHTML=""; render(); }; }); };
   $("qx").onclick=end;
+  const qp=$("qp"), panel=()=>{ qp.innerHTML=`<b>🛠️ Admin en jeu</b><div style="display:grid;gap:6px;margin-top:8px">${[["fly","🕊️ Voler"],["spd","⚡ Vitesse x2"],["god","🛡️ Invincible"],["mag","🧲 Aimant à pièces"]].map(([k,l])=>`<button class="btn ${M[k]?"p":""}" data-qm="${k}" style="justify-content:flex-start">${M[k]?"✅":"⬜"} ${l}</button>`).join("")}<button class="btn" id="qc">🪙 +50 pièces</button><button class="btn" id="qt">⏱️ +30 secondes</button><button class="btn g" id="qr">▶ Reprendre</button></div>`;
+    qp.querySelectorAll("[data-qm]").forEach(b=>b.onclick=()=>{ M[b.dataset.qm]^=1; panel(); });
+    $("qc").onclick=()=>{ got+=50; toast("🪙 +50 pièces"); }; $("qt").onclick=()=>{ bonusT+=30; toast("⏱️ +30 secondes"); };
+    $("qr").onclick=()=>{ qp.style.display="none"; paused=false; last=performance.now(); }; };
+  $("qa").onclick=()=>{ if(!t0||over) return; if(qp.style.display==="block") return $("qr").click(); if(S.pin&&!admin.ok){ const v=prompt("Code du panel admin :"); if(v===null) return; if(v.trim()!==S.pin) return toast("❌ Mauvais code"); admin.ok=1; } paused=true; qp.style.display="block"; panel(); };
   setTimeout(()=>{ $("ldt").textContent="Connexion au serveur…"; },600); setTimeout(()=>{ $("ld").remove(); t0=performance.now(); last=t0; },1400);
   (function loop(now){ raf=requestAnimationFrame(loop);
     const sky=c.createLinearGradient(0,0,0,H); sky.addColorStop(0,c1); sky.addColorStop(1,c2); c.fillStyle=sky; c.fillRect(0,0,W,H);
-    if(t0){ const dt=Math.min(.033,(now-last)/1000); last=now; const T=(now-t0)/1000, left=Math.max(0,40-T); if(!left) return end();
-      P.x+=W*.38*dt*(1+T/50); P.vy+=H*3*dt; const py=P.y; P.y+=P.vy*dt;
+    if(t0&&paused){ t0+=now-last; last=now; }
+    if(t0&&!paused){ const dt=Math.min(.033,(now-last)/1000); last=now; const T=(now-t0)/1000, left=Math.max(0,40+bonusT-T); if(!left) return end();
+      P.x+=W*.38*dt*(1+T/50)*(M.spd?2:1); P.vy+=H*(M.fly?1.4:3)*dt; if(M.fly) P.vy=Math.min(P.vy,H*.5); const py=P.y; P.y+=P.vy*dt; if(M.fly&&P.y<70){ P.y=70; P.vy=0; } if(M.god&&P.y>H*.82){ P.y=H*.82; P.vy=-H*1.1; }
       for(const p of plats) if(P.x+12>p.x&&P.x-12<p.x+p.w&&py<=p.y&&P.y>=p.y&&P.vy>0){ P.y=p.y; P.vy=0; P.j=0; cp=Math.max(cp,p.x+20); }
       if(P.y>H+60){ falls++; P.x=cp; P.y=H*.3; P.vy=0; }
-      for(const k of coins) if(!k.t&&Math.abs(k.x-P.x)<26&&Math.abs(k.y-(P.y-30))<34){ k.t=1; got++; }
+      for(const k of coins){ if(k.t) continue; if(M.mag&&Math.abs(k.x-P.x)<220){ k.x+=(P.x-k.x)*.18; k.y+=(P.y-30-k.y)*.18; } if(Math.abs(k.x-P.x)<26&&Math.abs(k.y-(P.y-30))<34){ k.t=1; got++; } }
       cam+=(P.x-W*.3-cam)*.2; $("hud").innerHTML=`🪙 ${got} · ⏱️ ${Math.ceil(left)} s`; }
     c.save(); c.translate(-cam*.3,0); c.fillStyle="#ffffff22"; for(let i=0;i<30;i++){ c.beginPath(); c.arc(i*170+40,H*.18+(i%3)*30,26+(i%4)*8,0,7); c.fill(); } c.restore();
     c.save(); c.translate(-cam,0);
@@ -375,6 +381,8 @@ function adminPanel(){ const sel=t=>`<option value="${t}">`;
 $("tadm").onclick=admin;
 $("tbux").onclick=()=>modal(`<div style="text-align:center"><div style="width:60px;margin:0 auto">${COIN.replace('class="coin"','style="width:60px;height:60px"')}</div><div class="big" style="margin-top:8px">${nf(S.bux)} Bloxbux</div><p class="hint">${S.bux.toLocaleString("fr-FR")} exactement</p></div><div class="lbl">Derniers mouvements</div>${S.hist.length?S.hist.map(h=>`<div style="padding:6px 0;border-bottom:1px solid var(--line)">${esc(h)}</div>`).join(""):'<p class="hint">Rien pour l\'instant. Joue à un jeu pour gagner des Bloxbux !</p>'}<button class="btn w" id="bc" style="margin-top:12px">Fermer</button>`,()=>{ $("bc").onclick=close; });
 /* les joueurs en ligne bougent un peu */
+addEventListener("storage",e=>{ if(e.key!==KEY) return; try{ const n=JSON.parse(e.newValue||"null"); if(n&&n.v){ S=n; render(); } }catch(_){} });
+addEventListener("visibilitychange",()=>{ if(document.visibilityState!=="visible") return; try{ const n=JSON.parse(localStorage.getItem(KEY)||"null"); if(n&&n.v){ S=n; render(); } }catch(_){} });
 setInterval(()=>{ allGames().forEach(g=>{ g.pl=Math.max(0,Math.round(g.pl*rnd(.985,1.015))); }); },8000);
 render();
 })();
