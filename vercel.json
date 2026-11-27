@@ -11,6 +11,9 @@
     },
     "api/bloxy.js": {
       "maxDuration": 60
+    },
+    "api/discord.js": {
+      "maxDuration": 30
     }
   },
   "rewrites": [

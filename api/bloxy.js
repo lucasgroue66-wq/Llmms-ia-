@@ -48,6 +48,14 @@ export default async function handler(req, res) {
       const rooms = (Array.isArray(b.rooms) ? b.rooms : []).filter(okId).slice(0, 40); if (!rooms.length) return res.json({ counts: {} });
       const r = await kv(rooms.map(x => ["HLEN", "llmms:bx:room:" + x])); const counts = {}; rooms.forEach((x, i) => counts[x] = r[i] || 0); return res.json({ counts });
     }
+    if (op === "prof") {
+      const u = clean(b.user, 20), key = u.toLowerCase().replace(/[^a-z0-9_.-]/g, ""); if (!key || !okId(b.pid)) return res.status(400).json({ error: "profil" });
+      const [owner] = await kv([["GET", "llmms:bx:own:" + key]]); if (owner && owner !== b.pid) return res.json({ ok: 0, taken: 1 });
+      const d = { user: u, disp: clean(b.disp, 20), cert: b.cert ? 1 : 0, fol: num(b.fol) < 0 ? 0 : Math.floor(Math.min(1e12, Number(b.fol) || 0)), fr: Math.floor(Math.min(1e6, Number(b.fr) || 0)), bux: Math.floor(Math.min(1e15, Number(b.bux) || 0)), inv: Math.floor(Math.min(1e15, Number(b.inv) || 0)),
+        games: (Array.isArray(b.games) ? b.games : []).slice(0, 5).map(g => ({ n: clean(g.n, 28), pl: Math.floor(Math.min(1e12, Number(g.pl) || 0)), vis: Math.floor(Math.min(1e15, Number(g.vis) || 0)) })) };
+      await kv([["SET", "llmms:bx:own:" + key, b.pid], ["SET", "llmms:bx:prof:" + key, JSON.stringify(d)], ["ZADD", "llmms:bx:top", d.fol, d.disp + " (@" + u + ")"]]);
+      return res.json({ ok: 1 });
+    }
     if (op === "ailevel") {
       const prompt = clean(b.prompt, 300) || "un obby fun";
       const t = await gemini(`Tu crées des niveaux de jeu de plateforme 2D vu de côté. Réponds UNIQUEMENT avec un JSON {"n":"nom court du niveau","rows":[...]} sans texte autour.

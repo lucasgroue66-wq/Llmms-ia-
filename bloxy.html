@@ -897,6 +897,9 @@ const _rd2=render; render=function(){ if(page==="ia"){ head(); nav(); renderIA()
   if(page==="avatar"){ const c=m.querySelector(".card"); if(c){ c.insertAdjacentHTML("afterend",`<button class="btn p w" id="a3d" style="margin-top:10px">🧊 Voir mon avatar en 3D + emotes</button>`); $("a3d").onclick=open3D; } }
   if(page==="prof"){ const s=m.querySelector(".stats"); if(s) s.insertAdjacentHTML("afterend",`<div style="display:flex;gap:8px;margin-top:10px"><button class="btn w" id="pia">🤖 BLOXY IA</button><button class="btn w" id="p3d">🧊 Avatar 3D</button></div>`); if($("pia")) $("pia").onclick=()=>go("ia"); if($("p3d")) $("p3d").onclick=open3D; } };
 
+/* profil publié pour le bot Discord (/profil, /classement) */
+function pushProf(){ if(!ONLINE) return; bxApi("prof",{pid:S.pid,user:S.user,disp:S.disp,cert:S.cert,fol:S.fol,fr:S.fr.length,bux:S.bux,inv:S.inv.map(IT).reduce((a,i)=>a+itemVal(i),0),games:S.games.slice().sort((a,b)=>b.pl-a.pl).slice(0,5).map(g=>({n:g.n,pl:g.pl,vis:g.vis}))}).catch(()=>{}); }
+setTimeout(pushProf,3000); setInterval(pushProf,60000);
 $("tbell").onclick=()=>openBell();
 save(); render(); bell();
 })();
