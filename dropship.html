@@ -111,13 +111,13 @@ function conv(){ return Math.min(.4,0.055+lvl("site")*.013+lvl("brand")*.008)*(1
 function supMult(){ return Math.max(.3,1-lvl("supp")*.08); }
 function refundRate(){ return Math.max(.01,0.08-lvl("sav")*.012-S.rep/2000); }
 function priceMult(){ return 1+lvl("brand")*.06; }
-function adCost(){ return Math.max(15,Math.round(25*Math.pow(1.1,S.orders/35))); }
+function adCost(){ return Math.max(12,Math.round(18*Math.pow(1.07,S.orders/60))); }
 
 function toast(t){ const e=$("toast"); e.textContent=t; e.classList.add("on"); clearTimeout(toast.t); toast.t=setTimeout(()=>e.classList.remove("on"),2000); }
 
 function runAd(ev,budget){ const pr=prod(S.prod); if(!pr) return; const b=budget||adCost(); if(S.cash<b){ toast("Pas assez de cash pour la pub 💸"); return; }
  S.cash-=b;
- const visitors=Math.round(b*rnd(.85,1.25)*adPower()*pm*1.35);
+ const visitors=Math.round(b*rnd(.85,1.25)*adPower()*pm*1.5);
  let orders=Math.round(visitors*conv()*pr.hype);
  let viral=1,tag=""; const r=Math.random(); if(r<.05){ viral=rnd(3,8); tag="🔥 VIRAL"; } else if(r>.9){ viral=rnd(.3,.6); tag="📉 flop pub"; }
  orders=Math.max(0,Math.round(orders*viral));
@@ -154,7 +154,7 @@ function renderHome(){ const pr=prod(S.prod), r=rankOf(S.rev), nx=nextRank(S.rev
    <div style="display:flex;align-items:center;gap:12px"><div style="font-size:36px">${pr?pr.e:"📦"}</div><div class="grow"><b style="font-size:16px">Produit vedette</b><div class="hint">${pr?esc(pr.n)+" · marge "+eur(pr.price-pr.cost):"Choisis un produit"}</div></div><div style="text-align:right"><div class="hint">${r[2]} ${r[1]}</div>${S.prestige?`<div class="tag">⭐${S.prestige}</div>`:""}</div></div>
    <div class="kpi" style="margin-top:10px"><div><span>📈 Chiffre d'affaires</span><b>${eur(S.rev)}</b></div><div><span>📦 Commandes</span><b>${nf(S.orders)}</b></div><div><span>⭐ Réputation</span><b>${Math.round(S.rep)}%</b></div><div><span>↩️ Remboursements</span><b>${nf(S.refunds)}</b></div></div>
    ${nx?`<div class="hint" style="margin-top:8px">Prochain palier : ${nx[2]} ${nx[1]} (${eur(nx[0])})</div><div class="bar"><div style="width:${Math.min(100,S.rev/nx[0]*100)}%"></div></div>`:`<div class="hint" style="margin-top:8px">👑 Palier max !</div>`}</div>
-  <button class="ad" id="runad">📢 Lancer une pub (${eur(ac)})<div class="hint" style="color:#fff;opacity:.85;font-weight:600;margin-top:3px">≈ ${nf(ac*adPower()*pm*1.35*conv()*(pr?pr.hype:1))} commandes</div></button>
+  <button class="ad" id="runad">📢 Lancer une pub (${eur(ac)})<div class="hint" style="color:#fff;opacity:.85;font-weight:600;margin-top:3px">≈ ${nf(ac*adPower()*pm*1.5*conv()*(pr?pr.hype:1))} commandes</div></button>
   <div class="hint" style="text-align:center;margin:8px 0">${lvl("auto")?"🤖 Tes pubs automatiques tournent toutes seules":"💡 Clique pour transformer ta pub en commandes"}</div>
   <div class="card" style="margin-top:4px"><b>🧾 Dernières commandes</b><div class="feed" style="margin-top:6px">${S.feed.length?S.feed.map(f=>`<div class="ord"><span style="font-size:20px">${f.e}</span><div class="grow">${f.o} ventes de ${esc(f.n)} ${f.tag?`<span class="tag">${f.tag}</span>`:""}${f.ref?`<span class="hint"> · ${f.ref}↩️</span>`:""}</div><b style="color:${f.p>=0?"var(--ok)":"var(--ko)"}">${f.p>=0?"+":""}${eur(f.p)}</b></div>`).join(""):`<p class="hint">Lance ta première pub pour avoir des commandes !</p>`}</div></div>`;
  $("runad").onclick=e=>runAd(e);
