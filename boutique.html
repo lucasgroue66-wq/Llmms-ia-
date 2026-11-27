@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>dropshipping.llmsio — Kinder Bueno livré chez toi</title>
+<meta name="description" content="dropshipping.llmsio : commande tes Kinder Bueno et snacks préférés, livrés rapidement chez toi.">
+<link rel="icon" href="/favicon.svg">
+<style>
+:root{--bg:#1a1109;--bg2:#241708;--cream:#f7ecd9;--choco:#5a3410;--choco2:#8a5a22;--gold:#e0a63c;--milk:#f3d9a8;--red:#c0392b;--ok:#2ecc71;--tx:#2a1c0d;--line:#e7d4b4}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent;margin:0}
+html,body{background:var(--cream);color:var(--tx);font-family:"Segoe UI",system-ui,Roboto,sans-serif}
+body{padding-bottom:40px}
+button{font:inherit;cursor:pointer;border:0;background:none;color:inherit}
+img{max-width:100%}
+.header{position:sticky;top:0;z-index:30;background:linear-gradient(90deg,var(--choco),var(--choco2));color:var(--cream);box-shadow:0 3px 14px #0005}
+.hin{max-width:1050px;margin:0 auto;display:flex;align-items:center;gap:12px;padding:12px 16px}
+.brand{font-weight:900;font-size:20px;letter-spacing:.5px;display:flex;align-items:center;gap:8px}
+.brand .b{background:var(--gold);color:var(--choco);border-radius:8px;padding:2px 8px;font-size:14px}
+.grow{flex:1}
+.cartbtn{position:relative;background:var(--gold);color:var(--choco);font-weight:800;border-radius:999px;padding:9px 16px;display:flex;align-items:center;gap:7px}
+.cartbtn .n{position:absolute;top:-6px;right:-6px;background:var(--red);color:#fff;font-size:11px;font-weight:900;border-radius:999px;min-width:19px;height:19px;display:grid;place-items:center;padding:0 4px}
+.hero{background:radial-gradient(circle at 80% 20%,#3a2410,#1a1109);color:var(--cream);text-align:center;padding:48px 18px 56px;position:relative;overflow:hidden}
+.hero h1{font-size:34px;line-height:1.1;margin-bottom:10px}
+.hero h1 span{color:var(--gold)}
+.hero p{opacity:.9;max-width:560px;margin:0 auto 20px;font-size:16px}
+.hbtn{display:inline-flex;align-items:center;gap:8px;background:var(--gold);color:var(--choco);font-weight:900;padding:14px 26px;border-radius:999px;font-size:17px;box-shadow:0 8px 24px #0006}
+.floatc{position:absolute;font-size:44px;opacity:.5;animation:bob 4s ease-in-out infinite}
+@keyframes bob{50%{transform:translateY(-16px) rotate(8deg)}}
+.badges{display:flex;gap:10px;flex-wrap:wrap;justify-content:center;margin-top:22px}
+.badges .bg{background:#ffffff18;border:1px solid #ffffff22;border-radius:999px;padding:7px 14px;font-size:13px;font-weight:700}
+.wrap{max-width:1050px;margin:0 auto;padding:22px 16px}
+.sec-title{font-size:24px;font-weight:900;color:var(--choco);margin:10px 0 4px;display:flex;align-items:center;gap:8px}
+.sec-sub{color:#6b5636;margin-bottom:16px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:16px}
+.pcard{background:#fff;border:1px solid var(--line);border-radius:18px;overflow:hidden;box-shadow:0 4px 14px #0001;display:flex;flex-direction:column}
+.pimg{height:160px;display:grid;place-items:center;position:relative}
+.pimg svg{height:130px}
+.promo{position:absolute;top:10px;left:10px;background:var(--red);color:#fff;font-weight:900;font-size:12px;padding:4px 9px;border-radius:999px}
+.pbody{padding:12px 14px 14px;display:flex;flex-direction:column;flex:1}
+.pname{font-weight:800;font-size:15px}
+.pdesc{color:#7a6540;font-size:12.5px;margin:4px 0 8px;flex:1}
+.prow{display:flex;align-items:center;gap:8px}
+.price{font-weight:900;font-size:19px;color:var(--choco)}
+.old{color:#b09a74;text-decoration:line-through;font-size:13px}
+.add{margin-left:auto;background:var(--choco);color:var(--cream);font-weight:800;border-radius:10px;padding:9px 13px}
+.add:active{transform:scale(.95)}
+.feat{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:14px;margin:10px 0 6px}
+.feat .f{background:#fff;border:1px solid var(--line);border-radius:14px;padding:16px;text-align:center}
+.feat .f .e{font-size:30px}
+.feat .f b{display:block;margin-top:6px}
+.feat .f span{font-size:12.5px;color:#7a6540}
+.foot{background:var(--choco);color:var(--milk);text-align:center;padding:28px 16px;margin-top:30px}
+.foot a{color:var(--gold);text-decoration:none}
+.drawer{position:fixed;inset:0;z-index:50;background:#0007;display:none}
+.drawer.on{display:block}
+.panel{position:absolute;right:0;top:0;bottom:0;width:min(420px,92vw);background:var(--cream);display:flex;flex-direction:column;animation:slide .25s}
+@keyframes slide{from{transform:translateX(40px);opacity:0}}
+.ptop{display:flex;align-items:center;gap:10px;padding:16px;background:var(--choco);color:var(--cream);font-weight:800;font-size:17px}
+.ci{display:flex;gap:11px;align-items:center;padding:12px 16px;border-bottom:1px solid var(--line)}
+.ci .t{font-size:30px;width:46px;text-align:center}
+.ci .nm{font-weight:700;font-size:14px}
+.qty{display:flex;align-items:center;gap:8px;margin-top:4px}
+.qty button{width:26px;height:26px;border-radius:7px;background:#e7d4b4;font-weight:900}
+.cartlist{flex:1;overflow-y:auto}
+.cfoot{padding:16px;border-top:1px solid var(--line);background:#fff}
+.tot{display:flex;justify-content:space-between;font-weight:900;font-size:19px;margin-bottom:10px}
+.btn{display:block;width:100%;text-align:center;font-weight:900;padding:14px;border-radius:12px}
+.btn.g{background:var(--ok);color:#06220f}
+.btn.c{background:var(--choco);color:var(--cream)}
+.field{margin-top:10px}
+.field label{font-size:13px;font-weight:700;color:#6b5636}
+.field input{width:100%;padding:11px;border:1px solid var(--line);border-radius:10px;margin-top:3px;font:inherit;background:#fff}
+.note{font-size:12px;color:#8a7350;margin-top:8px}
+.empty{text-align:center;color:#8a7350;padding:40px 20px}
+.toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%) translateY(20px);background:var(--choco);color:var(--cream);font-weight:800;padding:12px 18px;border-radius:12px;opacity:0;transition:.25s;z-index:70;pointer-events:none}
+.toast.on{opacity:1;transform:translateX(-50%) translateY(0)}
+</style>
+</head>
+<body>
+<header class="header"><div class="hin">
+  <div class="brand">🍫 dropshipping<span class="b">.llmsio</span></div>
+  <div class="grow"></div>
+  <button class="cartbtn" id="opencart">🛒 Panier <span class="n" id="cartn" style="display:none">0</span></button>
+</div></header>
+
+<section class="hero">
+  <div class="floatc" style="left:6%;top:20%">🍫</div><div class="floatc" style="right:8%;top:30%;animation-delay:1s">🍫</div><div class="floatc" style="left:14%;bottom:12%;animation-delay:2s">🍫</div>
+  <h1>Tes <span>Kinder Bueno</span><br>livrés chez toi 🚀</h1>
+  <p>Le goût qui fond en bouche, commandé en 2 clics et livré directement à ta porte. Frais, rapide, sans bouger du canap'.</p>
+  <a class="hbtn" href="#boutique">🛒 Voir la boutique</a>
+  <div class="badges"><div class="bg">🚚 Livraison rapide</div><div class="bg">🔒 Paiement sécurisé</div><div class="bg">😋 100% gourmand</div><div class="bg">↩️ Satisfait ou remboursé</div></div>
+</section>
+
+<div class="wrap">
+  <div class="feat">
+    <div class="f"><div class="e">⚡</div><b>Commande express</b><span>Ajoute au panier et commande en 30 secondes</span></div>
+    <div class="f"><div class="e">🚚</div><b>Livré chez toi</b><span>Reçois tes snacks directement à la maison</span></div>
+    <div class="f"><div class="e">💳</div><b>Paiement sécurisé</b><span>Tes paiements sont protégés</span></div>
+  </div>
+
+  <h2 class="sec-title" id="boutique">🍫 Notre boutique</h2>
+  <p class="sec-sub">Choisis tes préférés, remplis ton panier.</p>
+  <div class="grid" id="grid"></div>
+</div>
+
+<footer class="foot">
+  <div class="brand" style="justify-content:center;margin-bottom:8px">🍫 dropshipping<span class="b">.llmsio</span></div>
+  <p>Ta boutique gourmande en ligne 😋</p>
+  <p style="margin-top:8px;font-size:13px;opacity:.8">Contact : contact@llmsio · Paiement sécurisé · Livraison suivie</p>
+  <p style="margin-top:10px;font-size:11px;opacity:.6">dropshipping.llmsio — boutique indépendante. Les produits et marques appartiennent à leurs propriétaires respectifs.</p>
+</footer>
+
+<div class="drawer" id="drawer"><div class="panel">
+  <div class="ptop">🛒 Mon panier <span class="grow"></span><button id="closecart" style="color:var(--cream);font-size:22px">✕</button></div>
+  <div class="cartlist" id="cartlist"></div>
+  <div class="cfoot" id="cfoot"></div>
+</div></div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+(function(){
+const $=id=>document.getElementById(id);
+const euro=n=>n.toFixed(2).replace(".",",")+" €";
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+// dessins SVG de barres chocolatées (aucune image de marque, c'est dessiné)
+function bar(c1,c2,wrap){ return `<svg viewBox="0 0 120 150"><defs><linearGradient id="g${c1.slice(1)}" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="${c2}"/><stop offset="1" stop-color="${c1}"/></linearGradient></defs>
+  <rect x="26" y="10" width="68" height="132" rx="10" fill="url(#g${c1.slice(1)})"/>
+  <rect x="26" y="10" width="68" height="132" rx="10" fill="none" stroke="#00000022" stroke-width="2"/>
+  ${[0,1,2,3].map(i=>`<ellipse cx="60" cy="${30+i*32}" rx="24" ry="13" fill="#ffffff22"/><ellipse cx="60" cy="${30+i*32}" rx="24" ry="13" fill="none" stroke="#00000018" stroke-width="2"/>`).join("")}
+  <path d="M20 16 L100 16" stroke="${wrap}" stroke-width="0"/>
+  <rect x="22" y="6" width="76" height="22" rx="6" fill="${wrap}"/><text x="60" y="21" text-anchor="middle" font-size="11" font-weight="900" fill="#fff" font-family="system-ui">llmsio</text></svg>`; }
+const PRODUCTS=[
+ {id:"bueno",n:"Kinder Bueno Classique",d:"La barre gaufrée au chocolat et noisette, par 2.",p:1.99,old:2.49,promo:"-20%",img:bar("#6b3f14","#9c6a2e","#b8322a")},
+ {id:"white",n:"Kinder Bueno White",d:"Version chocolat blanc, encore plus fondante.",p:2.19,old:2.69,promo:"TOP",img:bar("#d9b98a","#efdcc0","#c69a4a")},
+ {id:"dark",n:"Kinder Bueno Dark",d:"Chocolat noir intense pour les connaisseurs.",p:2.29,img:bar("#3a2410","#5a3410","#1f140a")},
+ {id:"mini",n:"Sachet Mini Bueno",d:"Un grand sachet de mini barres à partager.",p:4.49,old:5.99,promo:"-25%",img:bar("#7a4a1e","#a9742f","#d4a017")},
+ {id:"pack10",n:"Méga Pack x10",d:"10 barres pour tenir toute la semaine 😋.",p:14.99,old:19.90,promo:"DEAL",img:bar("#5a3410","#8a5a22","#c0392b")},
+ {id:"choco",n:"Pâte à tartiner Noisette",d:"Le pot crémeux à tartiner sur tout.",p:3.49,img:bar("#4a2f12","#7a4e1e","#e0a63c")},
+ {id:"surprise",n:"Box Surprise Gourmande",d:"Un assortiment mystère de snacks chocolatés.",p:9.99,old:14.99,promo:"🎁",img:bar("#6b3f14","#b07a30","#8e44ad")},
+ {id:"milk",n:"Pack Barres Lait x6",d:"6 barres au chocolat au lait fondant.",p:7.99,img:bar("#8a5a22","#c08a3e","#d4a017")}
+];
+let cart={}; try{ cart=JSON.parse(localStorage.getItem("llmsio_cart")||"{}"); }catch(e){ cart={}; }
+const prod=id=>PRODUCTS.find(p=>p.id===id);
+function save(){ try{ localStorage.setItem("llmsio_cart",JSON.stringify(cart)); }catch(e){} }
+function toast(t){ const e=$("toast"); e.textContent=t; e.classList.add("on"); clearTimeout(toast.t); toast.t=setTimeout(()=>e.classList.remove("on"),1800); }
+function count(){ return Object.values(cart).reduce((a,b)=>a+b,0); }
+function total(){ return Object.entries(cart).reduce((t,[id,q])=>t+(prod(id)?prod(id).p*q:0),0); }
+
+function renderGrid(){ $("grid").innerHTML=PRODUCTS.map(p=>`<div class="pcard"><div class="pimg" style="background:radial-gradient(circle at 50% 35%,#fff,#f0e3cc)">${p.promo?`<span class="promo">${p.promo}</span>`:""}${p.img}</div>
+  <div class="pbody"><div class="pname">${esc(p.n)}</div><div class="pdesc">${esc(p.d)}</div>
+  <div class="prow"><span class="price">${euro(p.p)}</span>${p.old?`<span class="old">${euro(p.old)}</span>`:""}<button class="add" data-add="${p.id}">+ Panier</button></div></div></div>`).join("");
+  document.querySelectorAll("[data-add]").forEach(b=>b.onclick=()=>{ cart[b.dataset.add]=(cart[b.dataset.add]||0)+1; save(); upd(); toast("🛒 Ajouté au panier !"); }); }
+
+function upd(){ const n=count(); $("cartn").style.display=n?"grid":"none"; $("cartn").textContent=n; renderCart(); }
+function renderCart(){ const ids=Object.keys(cart).filter(id=>cart[id]>0);
+  $("cartlist").innerHTML=ids.length?ids.map(id=>{ const p=prod(id); return `<div class="ci"><div class="t">🍫</div><div class="grow"><div class="nm">${esc(p.n)}</div><div style="color:#8a7350;font-size:13px">${euro(p.p)}</div><div class="qty"><button data-m="${id}">−</button><b>${cart[id]}</b><button data-p="${id}">+</button><button data-del="${id}" style="margin-left:6px;background:none;color:#b00">🗑️</button></div></div><b>${euro(p.p*cart[id])}</b></div>`; }).join(""):`<div class="empty">🛒<br>Ton panier est vide.<br>Ajoute des bons snacks 😋</div>`;
+  $("cfoot").innerHTML=ids.length?`<div class="tot"><span>Total</span><span>${euro(total())}</span></div><button class="btn g" id="checkout">✅ Commander (${euro(total())})</button>`:"";
+  document.querySelectorAll("[data-p]").forEach(b=>b.onclick=()=>{ cart[b.dataset.p]++; save(); upd(); });
+  document.querySelectorAll("[data-m]").forEach(b=>b.onclick=()=>{ cart[b.dataset.m]--; if(cart[b.dataset.m]<=0) delete cart[b.dataset.m]; save(); upd(); });
+  document.querySelectorAll("[data-del]").forEach(b=>b.onclick=()=>{ delete cart[b.dataset.del]; save(); upd(); });
+  if($("checkout")) $("checkout").onclick=checkout; }
+
+function checkout(){ $("cartlist").innerHTML=`<div style="padding:16px"><b style="font-size:16px">📦 Tes infos de livraison</b>
+  <div class="field"><label>Nom complet</label><input id="f_nom" placeholder="Ton nom"></div>
+  <div class="field"><label>Adresse</label><input id="f_adr" placeholder="Rue, ville, code postal"></div>
+  <div class="field"><label>E-mail</label><input id="f_mail" placeholder="toi@mail.com"></div>
+  <div class="note">🔒 Le paiement se fait à l'étape suivante, de façon sécurisée. Pour encaisser pour de vrai, connecte Stripe ou PayPal à ta boutique.</div></div>`;
+  $("cfoot").innerHTML=`<div class="tot"><span>Total</span><span>${euro(total())}</span></div><button class="btn c" id="pay">💳 Payer ${euro(total())}</button><button class="btn" id="backcart" style="margin-top:8px;background:#e7d4b4">‹ Retour au panier</button>`;
+  $("backcart").onclick=renderCart;
+  $("pay").onclick=()=>{ const nom=$("f_nom").value.trim(); if(!nom) return toast("Entre ton nom 🙂"); if(!$("f_adr").value.trim()) return toast("Entre ton adresse");
+    const ref="LLM-"+Math.random().toString(36).slice(2,7).toUpperCase();
+    $("cartlist").innerHTML=`<div class="empty" style="color:var(--choco)"><div style="font-size:54px">✅</div><b style="font-size:20px">Merci ${esc(nom)} !</b><p style="margin-top:8px">Ta commande <b>#${ref}</b> est enregistrée 🎉<br>Total : <b>${euro(total())}</b></p><p class="note" style="margin-top:12px">📦 Ceci est une démo de ta boutique. Pour recevoir de vrais paiements et expédier, connecte un moyen de paiement (Stripe/PayPal) et ton fournisseur.</p></div>`;
+    $("cfoot").innerHTML=`<button class="btn c" id="done">Nouvelle commande</button>`; cart={}; save(); $("cartn").style.display="none";
+    $("done").onclick=()=>{ closeCart(); renderCart(); }; }; }
+
+function openCart(){ $("drawer").classList.add("on"); renderCart(); }
+function closeCart(){ $("drawer").classList.remove("on"); }
+$("opencart").onclick=openCart; $("closecart").onclick=closeCart;
+$("drawer").onclick=e=>{ if(e.target.id==="drawer") closeCart(); };
+renderGrid(); upd();
+})();
+</script>
+</body>
+</html>
