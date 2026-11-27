@@ -95,6 +95,7 @@ const CMDS = [
   { name: "8ball", description: "Pose une question, la boule magique répond", options: [{ type: 3, name: "question", description: "Ta question", required: true }] },
   { name: "quiz", description: "Une question de culture G (bonne réponse = pièces)" },
   { name: "fakenitro", description: "😈 Faux cadeau Nitro pour troller un pote", options: [{ type: 3, name: "duree", description: "Le faux cadeau", required: false, choices: [{ name: "1 mois", value: "1 mois" }, { name: "1 an", value: "1 an" }, { name: "À vie", value: "à vie" }] }, { type: 3, name: "message", description: "Ce qui s'affiche quand il clique (court, par défaut : non je t'ai troll mdr)", required: false, max_length: 50 }] },
+  { name: "faketiktok", description: "😈 Faux cadeau / live TikTok pour troller un pote", options: [{ type: 3, name: "type", description: "Le faux cadeau", required: false, choices: [{ name: "🎁 Cadeau TikTok", value: "cadeau" }, { name: "🪙 Pièces TikTok", value: "pieces" }, { name: "🔴 Passer en LIVE", value: "live" }] }, { type: 3, name: "message", description: "Ce qui s'affiche quand il clique (court, par défaut : non je t'ai troll mdr)", required: false, max_length: 50 }] },
   { name: "warn", description: "Avertir un membre", default_member_permissions: MOD, options: [{ type: 6, name: "membre", description: "Le membre", required: true }, { type: 3, name: "raison", description: "Pourquoi", required: true }] },
   { name: "warns", description: "Voir les avertissements d'un membre", default_member_permissions: MOD, options: [{ type: 6, name: "membre", description: "Le membre", required: true }] },
   { name: "mute", description: "Rendre muet un membre (timeout)", default_member_permissions: MOD, options: [{ type: 6, name: "membre", description: "Le membre", required: true }, { type: 4, name: "minutes", description: "Durée en minutes", required: true, min_value: 1, max_value: 40320 }, { type: 3, name: "raison", description: "Pourquoi", required: false }] },
@@ -103,7 +104,7 @@ const CMDS = [
   { name: "give", description: "(Admin) Donner des pièces à un membre", default_member_permissions: "8", options: [{ type: 6, name: "membre", description: "À qui", required: true }, { type: 4, name: "montant", description: "Combien", required: true }] }
 ];
 
-const ANY = ["aide", "ia", "discute", "idee", "pfc", "de", "8ball", "quiz", "fakenitro", "bloxy", "profil", "classement"];
+const ANY = ["aide", "ia", "discute", "idee", "pfc", "de", "8ball", "quiz", "fakenitro", "faketiktok", "bloxy", "profil", "classement"];
 for (const c of CMDS) if (ANY.includes(c.name)) { c.integration_types = [0, 1]; c.contexts = [0, 1, 2]; }
 async function run(i) {
   const g = i.guild_id || "dm", me = i.member?.user || i.user, uid = me.id, name = i.member?.nick || me.global_name || me.username, cmd = i.data.name;
@@ -192,6 +193,13 @@ async function run(i) {
       return { type: 4, data: { content: "Tiens, cadeau 🎁", embeds: [{ author: { name: "Tu as reçu un cadeau !" }, title: `Nitro · ${d}`, description: `**${name}** t'offre **Nitro** pendant **${d}** ✨
 Clique vite avant que ça expire !`, color: 0xff73fa }],
         components: [{ type: 1, components: [{ type: 2, style: 3, label: "🎁 Récupérer", custom_id: `nitro:${uid}:${(() => { let t = troll; while (Buffer.byteLength(t) > 54) t = [...t].slice(0, -1).join(""); return Buffer.from(t).toString("base64url"); })()}` }] }] } }; }
+    case "faketiktok": { const ty = opt(i, "type") || "cadeau", troll = String(opt(i, "message") || "non je t'ai troll mdr 😂").slice(0, 150);
+      const enc = (() => { let t = troll; while (Buffer.byteLength(t) > 50) t = [...t].slice(0, -1).join(""); return Buffer.from(t).toString("base64url"); })();
+      const V = { cadeau: ["🎁 Cadeau TikTok", `**${name}** t'a envoyé un **Univers 🌌** (34 999 pièces) sur TikTok !\nRécupère-le avant qu'il expire ⏳`, "🎁 Récupérer", 0x25f4ee],
+        pieces: ["🪙 Pièces TikTok", `**${name}** t'offre **50 000 pièces TikTok** 🪙\nClique pour les ajouter à ton compte !`, "🪙 Récupérer", 0xfe2c55],
+        live: ["🔴 TikTok LIVE", `**${name}** est passé en **LIVE** et t'a invité à co-animer 🎥\nRejoins vite, il y a déjà 12,4 k spectateurs !`, "🔴 Rejoindre le live", 0xfe2c55] }[ty];
+      return { type: 4, data: { content: "📱", embeds: [{ author: { name: "TikTok" }, title: V[0], description: V[1], color: V[3] }],
+        components: [{ type: 1, components: [{ type: 2, style: 3, label: V[2], custom_id: `tiktok:${uid}:${enc}` }] }] } }; }
     case "warn": {
       const raison = String(opt(i, "raison")).slice(0, 200), key = `llmms:dc:${g}:warn:${target}`; const [n] = await kv([["RPUSH", key, JSON.stringify({ r: raison, by: uid, t: now })]]);
       return emb("⚠️ Avertissement", `<@${target}> a reçu un avertissement (**${n}** au total)\nRaison : ${raison}`, COL.ko);
@@ -214,6 +222,9 @@ async function button(i) {
     if (uid === k) return eph("C'est toi qui l'as envoyé 😏 attends que ta victime clique !");
     return { type: 7, data: { content: "", embeds: [{ title: "🤡 " + troll, description: `<@${uid}> a cru au Nitro gratuit 😂😂
 Piégé par <@${k}> !`, color: 0xef4444, footer: { text: "/fakenitro · le bot de LLMMS" } }], components: [{ type: 1, components: [{ type: 2, style: 4, label: "🤡 Piégé", custom_id: "nitro_done", disabled: true }] }] } }; }
+  if (kind === "tiktok") { let troll = "non je t'ai troll mdr 😂"; try { troll = Buffer.from(j || "", "base64url").toString("utf8") || troll; } catch {}
+    if (uid === k) return eph("C'est toi qui l'as envoyé 😏 attends que ta victime clique !");
+    return { type: 7, data: { content: "", embeds: [{ title: "🤡 " + troll, description: `<@${uid}> a cru au cadeau TikTok 😂😂\nPiégé par <@${k}> !`, color: 0xef4444, footer: { text: "/faketiktok · le bot de LLMMS" } }], components: [{ type: 1, components: [{ type: 2, style: 4, label: "🤡 Piégé", custom_id: "tiktok_done", disabled: true }] }] } }; }
   if (kind === "chatr") { if (uid !== k) return eph("Lance ta propre discussion avec `/discute` 😉"); return { type: 9, data: { custom_id: "chatm:" + uid, title: "Répondre à llmms ia", components: [{ type: 1, components: [{ type: 4, custom_id: "msg", label: "Ton message", style: 2, max_length: 600, required: true }] }] } }; }
   if (kind === "chatn") { if (uid !== k) return eph("Ce n'est pas ta discussion 😉"); await kv([["DEL", CH(uid)]]); return eph("🔄 C'est oublié ! Recommence avec `/discute`."); }
   if (kind !== "quiz") return eph("Bouton inconnu");
