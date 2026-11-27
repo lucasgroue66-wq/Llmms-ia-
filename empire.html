@@ -5441,11 +5441,14 @@ const BXPAY=["💳 PayPal","🏦 Virement","🎁 Carte cadeau","🪙 Crypto","�
 const bxN=n=>Math.round(n).toLocaleString("fr-FR");
 const bxLog=(b,t)=>{ b.log.unshift({d:E.day,t}); b.log=b.log.slice(0,40); };
 const bxBanned=b=>b.ban>E.day;
-function bxGamesBux(){ const A=P(); return (A.blox||[]).filter(g=>g.live&&g.dev<=0).reduce((t,g)=>t+g.pl*(1+(g.gp||[]).length*.5)*.05,0); }
+const bxMul=()=>{ const b=E.x&&E.x.bxr; return b&&b.cert?5:1; };
+const bxGameBux=g=>g.pl*(1+(g.gp||[]).length*.5)*.05*bxMul();
+function bxGamesBux(){ const A=P(); return (A.blox||[]).filter(g=>g.live&&g.dev<=0).reduce((t,g)=>t+bxGameBux(g),0); }
+const BXCERT=5000;
 function bxNewOffer(b){ const mem=(E.x&&E.x.dk&&E.x.dk.on)?(E.x.dk.mem||0):0, big=Math.log10(mem+10);
   const tiers=[1000,2500,5000,10000,25000,50000,100000,250000,1e6,5e6], top=Math.min(tiers.length-1,3+Math.floor(big)+(b.ann>E.day?2:0));
   const q=tiers[ri(0,top)], p=Math.round(b.price*rnd(.65,1.35)*100)/100;
-  return {id:Date.now().toString(36)+ri(0,999),n:pick(BXN),q,p,pay:pick(BXPAY),scam:clamp8(.16-b.rep*.0013+(p>b.price*1.2?.12:0),.02,.4),d:E.day}; }
+  return {id:Date.now().toString(36)+ri(0,999),n:pick(BXN),q,p,pay:pick(BXPAY),scam:clamp8(.16-b.rep*.0013+(p>b.price*1.2?.12:0)-(b.cert?.05:0),.02,.4),d:E.day}; }
 /* chaque jour : prix du marché, Bloxbux de tes jeux, nouveaux acheteurs */
 const _tickBXR=tick; tick=function(s){ _tickBXR(s); const b=E.x&&E.x.bxr; if(!b) return;
   b.price=Math.round(clamp8(b.price*rnd(.9,1.11),2.5,9)*100)/100;
@@ -5462,19 +5465,23 @@ async function bxSell(o){ const b=BXR(); if(bxBanned(b)) return toast("⛔ Ton c
   if(!b.mm&&Math.random()<o.scam){ b.tot.scam+=o.q; b.rep=Math.max(0,b.rep-4); bxLog(b,`😡 ${o.n} a pris ${bxN(o.q)} Bloxbux et a bloqué ton compte Disko (arnaque)`); save(); head();
     await cine({ic:"😡",t:"ARNAQUÉ !",s:`${o.n} a reçu tes ${bxN(o.q)} Bloxbux… et n'a jamais payé. Utilise un middleman la prochaine fois.`,col:"rouge",ms:2800}); }
   else { const cash=gross*(b.mm?.95:1); E.cash+=cash; b.tot.sold+=o.q; b.tot.cash+=cash; b.rep=Math.min(100,b.rep+1); bxLog(b,`✅ Vendu ${bxN(o.q)} Bloxbux à ${o.n} (${o.pay}) : +${fmt(cash)}`); save(); head(); toast(`💸 +${fmt(cash)} · ${bxN(o.q)} Bloxbux vendus à ${o.n}`); }
-  if(b.sus>40&&Math.random()<(b.sus-40)/100*.6){ b.bans++; const lost=b.bux; b.bux=0; b.gv=0; b.sus=0; b.ban=E.day+7; b.offers=[]; bxLog(b,`⛔ Banni 7 jours par la modération Bloxy (${bxN(lost)} Bloxbux supprimés)`); save(); head();
-    await cine({ic:"⛔",t:"COMPTE BLOXY BANNI",s:`La modération a repéré trop de Bloxbux « givés » revendus. ${bxN(lost)} Bloxbux supprimés · banni 7 jours.`,col:"rouge",ms:3200}); }
+  if(b.sus>40&&Math.random()<(b.sus-40)/100*.6){ b.bans++; const wasC=b.cert; b.cert=0; const lost=b.bux; b.bux=0; b.gv=0; b.sus=0; b.ban=E.day+7; b.offers=[]; bxLog(b,`⛔ Banni 7 jours par la modération Bloxy (${bxN(lost)} Bloxbux supprimés)`); save(); head();
+    await cine({ic:"⛔",t:"COMPTE BLOXY BANNI",s:`La modération a repéré trop de Bloxbux « givés » revendus. ${bxN(lost)} Bloxbux supprimés · banni 7 jours.${wasC?" Ta certification ✔ t'a été retirée.":""}`,col:"rouge",ms:3200}); }
   appBxr(); }
 function appBxr(){ const b=BXR(), A=P(), tab=appBxr.t||"wal", r=()=>appBxr(), ban=bxBanned(b), per=Math.round(bxGamesBux());
   const susC=b.sus>60?"#ef4444":b.sus>30?"#f59e0b":"#22c55e";
-  $("main").innerHTML=back("Bloxy","🟥")+`<div class="card" style="background:linear-gradient(135deg,#dc2626,#450a0a)"><div class="row"><span style="font-size:38px">🟥</span><div class="grow"><b style="font-size:18px">Bloxy</b><div class="hint" style="color:#fecaca">Ton compte · ${esc(W().name||"Llmms99587")}</div></div><div style="text-align:right"><div style="font-size:22px;font-weight:900">💎 ${bxN(b.bux)}</div><div class="hint" style="color:#fecaca">Bloxbux</div></div></div>
+  $("main").innerHTML=back("Bloxy","🟥")+`<div class="card" style="background:linear-gradient(135deg,#dc2626,#450a0a)"><div class="row"><span style="font-size:38px">🟥</span><div class="grow"><b style="font-size:18px">Bloxy</b><div class="hint" style="color:#fecaca">Ton compte · ${esc(W().name||"Llmms99587")}${b.cert?` <span style="background:#3b82f6;color:#fff;border-radius:999px;padding:0 6px;font-weight:800">✔ Certifié</span>`:""}</div></div><div style="text-align:right"><div style="font-size:22px;font-weight:900">💎 ${bxN(b.bux)}</div><div class="hint" style="color:#fecaca">Bloxbux</div></div></div>
     <div class="kpi" style="margin-top:8px"><div><span>🧱 Tes jeux / jour</span><b class="up">+${bxN(per)}</b></div><div><span>💬 Prix Disko</span><b>${b.price.toFixed(2).replace(".",",")} € / 1 000</b></div><div><span>⭐ Réputation</span><b>${b.rep}/100</b></div><div><span>🚨 Soupçons</span><b style="color:${susC}">${Math.round(b.sus)} %</b></div></div></div>
     ${ban?`<div class="card" style="border:2px solid #ef4444"><b>⛔ Compte banni jusqu'au jour ${b.ban}</b><p class="hint">Tu ne peux plus rien recevoir ni vendre pendant ${b.ban-E.day} jour(s).</p></div>`:""}
     <div class="seg">${[["wal","👛 Portefeuille"],["mkt","💬 Vente Disko"],["log","📜 Historique"]].map(([k,l])=>`<button data-bx="${k}" class="${tab===k?"on":""}">${l}</button>`).join("")}</div><div id="bxb"></div>`; bindBack();
   document.querySelectorAll("[data-bx]").forEach(x=>x.onclick=()=>{ appBxr.t=x.dataset.bx; r(); }); const bx=$("bxb");
   if(tab==="wal"){ const live=(A.blox||[]).filter(g=>g.live&&g.dev<=0);
-    bx.innerHTML=`<div class="card"><b>🧱 Bloxbux gagnés par tes jeux</b><p class="hint">Chaque jour, les joueurs de tes jeux Bloxy achètent tes gamepasses : ça tombe direct dans ton portefeuille. Plus de joueurs et de gamepasses = plus de Bloxbux.</p>
-      ${live.length?live.map(g=>`<div class="item"><div class="ic">${BGEN[g.g][0]}</div><div class="grow"><div class="t">${esc(g.n)}</div><div class="d">🟢 ${bxN(g.pl)} joueurs · 🎟️ ${(g.gp||[]).length} gamepass</div></div><b class="up">+${bxN(g.pl*(1+(g.gp||[]).length*.5)*.05)}/j</b></div>`).join(""):`<p class="hint">Aucun jeu en ligne pour l'instant.</p>`}
+    const best=Math.max(0,...live.map(g=>g.pl)), canC=!ban&&best>=BXCERT&&b.rep>=40;
+    bx.innerHTML=`<div class="card" style="${b.cert?"border:2px solid #3b82f6":""}"><b>✔ Certification Bloxy</b>${b.cert?`<p class="hint">✅ Tu es <b>créateur certifié</b> : tes jeux te rapportent <b>5× plus de Bloxbux</b> chaque jour, et les acheteurs sur Disko te font plus confiance. Attention : un ban te retire la certification.</p>`:`<p class="hint">Deviens créateur certifié pour gagner <b>5× plus de Bloxbux</b> avec tes jeux.</p>
+      <div style="font-size:14px;line-height:1.7">${best>=BXCERT?"✅":"❌"} Un jeu avec au moins ${bxN(BXCERT)} joueurs en ligne <span class="hint">(record : ${bxN(best)})</span><br>${b.rep>=40?"✅":"❌"} Réputation d'au moins 40/100 <span class="hint">(${b.rep})</span><br>${!ban?"✅":"❌"} Pas de ban en cours</div>
+      <button class="btn o" id="bxce" style="width:100%;margin-top:6px" ${canC?"":"disabled"}>✔ Demander la certification</button>`}</div>
+     <div class="card"><b>🧱 Bloxbux gagnés par tes jeux</b>${b.cert?' <span class="tag b">×5</span>':""}<p class="hint">Chaque jour, les joueurs de tes jeux Bloxy achètent tes gamepasses : ça tombe direct dans ton portefeuille. Plus de joueurs et de gamepasses = plus de Bloxbux.</p>
+      ${live.length?live.map(g=>`<div class="item"><div class="ic">${BGEN[g.g][0]}</div><div class="grow"><div class="t">${esc(g.n)}</div><div class="d">🟢 ${bxN(g.pl)} joueurs · 🎟️ ${(g.gp||[]).length} gamepass</div></div><b class="up">+${bxN(bxGameBux(g))}/j</b></div>`).join(""):`<p class="hint">Aucun jeu en ligne pour l'instant.</p>`}
       <button class="btn gh" id="bxst" style="width:100%">🧱 Ouvrir Bloxy Studio</button></div>
      <div class="card"><b>🛠️ Panel admin de tes jeux</b><p class="hint">Tu es le créateur : tu peux te give des Bloxbux depuis ton jeu. Mais attention, la modération Bloxy surveille ceux qui revendent beaucoup de Bloxbux « givés » : plus tu en revends, plus les soupçons montent.</p>
       <div class="qty" style="margin-top:6px">${[1000,10000,100000,1e6,1e7].map(v=>`<button data-gv="${v}" ${ban||!live.length?"disabled":""}>+${bxN(v)}</button>`).join("")}<button data-gv="0" ${ban||!live.length?"disabled":""}>✏️ Autre</button></div>
@@ -5482,6 +5489,7 @@ function appBxr(){ const b=BXR(), A=P(), tab=appBxr.t||"wal", r=()=>appBxr(), ba
      <div class="card"><b>🏦 DevEx officiel</b><p class="hint">Bloxy rachète les Bloxbux <b>gagnés</b> par tes jeux à 3,50 € les 1 000. Moins cher que sur Disko, mais zéro risque. Les Bloxbux givés ne sont pas acceptés. Minimum 30 000.</p>
       <button class="btn g" id="bxdv" style="width:100%" ${ban||b.bux-b.gv<30000?"disabled":""}>Encaisser ${bxN(Math.max(0,b.bux-b.gv))} Bloxbux · ${fmt(Math.max(0,b.bux-b.gv)/1000*3.5)}</button></div>`;
     $("bxst").onclick=()=>{ app="blox"; apps(); };
+    if($("bxce")) $("bxce").onclick=async()=>{ b.cert=1; b.rep=Math.min(100,b.rep+10); bxLog(b,"✔ Tu es maintenant créateur certifié Bloxy (Bloxbux ×5)"); save(); await cine({ic:"✔",t:"CRÉATEUR CERTIFIÉ",s:"Ton compte Bloxy a le badge bleu : tes jeux te rapportent 5× plus de Bloxbux !",col:"or",ms:2800}); r(); };
     $("bxdv").onclick=()=>{ const q=b.bux-b.gv; if(q<30000) return; const c=q/1000*3.5; b.bux-=q; E.cash+=c; b.tot.devex+=c; bxLog(b,`🏦 DevEx : ${bxN(q)} Bloxbux → +${fmt(c)}`); save(); head(); toast(`🏦 DevEx validé : +${fmt(c)}`); r(); };
     document.querySelectorAll("[data-gv]").forEach(x=>x.onclick=()=>{ let v=+x.dataset.gv; if(!v){ const s=prompt("Combien de Bloxbux tu te give ?","50000"); if(!s) return; v=Math.floor(+String(s).replace(/\s/g,"")||0); } v=clamp8(v,0,1e9); if(!v) return;
       b.bux+=v; b.gv+=v; b.tot.give+=v; bxLog(b,`🛠️ Panel admin : +${bxN(v)} Bloxbux givés`); save(); toast(`💎 +${bxN(v)} Bloxbux dans ton portefeuille`); r(); }); }
