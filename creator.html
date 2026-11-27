@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>CREATOR — deviens une star du contenu (LLMMS)</title>
+<meta name="description" content="CREATOR : pars de 0 abonné et deviens une star mondiale. YouTube, TikTok, Twitch ou Rap. Un jeu de llmms ia.">
+<link rel="icon" href="/favicon.svg">
+<style>
+:root{--bg:#0b0d13;--bg2:#141824;--card:#1b2030;--card2:#232a3d;--line:#2c3348;--tx:#f2f5fc;--mut:#98a2bd;--p1:#ff2d55;--p2:#ff6b9d;--ok:#22c55e;--gold:#fbbf24;--blue:#3b82f6}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;background:var(--bg);color:var(--tx);font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+body{padding-bottom:calc(76px + env(safe-area-inset-bottom))}
+button{font:inherit;color:inherit;border:0;cursor:pointer;background:none}
+input{font:inherit;color:var(--tx);background:var(--bg2);border:1px solid var(--line);border-radius:10px;padding:11px;width:100%}
+.wrap{max-width:720px;margin:0 auto;padding:14px}
+.top{position:sticky;top:0;z-index:20;background:rgba(11,13,19,.92);backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
+.top .in{max-width:720px;margin:0 auto;display:flex;align-items:center;gap:10px;padding:9px 14px}
+.logo{font-weight:900;font-size:19px;letter-spacing:1px;background:linear-gradient(90deg,var(--p1),var(--gold));-webkit-background-clip:text;background-clip:text;color:transparent}
+.grow{flex:1}
+.pill{display:flex;align-items:center;gap:5px;background:var(--card);border:1px solid var(--line);border-radius:999px;padding:5px 11px;font-weight:800;font-size:14px}
+.ibtn{width:38px;height:38px;border-radius:11px;background:var(--card);border:1px solid var(--line);display:grid;place-items:center;font-size:18px}
+.nav{position:fixed;bottom:0;left:0;right:0;z-index:20;display:flex;background:rgba(20,24,36,.97);border-top:1px solid var(--line);padding:6px 4px calc(6px + env(safe-area-inset-bottom))}
+.nav button{flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;font-size:11px;color:var(--mut);padding:4px 0}
+.nav button span{font-size:21px}
+.nav button.on{color:var(--tx)}.nav button.on span{filter:drop-shadow(0 0 6px var(--p2))}
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:14px;margin-bottom:12px}
+.hint{color:var(--mut);font-size:13px}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:7px;padding:12px 16px;border-radius:12px;font-weight:800;background:var(--card2);border:1px solid var(--line)}
+.btn.p{background:linear-gradient(135deg,var(--p1),var(--p2));border:0}
+.btn.g{background:var(--ok);border:0;color:#04130a}
+.btn.o{background:linear-gradient(135deg,#f59e0b,#f97316);border:0}
+.btn.w{width:100%}
+.btn:disabled{opacity:.45}
+.kpi{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.kpi>div{background:var(--bg2);border-radius:12px;padding:10px}
+.kpi b{display:block;font-size:18px}.kpi span{font-size:12px;color:var(--mut)}
+.big{font-size:26px;font-weight:900}
+.make{width:100%;padding:22px;border-radius:20px;font-size:20px;font-weight:900;background:linear-gradient(135deg,var(--p1),var(--p2));border:0;box-shadow:0 10px 30px #ff2d5540;position:relative;overflow:hidden}
+.make:active{transform:scale(.98)}
+.up{display:flex;align-items:center;gap:11px;padding:11px;border-radius:13px;background:var(--bg2);margin-bottom:8px}
+.up .ic{font-size:26px}
+.up .t{font-weight:700}.up .d{font-size:12px;color:var(--mut)}
+.lv{font-size:11px;color:var(--gold);font-weight:800}
+.tag{display:inline-block;font-size:11px;font-weight:800;padding:2px 8px;border-radius:999px;background:#ffffff14}
+.plat{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.pcard{padding:18px;border-radius:18px;border:2px solid var(--line);background:var(--card);text-align:center;cursor:pointer}
+.pcard .e{font-size:40px}.pcard b{display:block;margin-top:6px;font-size:17px}
+.pcard.on{border-color:var(--p2);box-shadow:0 0 20px #ff6b9d40}
+.feed{max-height:300px;overflow-y:auto}
+.vid{display:flex;gap:10px;padding:8px 0;border-bottom:1px solid var(--line)}
+.vid .th{width:64px;height:40px;border-radius:7px;flex:none;display:grid;place-items:center;font-size:20px;background:linear-gradient(135deg,#2a3147,#161a28)}
+.vid .nm{font-weight:600;font-size:13px}
+.toast{position:fixed;left:50%;bottom:92px;transform:translateX(-50%) translateY(20px);background:#fff;color:#111;font-weight:800;padding:10px 16px;border-radius:12px;opacity:0;transition:.25s;z-index:60;pointer-events:none;max-width:92vw;text-align:center}
+.toast.on{opacity:1;transform:translateX(-50%) translateY(0)}
+.modal{position:fixed;inset:0;z-index:80;background:#000b;display:none;align-items:center;justify-content:center;padding:16px}
+.modal.on{display:flex}
+.sheet{width:100%;max-width:440px;background:var(--bg2);border:1px solid var(--line);border-radius:20px;padding:18px;animation:pop .2s}
+@keyframes pop{from{transform:scale(.9);opacity:0}}
+.float{position:absolute;font-weight:900;pointer-events:none;animation:fl 1s ease-out forwards;z-index:30}
+@keyframes fl{to{transform:translateY(-60px);opacity:0}}
+.rank{display:flex;align-items:center;gap:10px;padding:9px;border-radius:12px;background:var(--bg2);margin-bottom:7px}
+.bar{height:9px;border-radius:9px;background:var(--line);overflow:hidden;margin-top:6px}
+.bar>div{height:100%;background:linear-gradient(90deg,var(--p1),var(--gold))}
+</style>
+</head>
+<body>
+<div class="top"><div class="in"><div class="logo">🎬 CREATOR</div><div class="grow"></div><button class="pill" id="tmon"></button><button class="ibtn" id="tadm" title="Panel admin">🛠️</button></div></div>
+<main class="wrap" id="main"></main>
+<nav class="nav" id="nav"></nav>
+<div class="modal" id="modal"><div class="sheet" id="sheet"></div></div>
+<div class="toast" id="toast"></div>
+<script>
+(function(){
+const $=id=>document.getElementById(id), KEY="creator_llmms1";
+const rnd=(a,b)=>a+Math.random()*(b-a), ri=(a,b)=>Math.floor(rnd(a,b+1)), pick=a=>a[Math.floor(Math.random()*a.length)];
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+function nf(n){ n=Math.floor(n||0); const a=Math.abs(n); if(a>=1e12)return(n/1e12).toFixed(2).replace(/\.?0+$/,"")+" T"; if(a>=1e9)return(n/1e9).toFixed(2).replace(/\.?0+$/,"")+" Md"; if(a>=1e6)return(n/1e6).toFixed(2).replace(/\.?0+$/,"")+" M"; if(a>=1e3)return(n/1e3).toFixed(1).replace(/\.0$/,"")+" k"; return n.toLocaleString("fr-FR"); }
+const money=n=>nf(n)+" €";
+
+const PLATS={
+ yt:{e:"🎥",n:"YouTuber",content:"vidéo",fan:"abonnés",act:"Tourner une vidéo",col:"#ff0000",ideas:["vlog du quotidien","challenge 24h","gaming montage","story time","unboxing","prank","react","tuto"]},
+ tt:{e:"📱",n:"TikTokeur",content:"TikTok",fan:"followers",act:"Filmer un TikTok",col:"#25f4ee",ideas:["danse tendance","POV drôle","transition stylée","lip sync","life hack","storytime rapide","duo","trend du moment"]},
+ tw:{e:"🎮",n:"Streamer",content:"live",fan:"followers",act:"Lancer un live",col:"#9146ff",ideas:["stream chill","speedrun","just chatting","tournoi","découverte de jeu","marathon caritatif","session rankée","review live"]},
+ rap:{e:"🎤",n:"Rappeur",content:"son",fan:"fans",act:"Sortir un son",col:"#fbbf24",ideas:["freestyle","clip","featuring","diss track","album","concert","sortie surprise","remix"]}
+};
+const RANKS=[[0,"Débutant","🌱","#64748b"],[100,"Petit créateur","🥉","#b45309"],[1000,"Monte bien","🥈","#94a3b8"],[1e4,"Confirmé","🥇","#fbbf24"],[1e5,"Plaque d'Or","🏆","#f59e0b"],[1e6,"Star","💎","#22d3ee"],[1e7,"Légende","👑","#a855f7"],[1e8,"Icône mondiale","🌍","#ff2d55"]];
+const rankOf=f=>{ let r=RANKS[0]; for(const x of RANKS) if(f>=x[0]) r=x; return r; };
+const nextRank=f=>RANKS.find(x=>x[0]>f);
+
+const UPG={
+ mic:{ic:"🎙️",n:"Micro",d:"Qualité +",base:50,mul:1.6,eff:"q"},
+ cam:{ic:"📸",n:"Caméra",d:"Qualité +",base:120,mul:1.7,eff:"q"},
+ pc:{ic:"💻",n:"PC de montage",d:"Qualité +",base:400,mul:1.75,eff:"q"},
+ edit:{ic:"✂️",n:"Logiciel de montage",d:"Qualité +",base:1500,mul:1.8,eff:"q"},
+ thumb:{ic:"🖼️",n:"Miniatures pro",d:"Vues x par contenu",base:300,mul:1.7,eff:"v"},
+ seo:{ic:"🔎",n:"Référencement",d:"Vues +",base:900,mul:1.75,eff:"v"},
+ ads:{ic:"📣",n:"Pub / promo",d:"Vues +",base:5000,mul:1.85,eff:"v"},
+ editor:{ic:"🧑‍💻",n:"Monteur",d:"Poste du contenu tout seul",base:2500,mul:1.9,eff:"auto"},
+ cm:{ic:"💬",n:"Community manager",d:"Revenus +",base:8000,mul:1.9,eff:"inc"},
+ studio:{ic:"🏢",n:"Studio",d:"Gros bonus qualité & revenus",base:50000,mul:2.1,eff:"big"}
+};
+
+function fresh(){ return {v:1,plat:null,name:"",money:0,fans:0,views:0,posts:0,up:{},feed:[],rep:50,prestige:0,start:Date.now(),last:Date.now(),ms:{},badges:[]}; }
+let S; try{ S=JSON.parse(localStorage.getItem(KEY)||"null"); }catch(e){ S=null; }
+if(!S||!S.v) S=fresh();
+function save(){ try{ localStorage.setItem(KEY,JSON.stringify(S)); }catch(e){} }
+
+function lvl(k){ return S.up[k]||0; }
+function cost(k){ const u=UPG[k]; return Math.floor(u.base*Math.pow(u.mul,lvl(k))); }
+function qMult(){ let q=1; for(const k in UPG) if(UPG[k].eff==="q") q+=lvl(k)*.35; q+=lvl("studio")*1.5; return q*(1+S.prestige*.5); }
+function vMult(){ let v=1; for(const k in UPG) if(UPG[k].eff==="v") v+=lvl(k)*.5; v+=lvl("studio")*2; return v; }
+function incMult(){ return (1+lvl("cm")*.4+lvl("studio")*1.5)*(1+S.prestige*.5); }
+function perView(){ return 0.004*incMult()*(S.plat==="rap"?1.4:1); }
+function fansPerSec(){ return S.fans*0.0006*(1+S.prestige*.3); }
+function moneyPerSec(){ return S.fans*perView()*0.25; }
+
+function toast(t){ const e=$("toast"); e.textContent=t; e.classList.add("on"); clearTimeout(toast.t); toast.t=setTimeout(()=>e.classList.remove("on"),2200); }
+function P(){ return PLATS[S.plat]; }
+
+/* ---------- créer du contenu ---------- */
+function makeContent(ev){ const pl=P(); const q=qMult()*rnd(.6,1.5);
+ const baseV=(50+S.fans*rnd(.08,.25))*vMult()*q*(1+S.rep/100);
+ let viral=1, tagTxt=""; const r=Math.random();
+ if(r<.04){ viral=rnd(6,20); tagTxt="🔥 VIRAL !"; }
+ else if(r<.12){ viral=rnd(2,4); tagTxt="📈 ça marche fort"; }
+ else if(r>.93){ viral=rnd(.2,.5); tagTxt="📉 flop"; }
+ const views=Math.round(baseV*viral);
+ const newFans=Math.round(views*rnd(.02,.06)*(1+S.rep/150));
+ const gain=views*perView();
+ S.views+=views; S.fans+=newFans; S.money+=gain; S.posts++;
+ S.feed.unshift({e:pick(["🎬","📹","🎞️","⭐","🎥","🔴","🎤","📱"]),t:pick(pl.ideas),v:views,f:newFans,tag:tagTxt}); S.feed=S.feed.slice(0,25);
+ if(ev){ const f=document.createElement("div"); f.className="float"; f.style.left=(ev.clientX||ev.target.getBoundingClientRect().left+60)+"px"; f.style.top=(ev.clientY||ev.target.getBoundingClientRect().top)+"px"; f.style.color=viral>2?"#fbbf24":"#fff"; f.textContent="+"+nf(views)+" 👁️"; document.body.appendChild(f); setTimeout(()=>f.remove(),1000); }
+ checkRank(); maybeEvent(); save(); if(page==="home") renderHome(); else head();
+}
+function checkRank(){ const nx=nextRank(S.fans - 1); // detect crossing
+ const r=rankOf(S.fans); if(S.ms.rank!==r[0]&&S.fans>=r[0]&&r[0]>0){ S.ms.rank=r[0]; const bonus=r[0]*perView()*20; S.money+=bonus; if(!S.badges.includes(r[1])) S.badges.push(r[1]);
+  pop(`<div style="text-align:center"><div style="font-size:60px">${r[2]}</div><b style="font-size:22px">${r[1]} !</b><p class="hint">Tu as atteint <b>${nf(r[0])} ${P().fan}</b> 🎉</p><div class="big" style="color:var(--gold)">+${money(bonus)}</div><button class="btn p w" id="rok" style="margin-top:14px">Trop bien 🔥</button></div>`,()=>{ $("rok").onclick=close; }); }
+}
+const EVENTS=[
+ {t:"💰 Sponsor",d:p=>`Une marque veut te sponsoriser pour une ${p.content} !`,opt:["Accepter (+argent)","Refuser"],run:(i)=>{ if(i===0){ const g=S.fans*perView()*rnd(30,80)+200; S.money+=g; S.rep=Math.max(0,S.rep-ri(0,4)); return `💸 +${money(g)} (mais un peu moins d'authenticité)`; } S.rep=Math.min(100,S.rep+3); return "👍 Tes fans apprécient ton intégrité (+réputation)"; }},
+ {t:"😡 Drama",d:()=>"Des gens te critiquent dans les commentaires…",opt:["T'excuser","Ignorer"],run:(i)=>{ if(i===0){ S.rep=Math.min(100,S.rep+5); return "🙏 Tu désamorces, ta réputation remonte"; } const l=Math.round(S.fans*rnd(.01,.04)); S.fans=Math.max(0,S.fans-l); return `😬 Tu perds ${nf(l)} ${P().fan}`; }},
+ {t:"🤝 Collab",d:()=>"Un gros créateur te propose une collab !",opt:["Foncer","Pas le temps"],run:(i)=>{ if(i===0){ const f=Math.round(S.fans*rnd(.08,.2)+100); S.fans+=f; return `🚀 +${nf(f)} ${P().fan} grâce à la collab !`; } return "Bon, une autre fois."; }},
+ {t:"⚠️ Strike",d:p=>`Un souci de droits sur une ${p.content}…`,opt:["Contester","Supprimer"],run:(i)=>{ if(i===0&&Math.random()<.6){ return "✅ Contestation acceptée, rien perdu"; } const l=Math.round(S.money*rnd(.05,.15)); S.money=Math.max(0,S.money-l); return `💸 Tu perds ${money(l)}`; }}
+];
+function maybeEvent(){ if(S.posts<5) return; if(Math.random()>.08) return; const ev=pick(EVENTS), pl=P();
+ pop(`<b style="font-size:19px">${ev.t}</b><p>${ev.d(pl)}</p><div style="display:grid;gap:8px;margin-top:12px">${ev.opt.map((o,j)=>`<button class="btn ${j===0?"p":""}" data-ev="${j}">${o}</button>`).join("")}</div>`,()=>{ document.querySelectorAll("[data-ev]").forEach(b=>b.onclick=()=>{ const msg=ev.run(+b.dataset.ev); save(); close(); toast(msg); if(page==="home") renderHome(); else head(); }); });
+}
+
+/* ---------- rendu ---------- */
+let page="home";
+const NAV=[["home","🏠","Studio"],["shop","🛒","Améliorer"],["stats","📊","Carrière"]];
+function head(){ $("tmon").innerHTML="💶 "+money(S.money); }
+function nav(){ $("nav").innerHTML=NAV.map(([k,i,l])=>`<button data-nv="${k}" class="${page===k?"on":""}"><span>${i}</span>${l}</button>`).join(""); document.querySelectorAll("[data-nv]").forEach(b=>b.onclick=()=>{ page=b.dataset.nv; render(); }); }
+function render(){ head(); nav(); if(!S.plat) return choose(); if(page==="home") renderHome(); if(page==="shop") renderShop(); if(page==="stats") renderStats(); }
+
+function choose(){ $("nav").style.display="none"; $("main").innerHTML=`<div class="card" style="text-align:center;background:linear-gradient(135deg,#2a1137,#0b0d13)"><div style="font-size:44px">🎬</div><h2 style="margin:4px 0">Deviens une star du contenu</h2><p class="hint">Choisis ta plateforme pour commencer :</p></div>
+ <div class="plat">${Object.entries(PLATS).map(([k,p])=>`<button class="pcard" data-pl="${k}"><div class="e">${p.e}</div><b>${p.n}</b><div class="hint">${p.fan}</div></button>`).join("")}</div>
+ <div class="card" style="margin-top:12px"><div class="hint">Ton nom de créateur :</div><input id="cn" placeholder="LLMMS" maxlength="20" value="LLMMS"><button class="btn p w" id="cstart" style="margin-top:10px" disabled>Choisis une plateforme</button></div>`;
+ let sel=null;
+ document.querySelectorAll("[data-pl]").forEach(b=>b.onclick=()=>{ sel=b.dataset.pl; document.querySelectorAll("[data-pl]").forEach(x=>x.classList.toggle("on",x===b)); $("cstart").disabled=false; $("cstart").textContent="🚀 Lancer ma carrière ("+PLATS[sel].n+")"; });
+ $("cstart").onclick=()=>{ if(!sel) return; S.plat=sel; S.name=($("cn").value.trim()||"LLMMS").slice(0,20); save(); $("nav").style.display="flex"; render(); };
+}
+
+function renderHome(){ $("nav").style.display="flex"; const pl=P(), r=rankOf(S.fans), nx=nextRank(S.fans);
+ $("main").innerHTML=`<div class="card" style="background:linear-gradient(135deg,${pl.col}33,#0b0d13);border-color:${pl.col}55">
+   <div style="display:flex;align-items:center;gap:12px"><div style="font-size:40px">${pl.e}</div><div class="grow"><b style="font-size:18px">${esc(S.name)}</b><div class="hint">${pl.n} · ${r[2]} ${r[1]}${S.prestige?` · ⭐${S.prestige}`:""}</div></div></div>
+   <div class="kpi" style="margin-top:10px"><div><span>👥 ${pl.fan}</span><b>${nf(S.fans)}</b></div><div><span>👁️ Vues totales</span><b>${nf(S.views)}</b></div><div><span>💶 Par seconde</span><b class="up" style="color:var(--ok)">${money(moneyPerSec())}/s</b></div><div><span>⭐ Réputation</span><b>${Math.round(S.rep)}%</b></div></div>
+   ${nx?`<div class="hint" style="margin-top:8px">Prochain palier : ${nx[2]} ${nx[1]} (${nf(nx[0])})</div><div class="bar"><div style="width:${Math.min(100,S.fans/nx[0]*100)}%"></div></div>`:`<div class="hint" style="margin-top:8px">👑 Palier max atteint !</div>`}</div>
+  <button class="make" id="mk">${pl.act} 🎬<div class="hint" style="color:#fff;opacity:.85;font-weight:600;margin-top:4px">+${nf((50+S.fans*.15)*vMult()*qMult())} vues environ</div></button>
+  <div class="card" style="margin-top:12px"><b>📺 Tes dernières ${pl.content}s</b><div class="feed" style="margin-top:6px">${S.feed.length?S.feed.map(v=>`<div class="vid"><div class="th">${v.e}</div><div class="grow"><div class="nm">${esc(v.t)} ${v.tag?`<span class="tag">${v.tag}</span>`:""}</div><div class="hint">👁️ ${nf(v.v)} · +${nf(v.f)} ${pl.fan}</div></div></div>`).join(""):`<p class="hint">Clique sur le bouton pour créer ta première ${pl.content} !</p>`}</div></div>`;
+ $("mk").onclick=e=>makeContent(e);
+}
+
+function renderShop(){ $("nav").style.display="flex"; const groups=[["🎥 Qualité",["mic","cam","pc","edit"]],["📈 Audience",["thumb","seo","ads"]],["👔 Équipe",["editor","cm"]],["🏢 Premium",["studio"]]];
+ $("main").innerHTML=`<div class="card"><b>🛒 Améliore ta chaîne</b><p class="hint">La qualité augmente tes vues, l'audience multiplie chaque contenu, l'équipe fait tourner la boutique toute seule.</p><div class="kpi" style="margin-top:8px"><div><span>Qualité</span><b>x${qMult().toFixed(1)}</b></div><div><span>Vues/contenu</span><b>x${vMult().toFixed(1)}</b></div></div></div>
+  ${groups.map(([t,ks])=>`<div class="card"><b>${t}</b><div style="margin-top:8px">${ks.map(k=>{ const u=UPG[k],c=cost(k),can=S.money>=c; return `<div class="up"><div class="ic">${u.ic}</div><div class="grow"><div class="t">${u.n} <span class="lv">Niv. ${lvl(k)}</span></div><div class="d">${u.d}</div></div><button class="btn ${can?"g":""}" data-up="${k}" ${can?"":"disabled"} style="padding:9px 12px">${money(c)}</button></div>`; }).join("")}</div></div>`).join("")}`;
+ document.querySelectorAll("[data-up]").forEach(b=>b.onclick=()=>{ const k=b.dataset.up,c=cost(k); if(S.money<c) return; S.money-=c; S.up[k]=lvl(k)+1; save(); toast(`${UPG[k].ic} ${UPG[k].n} niveau ${lvl(k)} !`); renderShop(); head(); });
+}
+
+function renderStats(){ $("nav").style.display="flex"; const r=rankOf(S.fans), days=Math.max(1,Math.round((Date.now()-S.start)/864e5));
+ $("main").innerHTML=`<div class="card"><b>📊 Ta carrière</b><div class="kpi" style="margin-top:8px"><div><span>${P().fan}</span><b>${nf(S.fans)}</b></div><div><span>Vues totales</span><b>${nf(S.views)}</b></div><div><span>Contenus postés</span><b>${nf(S.posts)}</b></div><div><span>Argent gagné</span><b>${money(S.money)}</b></div></div></div>
+  <div class="card"><b>🏆 Paliers</b><div style="margin-top:8px">${RANKS.map(x=>`<div class="rank" style="${S.fans>=x[0]?"":"opacity:.45"}"><div style="font-size:22px">${x[2]}</div><div class="grow"><b>${x[1]}</b><div class="hint">${nf(x[0])} ${P().fan}</div></div>${S.fans>=x[0]?'<span class="tag" style="background:#22c55e33;color:#4ade80">✔</span>':"🔒"}</div>`).join("")}</div></div>
+  <div class="card"><b>⭐ Prestige</b><p class="hint">Recommence une nouvelle carrière à zéro, mais tu gardes un <b>bonus permanent</b> de +50% par prestige sur tes gains. Conseillé quand ta progression ralentit.</p><div class="hint">Prestige actuel : <b>${S.prestige}</b> (bonus x${(1+S.prestige*.5).toFixed(1)})</div><button class="btn o w" id="pres" style="margin-top:8px" ${S.fans>=1e5?"":"disabled"}>${S.fans>=1e5?"⭐ Prestige (recommencer)":"🔒 Atteins 100 k pour prestige"}</button></div>
+  <div class="card"><b>🏅 Badges</b><div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:6px">${S.badges.length?S.badges.map(b=>`<span class="tag">${esc(b)}</span>`).join(""):'<span class="hint">Aucun pour l\'instant</span>'}</div></div>`;
+ if($("pres")) $("pres").onclick=()=>{ if(S.fans<1e5) return; pop(`<div style="text-align:center"><div style="font-size:50px">⭐</div><b style="font-size:20px">Prestige ?</b><p class="hint">Tu repars à 0 ${P().fan} et 0 €, mais tu gagnes +50% sur tout, pour toujours.</p><div style="display:flex;gap:8px;margin-top:12px"><button class="btn o w" id="py">Oui, prestige !</button><button class="btn w" id="pn">Non</button></div></div>`,()=>{ $("pn").onclick=close; $("py").onclick=()=>{ const keep={plat:S.plat,name:S.name,prestige:S.prestige+1,badges:S.badges,start:S.start}; S=Object.assign(fresh(),keep); save(); close(); toast("⭐ Prestige ! Bonus permanent augmenté 🔥"); page="home"; render(); }; }); };
+}
+
+/* ---------- panel admin (sans code) ---------- */
+function admin(){ pop(`<div class="card" style="background:linear-gradient(135deg,#3b0a0a,#1b2030);border-color:#7f1d1d"><b style="font-size:19px">🛠️ Panel admin</b><div class="hint" style="color:#fecaca">Triche autant que tu veux 😏</div></div>
+  <div class="hint" style="margin:10px 0 4px">💶 Argent</div><div style="display:flex;flex-wrap:wrap;gap:6px">${[1e3,1e5,1e7,1e9].map(v=>`<button class="btn" data-am="${v}">+${money(v)}</button>`).join("")}</div>
+  <div class="hint" style="margin:10px 0 4px">👥 ${S.plat?P().fan:"fans"}</div><div style="display:flex;flex-wrap:wrap;gap:6px">${[1e3,1e5,1e6,1e8].map(v=>`<button class="btn" data-fn="${v}">+${nf(v)}</button>`).join("")}</div>
+  <button class="btn p w" id="amax" style="margin-top:10px">🌟 Tout améliorer au max</button>
+  <button class="btn r w" id="arst" style="margin-top:8px;background:#3a1518;border:1px solid #7f1d1d;color:#fecaca">🗑️ Recommencer à zéro</button>
+  <button class="btn w" id="acl" style="margin-top:8px">Fermer</button>`,()=>{
+  document.querySelectorAll("[data-am]").forEach(b=>b.onclick=()=>{ S.money+=+b.dataset.am; save(); head(); toast("💶 +"+money(+b.dataset.am)); });
+  document.querySelectorAll("[data-fn]").forEach(b=>b.onclick=()=>{ S.fans+=+b.dataset.fn; checkRank(); save(); if(page==="home")renderHome(); toast("👥 +"+nf(+b.dataset.fn)); });
+  $("amax").onclick=()=>{ for(const k in UPG) S.up[k]=(S.up[k]||0)+5; save(); toast("🌟 Matériel amélioré !"); if(page==="shop")renderShop(); };
+  $("arst").onclick=()=>{ if(!confirm("Tout effacer et recommencer ?")) return; S=fresh(); save(); close(); render(); };
+  $("acl").onclick=close; });
+}
+$("tadm").onclick=admin;
+$("tmon").onclick=()=>{ if(!S.plat) return; pop(`<div style="text-align:center"><div class="big">${money(S.money)}</div><p class="hint">${S.money.toLocaleString("fr-FR")} € exactement</p><div class="kpi" style="text-align:left"><div><span>Revenus/s</span><b>${money(moneyPerSec())}</b></div><div><span>Par vue</span><b>${(perView()).toFixed(4)} €</b></div></div><button class="btn w" id="mcl" style="margin-top:12px">Fermer</button></div>`,()=>{ $("mcl").onclick=close; }); };
+
+function pop(html,after){ $("sheet").innerHTML=html; $("modal").classList.add("on"); after&&after(); }
+function close(){ $("modal").classList.remove("on"); }
+$("modal").onclick=e=>{ if(e.target.id==="modal") close(); };
+
+/* ---------- boucle idle ---------- */
+{ const dt=Math.min(43200,(Date.now()-S.last)/1000); if(dt>5&&S.plat){ S.money+=moneyPerSec()*dt; S.fans+=fansPerSec()*dt; checkRank(); } S.last=Date.now(); }
+setInterval(()=>{ if(!S.plat) return; S.money+=moneyPerSec(); S.fans+=fansPerSec();
+  if(lvl("editor")&&Math.random()<.5*lvl("editor")){ /* monteur poste tout seul, discret */ const views=Math.round((30+S.fans*.05)*vMult()*qMult()); S.views+=views; S.fans+=Math.round(views*.03); S.money+=views*perView(); S.posts++; }
+  S.last=Date.now(); save(); if(page==="home"){ const h=rankOf(S.fans); head(); const mon=$("tmon"); } },1000);
+setInterval(()=>{ if(page==="home"&&S.plat){ renderHome(); } else head(); },3000);
+
+render();
+})();
+</script>
+</body>
+</html>
