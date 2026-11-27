@@ -157,7 +157,8 @@ const CMDS = [
   { name: "reglement", description: "📜 Règlement avec bouton J'accepte (admins)", default_member_permissions: "8192", options: [{ type: 3, name: "texte", description: "Le règlement", required: true }, { type: 8, name: "role", description: "Rôle donné à l'acceptation", required: false }] },
   { name: "ticket", description: "🎫 Bouton pour ouvrir un ticket d'aide (admins)", default_member_permissions: "16" },
   { name: "accueil", description: "👋 Message d'accueil avec questions (admins)", default_member_permissions: "32", options: [{ type: 8, name: "role", description: "Rôle donné à la fin (accès au serveur)", required: false }] },
-  { name: "construire", description: "🏗️ L'IA construit ton serveur (salons, rôles) — admins", default_member_permissions: "32", options: [{ type: 3, name: "description", description: "Décris le serveur que tu veux", required: true }] }
+  { name: "construire", description: "🏗️ L'IA construit ton serveur (salons, rôles) — admins", default_member_permissions: "32", options: [{ type: 3, name: "description", description: "Décris le serveur que tu veux", required: true }] },
+  { name: "nettoyer", description: "🗑️ Supprimer tous les salons ou rôles (admins) — irréversible", default_member_permissions: "8", options: [{ type: 3, name: "quoi", description: "Ce qu'il faut supprimer", required: true, choices: [{ name: "Tous les salons", value: "salons" }, { name: "Tous les rôles", value: "roles" }] }] }
 ];
 const QUESTIONS = [
   { q: "Tu connais LLMMS ? 👑", opts: ["Oui évidemment 🔥", "Un peu 👀", "Non c'est qui ?"] },
@@ -365,6 +366,10 @@ async function run(i) {
     case "reglement": { const txt = String(opt(i, "texte")).slice(0, 3500), r = opt(i, "role");
       return { type: 4, data: { embeds: [{ title: "📜 Règlement", description: txt, color: COL.gold, footer: { text: "Clique sur J'accepte pour valider" } }], components: [{ type: 1, components: [{ type: 2, style: 3, label: "✅ J'accepte", custom_id: `accept:${r || "0"}` }] }] } }; }
     case "ticket": return { type: 4, data: { embeds: [{ title: "🎫 Support", description: "Besoin d'aide ? Clique sur le bouton pour ouvrir un salon privé avec le staff.", color: COL.info }], components: [{ type: 1, components: [{ type: 2, style: 3, label: "🎫 Ouvrir un ticket", custom_id: "ticket:open" }] }] } };
+    case "nettoyer": { if (g === "dm") return eph("Seulement sur un serveur."); const quoi = opt(i, "quoi");
+      let n = 0; try { if (quoi === "salons") { const ch = await bot(`/guilds/${g}/channels`); n = (ch || []).length; } else { const rs = await bot(`/guilds/${g}/roles`); n = (rs || []).filter(x => x.name !== "@everyone" && !x.managed).length; } } catch (e) { return eph("❌ " + e.message); }
+      if (!n) return eph(`Rien à supprimer (${quoi}).`);
+      return { type: 4, data: { flags: 64, embeds: [{ title: "⚠️ Confirmation", description: `Tu es sur le point de supprimer **${n} ${quoi === "salons" ? "salon(s)" : "rôle(s)"}**.\n\n**C'est IRRÉVERSIBLE.** Tu es sûr ?`, color: COL.ko }], components: [{ type: 1, components: [{ type: 2, style: 4, label: "🗑️ Oui, tout supprimer", custom_id: `wipe:${quoi}:${uid}` }, { type: 2, style: 2, label: "Annuler", custom_id: "wipe:no" }] }] } }; }
     case "accueil": { const r = opt(i, "role") || "0";
       return { type: 4, data: { embeds: [{ title: "👋 Bienvenue sur le serveur !", description: "Avant d'entrer, réponds à quelques petites questions 👇\nC'est rapide et promis, y'a pas de mauvaise réponse 😄", color: COL.info }], components: [{ type: 1, components: [{ type: 2, style: 3, label: "▶️ Commencer", custom_id: `q:0:${r}` }] }] } }; }
   }
@@ -417,6 +422,16 @@ async function button(i) {
     const emb0 = i.message.embeds[0], vals = Object.values(votes), oui = vals.filter(x => x === 0).length, non = vals.filter(x => x === 1).length, total = oui + non;
     const line = (lbl, n) => { const bar = Math.round((total ? n / total : 0) * 10); return `${lbl}\n\`${"█".repeat(bar)}${"░".repeat(10 - bar)}\` ${n} (${Math.round((total ? n / total : 0) * 100)}%)`; };
     return { type: 7, data: { embeds: [{ ...emb0, description: `${line("👍 **Oui**", oui)}\n\n${line("👎 **Non**", non)}`, footer: { text: `${total} vote${total > 1 ? "s" : ""}` } }] } }; }
+  if (kind === "wipe") {
+    if (k === "no") return { type: 7, data: { embeds: [{ title: "❌ Annulé", description: "Rien n'a été supprimé.", color: COL.info }], components: [], flags: 64 } };
+    if (j && j !== uid) return eph("Seul celui qui a lancé la commande peut confirmer 😉");
+    const quoi = k, fin = async () => { let done = 0, errs = 0;
+      try { if (quoi === "salons") { const ch = await bot(`/guilds/${g}/channels`); for (const c of (ch || [])) { try { await bot(`/channels/${c.id}`, "DELETE"); done++; } catch { errs++; } } }
+        else { const rs = await bot(`/guilds/${g}/roles`); for (const r of (rs || []).filter(x => x.name !== "@everyone" && !x.managed)) { try { await bot(`/guilds/${g}/roles/${r.id}`, "DELETE"); done++; } catch { errs++; } } } } catch {}
+      await fetch(`${API}/webhooks/${i.application_id}/${i.token}/messages/@original`, { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ embeds: [{ title: "🗑️ Nettoyage terminé", description: `${done} ${quoi === "salons" ? "salon(s)" : "rôle(s)"} supprimé(s)${errs ? `\n⚠️ ${errs} non supprimé(s) (le bot n'avait pas la permission ou le rôle était au-dessus du sien)` : ""}`, color: COL.ok }], components: [] }) }).catch(() => {}); };
+    const p = fin(); if (bg(p)) return { type: 7, data: { embeds: [{ title: "🗑️ Suppression en cours…", color: COL.ko }], components: [], flags: 64 } };
+    await p; return { type: 7, data: { embeds: [{ title: "🗑️ Suppression en cours…", color: COL.ko }], components: [], flags: 64 } };
+  }
   if (kind === "build") {
     if (k === "no") return { type: 7, data: { embeds: [{ title: "❌ Annulé", description: "Aucun changement n'a été fait.", color: COL.ko }], components: [] } };
     let plan; try { const [v] = await kv([["GET", `llmms:dc:plan:${g}:${uid}`]]); plan = JSON.parse(v || "null"); } catch {}
