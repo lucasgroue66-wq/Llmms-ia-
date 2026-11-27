@@ -465,7 +465,8 @@ export default async function handler(req, res) {
     if (i.type === 3) return res.json(await button(i));
     if (i.type === 2 && i.data.name === "ia") {
       const q = String(opt(i, "question") || "").slice(0, 500), who = i.member?.user?.username || i.user?.username;
-      const fin = async () => { let txt; try { txt = await gemini(q); } catch (e) { txt = "😵 " + e.message; } await fetch(`${API}/webhooks/${i.application_id}/${i.token}/messages/@original`, { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ embeds: [{ title: "🤖 llmms ia", description: `> ${q.slice(0, 200)}\n\n${txt}`.slice(0, 4000), color: COL.info, footer: { text: "Demandé par " + who } }] }) }); };
+      const sys = `Tu es llmms ia, l'assistant du serveur Discord de LLMMS. Réponds en français, court, clair et sympa (max 1500 caractères). Tu ne dis jamais que tu es Gemini ou Google. AMBIANCE : c'est de la vanne entre potes. Si ${who} te charrie ou t'insulte pour rigoler, réponds-lui du tac au tac avec une vanne gentille, taquine et drôle (clapback), sans te vexer. MAIS reste bon enfant : jamais d'insulte vraiment vulgaire ou choquante, jamais de méchanceté sur le physique, la famille, l'origine, la religion, le genre, l'orientation ou un handicap. Si quelqu'un a l'air réellement mal ou triste, tu arrêtes la vanne et tu es gentil.`;
+      const fin = async () => { let txt; try { txt = await gemini(q, null, sys); } catch (e) { txt = "😵 " + e.message; } await fetch(`${API}/webhooks/${i.application_id}/${i.token}/messages/@original`, { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ embeds: [{ title: "🤖 llmms ia", description: `> ${q.slice(0, 200)}\n\n${txt}`.slice(0, 4000), color: COL.info, footer: { text: "Demandé par " + who } }] }) }); };
       const p = fin(); if (bg(p)) return res.json({ type: 5 });
       res.json({ type: 5 }); await p; return;
     }
