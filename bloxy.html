@@ -332,7 +332,7 @@ function playGame(g){ S.recent=[g.id,...S.recent.filter(x=>x!==g.id)].slice(0,8)
     qp.querySelectorAll("[data-qm]").forEach(b=>b.onclick=()=>{ M[b.dataset.qm]^=1; panel(); });
     $("qc").onclick=()=>{ got+=50; toast("🪙 +50 pièces"); }; $("qt").onclick=()=>{ bonusT+=30; toast("⏱️ +30 secondes"); };
     $("qr").onclick=()=>{ qp.style.display="none"; paused=false; last=performance.now(); }; };
-  $("qa").onclick=()=>{ if(!t0||over) return; if(qp.style.display==="block") return $("qr").click(); if(S.pin&&!admin.ok){ const v=prompt("Code du panel admin :"); if(v===null) return; if(v.trim()!==S.pin) return toast("❌ Mauvais code"); admin.ok=1; } paused=true; qp.style.display="block"; panel(); };
+  $("qa").onclick=()=>{ if(!t0||over) return; if(qp.style.display==="block") return $("qr").click(); paused=true; qp.style.display="block"; panel(); };
   setTimeout(()=>{ $("ldt").textContent="Connexion au serveur…"; },600); setTimeout(()=>{ $("ld").remove(); t0=performance.now(); last=t0; },1400);
   (function loop(now){ raf=requestAnimationFrame(loop);
     const sky=c.createLinearGradient(0,0,0,H); sky.addColorStop(0,c1); sky.addColorStop(1,c2); c.fillStyle=sky; c.fillRect(0,0,W,H);
@@ -350,9 +350,7 @@ function playGame(g){ S.recent=[g.id,...S.recent.filter(x=>x!==g.id)].slice(0,8)
     if(img.complete) c.drawImage(img,P.x-26,P.y-66,52,66); c.restore(); })(performance.now()); }
 
 /* ================= PANEL ADMIN ================= */
-function admin(){ if(!S.pin) return modal(`<b style="font-size:19px">🛠️ Panel admin</b><p class="hint">Choisis un code secret : il sera demandé pour ouvrir le panel (sur cet appareil).</p><input id="p1" type="password" inputmode="numeric" placeholder="Ton code (4 chiffres ou plus)"><button class="btn p w" id="p2" style="margin-top:10px">Valider</button>`,()=>{ $("p2").onclick=()=>{ const v=$("p1").value.trim(); if(v.length<4) return toast("Au moins 4 caractères"); S.pin=v; save(); adminPanel(); }; });
-  if(admin.ok) return adminPanel();
-  modal(`<b style="font-size:19px">🛠️ Panel admin</b><p class="hint">Entre ton code secret.</p><input id="p1" type="password" inputmode="numeric"><button class="btn p w" id="p2" style="margin-top:10px">Ouvrir</button>`,()=>{ $("p2").onclick=()=>{ if($("p1").value.trim()!==S.pin) return toast("❌ Mauvais code"); admin.ok=1; adminPanel(); }; }); }
+function admin(){ adminPanel(); }
 function adminPanel(){ const sel=t=>`<option value="${t}">`;
   modal(`<div class="card adm"><b style="font-size:19px">🛠️ Panel admin</b><div class="hint" style="color:#fecaca">Tu contrôles tout sur ta plateforme.</div></div>
     <div class="lbl">💰 Te give des Bloxbux</div><div class="chips" style="flex-wrap:wrap">${[1000,10000,100000,1e6,1e7,1e9].map(v=>`<button data-gb="${v}">+${nf(v)}</button>`).join("")}</div>
@@ -486,7 +484,7 @@ function playSteal(g){ S.recent=[g.id,...S.recent.filter(x=>x!==g.id)].slice(0,8
       sp.querySelectorAll("[data-sb]").forEach(b=>b.onclick=()=>{ const [bx,m]=b.dataset.sb.split(":").map(Number); if(S.bux<bx) return toast("Pas assez de Bloxbux 💸"); S.bux-=bx; st.cash+=m; log(`🛒 ${g.n} : ${nf(m)} d'argent (-${bx})`); save(); head(); toast(`💵 +${nf(m)}`); draw(); });
       sp.querySelectorAll("[data-su]").forEach(b=>b.onclick=()=>{ const [r,bx]=b.dataset.su.split(":").map(Number); if(S.bux<bx) return toast("Pas assez de Bloxbux 💸"); const u=mkUnit(g,r); if(!placeMine(u)) return toast("Ta base est pleine : vends une unité"); S.bux-=bx; log(`🛒 ${g.n} : ${u.n} (-${bx})`); save(); head(); toast(`${u.e} ${u.n} arrive dans ta base !`); draw(); });
       $("spc").onclick=panelClose; }; draw(); };
-  $("sadm").onclick=()=>{ if(sp.style.display==="block") return panelClose(); if(S.pin&&!admin.ok){ const v=prompt("Code du panel admin :"); if(v===null) return; if(v.trim()!==S.pin) return toast("❌ Mauvais code"); admin.ok=1; } paused=true; sp.style.display="block";
+  $("sadm").onclick=()=>{ if(sp.style.display==="block") return panelClose(); paused=true; sp.style.display="block";
     const draw=()=>{ sp.innerHTML=`<b>🛠️ Admin en jeu</b><div style="display:grid;gap:6px;margin-top:8px"><button class="btn" data-ac="1e4">💵 +10 k</button><button class="btn" data-ac="1e6">💵 +1 M</button><button class="btn" data-ac="1e9">💵 +1 Md</button><button class="btn" id="aun">⚪ Give une unité Secrète</button>${[["spd","⚡ Vitesse x2"],["inv","👻 Invisible (personne ne t'attrape)"],["lock","🔒 Base verrouillée à vie"]].map(([k,l])=>`<button class="btn ${A[k]?"p":""}" data-at="${k}" style="justify-content:flex-start">${A[k]?"✅":"⬜"} ${l}</button>`).join("")}<button class="btn g" id="apc">▶ Reprendre</button></div>`;
       sp.querySelectorAll("[data-ac]").forEach(b=>b.onclick=()=>{ st.cash+=+b.dataset.ac; toast(`💵 +${nf(+b.dataset.ac)}`); save(); });
       $("aun").onclick=()=>{ const u=mkUnit(g,5); if(!placeMine(u)) return toast("Ta base est pleine"); toast(`${u.e} ${u.n} ajouté !`); save(); };
