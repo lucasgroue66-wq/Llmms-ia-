@@ -158,8 +158,11 @@ const CMDS = [
   { name: "ticket", description: "🎫 Bouton pour ouvrir un ticket d'aide (admins)", default_member_permissions: "16" },
   { name: "accueil", description: "👋 Message d'accueil avec questions (admins)", default_member_permissions: "32", options: [{ type: 8, name: "role", description: "Rôle donné à la fin (accès au serveur)", required: false }] },
   { name: "construire", description: "🏗️ L'IA construit ton serveur (salons, rôles) — admins", default_member_permissions: "32", options: [{ type: 3, name: "description", description: "Décris le serveur que tu veux", required: true }] },
-  { name: "nettoyer", description: "🗑️ Supprimer tous les salons ou rôles (admins) — irréversible", default_member_permissions: "8", options: [{ type: 3, name: "quoi", description: "Ce qu'il faut supprimer", required: true, choices: [{ name: "Tous les salons", value: "salons" }, { name: "Tous les rôles", value: "roles" }, { name: "TOUT (salons + rôles)", value: "tout" }] }] }
+  { name: "nettoyer", description: "🗑️ Supprimer tous les salons ou rôles (admins) — irréversible", default_member_permissions: "8", options: [{ type: 3, name: "quoi", description: "Ce qu'il faut supprimer", required: true, choices: [{ name: "Tous les salons", value: "salons" }, { name: "Tous les rôles", value: "roles" }, { name: "TOUT (salons + rôles)", value: "tout" }] }] },
+  { name: "creerroles", description: "🎭 Créer des rôles (noms séparés par des ;) — admins", default_member_permissions: "268435456", options: [{ type: 3, name: "noms", description: "Ex: Admin;Modo;VIP;Membre", required: true }] },
+  { name: "creersalons", description: "📁 Créer des salons (noms séparés par des ;) — admins", default_member_permissions: "16", options: [{ type: 3, name: "noms", description: "Ex: général;média;annonces", required: true }, { type: 3, name: "type", description: "Texte ou vocal", required: false, choices: [{ name: "Texte", value: "text" }, { name: "Vocal", value: "voice" }] }] }
 ];
+const RCOL = [0xe74c3c, 0xe67e22, 0xf1c40f, 0x2ecc71, 0x1abc9c, 0x3498db, 0x9b59b6, 0xe91e63, 0x95a5a6, 0x11806a];
 const QUESTIONS = [
   { q: "Tu connais LLMMS ? 👑", opts: ["Oui évidemment 🔥", "Un peu 👀", "Non c'est qui ?"] },
   { q: "Tu savais que LLMMS a quitté Discord pendant 1 an ? 😱", opts: ["Ouais le traître 😭", "Non sérieux ?! 😳"] },
@@ -366,6 +369,14 @@ async function run(i) {
     case "reglement": { const txt = String(opt(i, "texte")).slice(0, 3500), r = opt(i, "role");
       return { type: 4, data: { embeds: [{ title: "📜 Règlement", description: txt, color: COL.gold, footer: { text: "Clique sur J'accepte pour valider" } }], components: [{ type: 1, components: [{ type: 2, style: 3, label: "✅ J'accepte", custom_id: `accept:${r || "0"}` }] }] } }; }
     case "ticket": return { type: 4, data: { embeds: [{ title: "🎫 Support", description: "Besoin d'aide ? Clique sur le bouton pour ouvrir un salon privé avec le staff.", color: COL.info }], components: [{ type: 1, components: [{ type: 2, style: 3, label: "🎫 Ouvrir un ticket", custom_id: "ticket:open" }] }] } };
+    case "creerroles": { if (g === "dm") return eph("Seulement sur un serveur."); const noms = String(opt(i, "noms")).split(/[;,]/).map(s => s.trim()).filter(Boolean).slice(0, 10);
+      if (!noms.length) return eph("Donne au moins un nom (ex: Admin;Modo;Membre)."); let ok2 = 0, errs = 0;
+      for (let k2 = 0; k2 < noms.length; k2++) { try { await bot(`/guilds/${g}/roles`, "POST", { name: noms[k2].slice(0, 90), color: RCOL[k2 % RCOL.length], hoist: true }); ok2++; } catch { errs++; } }
+      return emb("🎭 Rôles créés", `✅ ${ok2} rôle(s) créé(s) : ${noms.join(", ")}${errs ? `\n⚠️ ${errs} échec(s) (permission « Gérer les rôles » ? rôle du bot assez haut ?)` : ""}`, COL.ok); }
+    case "creersalons": { if (g === "dm") return eph("Seulement sur un serveur."); const voice = opt(i, "type") === "voice", noms = String(opt(i, "noms")).split(/[;,]/).map(s => s.trim()).filter(Boolean).slice(0, 15);
+      if (!noms.length) return eph("Donne au moins un nom de salon."); const cl = s => s.toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "").slice(0, 90) || "salon"; let ok2 = 0, errs = 0;
+      for (const nm of noms) { try { await bot(`/guilds/${g}/channels`, "POST", { name: voice ? nm.slice(0, 90) : cl(nm), type: voice ? 2 : 0 }); ok2++; } catch { errs++; } }
+      return emb(voice ? "🔊 Salons vocaux créés" : "📁 Salons créés", `✅ ${ok2} salon(s) créé(s)${errs ? `\n⚠️ ${errs} échec(s) (permission « Gérer les salons » ?)` : ""}`, COL.ok); }
     case "nettoyer": { if (g === "dm") return eph("Seulement sur un serveur."); const quoi = opt(i, "quoi");
       let nc = 0, nr = 0; try { if (quoi !== "roles") nc = (await bot(`/guilds/${g}/channels`) || []).length; if (quoi !== "salons") nr = (await bot(`/guilds/${g}/roles`) || []).filter(x => x.name !== "@everyone" && !x.managed).length; } catch (e) { return eph("❌ " + e.message); }
       const parts = []; if (quoi !== "roles") parts.push(`**${nc}** salon(s)`); if (quoi !== "salons") parts.push(`**${nr}** rôle(s)`);
