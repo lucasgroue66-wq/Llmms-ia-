@@ -158,7 +158,7 @@ const CMDS = [
   { name: "ticket", description: "🎫 Bouton pour ouvrir un ticket d'aide (admins)", default_member_permissions: "16" },
   { name: "accueil", description: "👋 Message d'accueil avec questions (admins)", default_member_permissions: "32", options: [{ type: 8, name: "role", description: "Rôle donné à la fin (accès au serveur)", required: false }] },
   { name: "construire", description: "🏗️ L'IA construit ton serveur (salons, rôles) — admins", default_member_permissions: "32", options: [{ type: 3, name: "description", description: "Décris le serveur que tu veux", required: true }] },
-  { name: "nettoyer", description: "🗑️ Supprimer tous les salons ou rôles (admins) — irréversible", default_member_permissions: "8", options: [{ type: 3, name: "quoi", description: "Ce qu'il faut supprimer", required: true, choices: [{ name: "Tous les salons", value: "salons" }, { name: "Tous les rôles", value: "roles" }] }] }
+  { name: "nettoyer", description: "🗑️ Supprimer tous les salons ou rôles (admins) — irréversible", default_member_permissions: "8", options: [{ type: 3, name: "quoi", description: "Ce qu'il faut supprimer", required: true, choices: [{ name: "Tous les salons", value: "salons" }, { name: "Tous les rôles", value: "roles" }, { name: "TOUT (salons + rôles)", value: "tout" }] }] }
 ];
 const QUESTIONS = [
   { q: "Tu connais LLMMS ? 👑", opts: ["Oui évidemment 🔥", "Un peu 👀", "Non c'est qui ?"] },
@@ -367,9 +367,10 @@ async function run(i) {
       return { type: 4, data: { embeds: [{ title: "📜 Règlement", description: txt, color: COL.gold, footer: { text: "Clique sur J'accepte pour valider" } }], components: [{ type: 1, components: [{ type: 2, style: 3, label: "✅ J'accepte", custom_id: `accept:${r || "0"}` }] }] } }; }
     case "ticket": return { type: 4, data: { embeds: [{ title: "🎫 Support", description: "Besoin d'aide ? Clique sur le bouton pour ouvrir un salon privé avec le staff.", color: COL.info }], components: [{ type: 1, components: [{ type: 2, style: 3, label: "🎫 Ouvrir un ticket", custom_id: "ticket:open" }] }] } };
     case "nettoyer": { if (g === "dm") return eph("Seulement sur un serveur."); const quoi = opt(i, "quoi");
-      let n = 0; try { if (quoi === "salons") { const ch = await bot(`/guilds/${g}/channels`); n = (ch || []).length; } else { const rs = await bot(`/guilds/${g}/roles`); n = (rs || []).filter(x => x.name !== "@everyone" && !x.managed).length; } } catch (e) { return eph("❌ " + e.message); }
-      if (!n) return eph(`Rien à supprimer (${quoi}).`);
-      return { type: 4, data: { flags: 64, embeds: [{ title: "⚠️ Confirmation", description: `Tu es sur le point de supprimer **${n} ${quoi === "salons" ? "salon(s)" : "rôle(s)"}**.\n\n**C'est IRRÉVERSIBLE.** Tu es sûr ?`, color: COL.ko }], components: [{ type: 1, components: [{ type: 2, style: 4, label: "🗑️ Oui, tout supprimer", custom_id: `wipe:${quoi}:${uid}` }, { type: 2, style: 2, label: "Annuler", custom_id: "wipe:no" }] }] } }; }
+      let nc = 0, nr = 0; try { if (quoi !== "roles") nc = (await bot(`/guilds/${g}/channels`) || []).length; if (quoi !== "salons") nr = (await bot(`/guilds/${g}/roles`) || []).filter(x => x.name !== "@everyone" && !x.managed).length; } catch (e) { return eph("❌ " + e.message); }
+      const parts = []; if (quoi !== "roles") parts.push(`**${nc}** salon(s)`); if (quoi !== "salons") parts.push(`**${nr}** rôle(s)`);
+      if (!nc && !nr) return eph("Rien à supprimer.");
+      return { type: 4, data: { flags: 64, embeds: [{ title: "⚠️ Confirmation", description: `Tu es sur le point de supprimer ${parts.join(" et ")}.\n\n**C'est IRRÉVERSIBLE.** Tu es sûr ?`, color: COL.ko }], components: [{ type: 1, components: [{ type: 2, style: 4, label: "🗑️ Oui, tout supprimer", custom_id: `wipe:${quoi}:${uid}` }, { type: 2, style: 2, label: "Annuler", custom_id: "wipe:no" }] }] } }; }
     case "accueil": { const r = opt(i, "role") || "0";
       return { type: 4, data: { embeds: [{ title: "👋 Bienvenue sur le serveur !", description: "Avant d'entrer, réponds à quelques petites questions 👇\nC'est rapide et promis, y'a pas de mauvaise réponse 😄", color: COL.info }], components: [{ type: 1, components: [{ type: 2, style: 3, label: "▶️ Commencer", custom_id: `q:0:${r}` }] }] } }; }
   }
@@ -425,10 +426,11 @@ async function button(i) {
   if (kind === "wipe") {
     if (k === "no") return { type: 7, data: { embeds: [{ title: "❌ Annulé", description: "Rien n'a été supprimé.", color: COL.info }], components: [], flags: 64 } };
     if (j && j !== uid) return eph("Seul celui qui a lancé la commande peut confirmer 😉");
-    const quoi = k, fin = async () => { let done = 0, errs = 0;
-      try { if (quoi === "salons") { const ch = await bot(`/guilds/${g}/channels`); for (const c of (ch || [])) { try { await bot(`/channels/${c.id}`, "DELETE"); done++; } catch { errs++; } } }
-        else { const rs = await bot(`/guilds/${g}/roles`); for (const r of (rs || []).filter(x => x.name !== "@everyone" && !x.managed)) { try { await bot(`/guilds/${g}/roles/${r.id}`, "DELETE"); done++; } catch { errs++; } } } } catch {}
-      await fetch(`${API}/webhooks/${i.application_id}/${i.token}/messages/@original`, { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ embeds: [{ title: "🗑️ Nettoyage terminé", description: `${done} ${quoi === "salons" ? "salon(s)" : "rôle(s)"} supprimé(s)${errs ? `\n⚠️ ${errs} non supprimé(s) (le bot n'avait pas la permission ou le rôle était au-dessus du sien)` : ""}`, color: COL.ok }], components: [] }) }).catch(() => {}); };
+    const quoi = k, fin = async () => { let dc = 0, dr = 0, errs = 0;
+      try { if (quoi !== "roles") { const ch = await bot(`/guilds/${g}/channels`); for (const c of (ch || [])) { try { await bot(`/channels/${c.id}`, "DELETE"); dc++; } catch { errs++; } } }
+        if (quoi !== "salons") { const rs = await bot(`/guilds/${g}/roles`); for (const r of (rs || []).filter(x => x.name !== "@everyone" && !x.managed)) { try { await bot(`/guilds/${g}/roles/${r.id}`, "DELETE"); dr++; } catch { errs++; } } } } catch {}
+      const parts = []; if (quoi !== "roles") parts.push(`${dc} salon(s)`); if (quoi !== "salons") parts.push(`${dr} rôle(s)`);
+      await fetch(`${API}/webhooks/${i.application_id}/${i.token}/messages/@original`, { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ embeds: [{ title: "🗑️ Nettoyage terminé", description: `${parts.join(" et ")} supprimé(s)${errs ? `\n⚠️ ${errs} non supprimé(s) (permission manquante ou rôle au-dessus du bot)` : ""}`, color: COL.ok }], components: [] }) }).catch(() => {}); };
     const p = fin(); if (bg(p)) return { type: 7, data: { embeds: [{ title: "🗑️ Suppression en cours…", color: COL.ko }], components: [], flags: 64 } };
     await p; return { type: 7, data: { embeds: [{ title: "🗑️ Suppression en cours…", color: COL.ko }], components: [], flags: 64 } };
   }
