@@ -5470,7 +5470,7 @@ async function bxSell(o){ const b=BXR(); if(bxBanned(b)) return toast("⛔ Ton c
   appBxr(); }
 const bxSite=()=>{ try{ return JSON.parse(localStorage.getItem("bloxy1")||"null"); }catch(e){ return null; } };
 const bxSiteSave=o=>{ try{ localStorage.setItem("bloxy1",JSON.stringify(o)); return true; }catch(e){ return false; } };
-function bxOpenSite(){ const b=BXR(), o=bxSite(), gv0=b.gv; if(o&&!bxBanned(b)&&b.bux>0){ o.bux=(o.bux||0)+b.bux; if(bxSiteSave(o)){ b.bux=0; b.gv=0; save(); } }
+function bxOpenSite(){ save(); const b=BXR(), o=bxSite(), gv0=b.gv; if(o&&!bxBanned(b)&&b.bux>0){ o.bux=(o.bux||0)+b.bux; if(bxSiteSave(o)){ b.bux=0; b.gv=0; save(); } }
   const back=()=>{ const n=bxSite(); if(n&&!bxBanned(b)&&n.bux>0){ const q=n.bux; n.bux=0; if(bxSiteSave(n)){ b.bux+=q; b.gv=Math.min(b.bux,b.gv+gv0); save(); head(); } } };
   const ov=document.createElement("div"); ov.style.cssText="position:fixed;inset:0;z-index:9999;background:#0d0f14;display:flex;flex-direction:column";
   ov.innerHTML=`<div style="display:flex;align-items:center;gap:8px;padding:8px 10px;background:#151821;border-bottom:1px solid #2b3144"><b style="flex:1">🧱 BLOXY <span style="font-weight:400;font-size:12px;color:#9aa3b8">· tes Bloxbux sont partagés avec l'Empire</span></b><button class="btn gh" id="bxsx">✖ Revenir à l'Empire</button></div><iframe src="/bloxy.html" style="flex:1;border:0;width:100%"></iframe>`;

@@ -270,7 +270,7 @@ function render(){ head(); nav(); const m=$("main");
       <h2>👥 Amis (${nf(fr.length)})</h2><div class="row">${fr.slice(0,30).map((n,i)=>`<div class="friend"><div class="fav">${avatarSVG(npcAvatar(n),"head")}${i%3!==2?`<span class="dot ${i%3?"game":""}"></span>`:""}</div>${esc(n)}<div class="hint" style="font-size:10.5px">${i%3===0?"En ligne":i%3===1?"En jeu":"Hors ligne"}</div></div>`).join("")}</div>
       ${rec.length?`<h2>▶️ Continuer</h2><div class="row">${rec.map(gcard).join("")}</div>`:""}
       <h2>🔥 Populaire</h2><div class="row">${pop.slice(0,10).map(gcard).join("")}</div>
-      <h2>🎮 Tes créations${cert()}</h2><div class="row">${S.games.map(gcard).join("")}</div>
+      <h2>🎮 Tes créations${cert()}</h2><div class="row">${S.games.slice().sort((a,b)=>b.pl-a.pl).map(gcard).join("")}</div>
       <h2>✨ Recommandé pour toi</h2><div class="grid">${others.slice().sort(()=>Math.random()-.5).slice(0,8).map(gcard).join("")}</div>`; bindG(); if($("hreq")) $("hreq").onclick=()=>openBell("req"); }
   if(page==="disc"){ const list=allGames().filter(g=>dcat==="all"||g.g===dcat).sort((a,b)=>b.pl-a.pl);
     m.innerHTML=`<input id="srch" placeholder="🔍 Rechercher un jeu"><div class="chips" style="margin-top:10px">${[["all","⭐","Tout"],...GENRES].map(([k,i,l])=>`<button data-dc="${k}" class="${dcat===k?"on":""}">${i} ${l}</button>`).join("")}</div><div class="grid" id="dg" style="margin-top:14px">${list.map(gcard).join("")}</div>`;
@@ -309,7 +309,7 @@ function openItem(id){ const it=IT(id), o=S.inv.includes(id), R=RAR[it.r], left=
     if($("iw")) $("iw").onclick=()=>{ S.eq[it.t]=id; save(); close(); toast("🧍 Équipé !"); go("avatar"); };
     if($("ib")) $("ib").onclick=()=>{ if(S.bux<it.p) return toast("Pas assez de Bloxbux 💸"); S.bux-=it.p; S.inv.push(id); if(it.stock) S.sold[id]=(S.sold[id]||0)+1; if(it.r==="lim"&&!S.badges.includes("💎 Collectionneur")) S.badges.push("💎 Collectionneur"); log(`🛍️ Acheté ${it.n}`); save(); close(); toast(`✅ ${it.n} est à toi !`); render(); }; }); }
 function openGame(id){ const g=G(id); const by=g.mine?`${esc(S.user)}${cert()}`:esc(g.by);
-  modal(`<div class="thumb" style="aspect-ratio:16/9">${thumbSVG(g)}</div><b style="display:block;font-size:21px;margin-top:12px">${esc(g.n)}</b><div class="hint">par ${by} · ${GENRES.find(x=>x[0]===g.g)[1]} ${GENRES.find(x=>x[0]===g.g)[2]}</div>
+  modal(`<div class="thumb" style="aspect-ratio:16/9">${thumbSVG(g)}</div><b style="display:block;font-size:21px;margin-top:12px">${esc(g.n)}</b><div class="hint">par ${by} · ${GENRES.find(x=>x[0]===g.g)[1]} ${GENRES.find(x=>x[0]===g.g)[2]}${g.emp?" · 🧱 créé dans Bloxy Studio":""}${g.dev?" · 🛠️ en développement":""}</div>
     <button class="btn g w" id="gp" style="margin-top:14px;font-size:20px;padding:14px">▶ JOUER</button>
     <div class="stats" style="margin-top:14px"><div><b>${nf(g.pl)}</b><span>En ligne</span></div><div><b>${nf(g.vis)}</b><span>Visites</span></div><div><b>${nf(g.fav)}</b><span>Favoris</span></div><div><b>${g.like} %</b><span>J'aime</span></div></div>
     ${gpHTML(g)}<div class="card" style="margin-top:12px"><b>Description</b><p class="hint" style="margin:6px 0 0">${isSteal(g)?"Achète les unités qui passent sur le tapis rouge, pose-les dans ta base pour qu'elles te rapportent de l'argent… et vole celles des autres joueurs ! Verrouille ta base pour te protéger.":"Saute de plateforme en plateforme, évite le vide et ramasse les pièces. Chaque pièce te rapporte des Bloxbux."}${g.mine?" Un jeu créé par "+esc(S.user)+".":""}</p></div>
@@ -383,11 +383,20 @@ function adminPanel(){ const sel=t=>`<option value="${t}">`;
 $("tadm").onclick=admin;
 $("tbux").onclick=()=>modal(`<div style="text-align:center"><div style="width:60px;margin:0 auto">${COIN.replace('class="coin"','style="width:60px;height:60px"')}</div><div class="big" style="margin-top:8px">${nf(S.bux)} Bloxbux</div><p class="hint">${S.bux.toLocaleString("fr-FR")} exactement</p></div><div class="lbl">Derniers mouvements</div>${S.hist.length?S.hist.map(h=>`<div style="padding:6px 0;border-bottom:1px solid var(--line)">${esc(h)}</div>`).join(""):'<p class="hint">Rien pour l\'instant. Joue à un jeu pour gagner des Bloxbux !</p>'}<button class="btn w" id="bc" style="margin-top:12px">Fermer</button>`,()=>{ $("bc").onclick=close; });
 /* les joueurs en ligne bougent un peu */
-addEventListener("storage",e=>{ if(e.key!==KEY) return; try{ const n=JSON.parse(e.newValue||"null"); if(n&&n.v){ S=n; render(); } }catch(_){} });
-addEventListener("visibilitychange",()=>{ if(document.visibilityState!=="visible") return; try{ const n=JSON.parse(localStorage.getItem(KEY)||"null"); if(n&&n.v){ S=n; render(); } }catch(_){} });
+addEventListener("storage",e=>{ if(e.key==="empire_mil2"){ if(syncEmpire()){ save(); render(); } return; } if(e.key!==KEY) return; try{ const n=JSON.parse(e.newValue||"null"); if(n&&n.v){ S=n; render(); } }catch(_){} });
+addEventListener("visibilitychange",()=>{ if(document.visibilityState!=="visible") return; try{ const n=JSON.parse(localStorage.getItem(KEY)||"null"); if(n&&n.v){ S=n; } }catch(_){} try{ syncEmpire(); save(); }catch(_){} render(); });
 setInterval(()=>{ allGames().forEach(g=>{ g.pl=Math.max(0,Math.round(g.pl*rnd(.985,1.015))); }); },8000);
+/* ================= JEUX CRÉÉS DANS EMPIRE MILLIONNAIRE (Bloxy Studio / Bloxy Créateur) ================= */
+const EGEN=["obby","sim","tyc","hor","fight","brain","rp"], EEMO=["🏃","⚡","🏭","👻","⚔️","🧠","🌆"];
+function syncEmpire(){ let E=null; try{ E=JSON.parse(localStorage.getItem("empire_mil2")||"null"); }catch(e){} const L=E&&E.ph&&E.ph.blox; if(!Array.isArray(L)) return 0;
+  const ids=new Set(); let added=0;
+  L.forEach(x=>{ const id="e"+x.id; ids.add(id); const old=S.games.find(g=>g.id===id), map=x.map!=null;
+    const d={id,n:String(x.n||"Mon jeu").slice(0,28),g:map?"rp":(EGEN[x.g]||"obby"),e:map?"🗺️":(EEMO[x.g]||"🎮"),pl:Math.max(0,Math.round(x.pl||0)),like:Math.max(60,Math.min(98,60+Math.round((x.q||50)*.38))),mine:1,emp:1,dev:x.dev>0};
+    if(old){ Object.assign(old,d); old.vis=Math.max(old.vis||0,Math.round(x.vis||0)); old.fav=Math.max(old.fav||0,Math.round((x.vis||0)*.02)); }
+    else { S.games.push({...d,vis:Math.round(x.vis||0),fav:Math.round((x.vis||0)*.02)}); added++; if(S.notifs) notif("🧱",`Ton jeu « ${d.n} » créé dans Bloxy Studio est maintenant sur BLOXY !`); } });
+  const n0=S.games.length; S.games=S.games.filter(g=>!g.emp||ids.has(g.id)); return added+(n0-S.games.length); }
 /* ================= GAMEPASSES ================= */
-S.gp=S.gp||{}; S.steal=S.steal||{}; S.notifs=S.notifs||[]; S.req=S.req||[]; S.lastT=S.lastT||Date.now(); S.ms=S.ms||{};
+S.gp=S.gp||{}; S.steal=S.steal||{}; S.notifs=S.notifs||[]; S.req=S.req||[]; S.lastT=S.lastT||Date.now(); S.ms=S.ms||{}; syncEmpire();
 const isSteal=g=>g.g==="brain"||/^steal\b/i.test(g.n);
 const GP={obby:[["x2","💰","Pièces x2",150],["spd","⚡","Vitesse +",100],["jmp","🦘","Triple saut",120],["vip","👑","VIP (+20 s)",400]],steal:[["x2","💰","Argent x2",300],["spd","⚡","Vitesse +40 %",150],["lock","🔒","Verrou 60 s",200],["vip","👑","VIP (+2 places)",500]]};
 const hasGP=(g,k)=>!!g.mine||((S.gp[g.id]||[]).includes(k));
