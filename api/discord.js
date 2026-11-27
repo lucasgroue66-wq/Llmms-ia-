@@ -149,7 +149,8 @@ const CMDS = [
   { name: "rolereaction", description: "🎭 Message pour choisir un rôle (admins)", default_member_permissions: "268435456", options: [{ type: 8, name: "role", description: "Le rôle à distribuer", required: true }, { type: 3, name: "nom", description: "Texte du bouton", required: false }, { type: 3, name: "message", description: "Texte au-dessus", required: false }] },
   { name: "reglement", description: "📜 Règlement avec bouton J'accepte (admins)", default_member_permissions: "8192", options: [{ type: 3, name: "texte", description: "Le règlement", required: true }, { type: 8, name: "role", description: "Rôle donné à l'acceptation", required: false }] },
   { name: "ticket", description: "🎫 Bouton pour ouvrir un ticket d'aide (admins)", default_member_permissions: "16" },
-  { name: "accueil", description: "👋 Message d'accueil avec questions (admins)", default_member_permissions: "32", options: [{ type: 8, name: "role", description: "Rôle donné à la fin (accès au serveur)", required: false }] }
+  { name: "accueil", description: "👋 Message d'accueil avec questions (admins)", default_member_permissions: "32", options: [{ type: 8, name: "role", description: "Rôle donné à la fin (accès au serveur)", required: false }] },
+  { name: "construire", description: "🏗️ L'IA construit ton serveur (salons, rôles) — admins", default_member_permissions: "32", options: [{ type: 3, name: "description", description: "Décris le serveur que tu veux", required: true }] }
 ];
 const QUESTIONS = [
   { q: "Tu connais LLMMS ? 👑", opts: ["Oui évidemment 🔥", "Un peu 👀", "Non c'est qui ?"] },
@@ -174,7 +175,7 @@ async function run(i) {
       "**🎉 Serveur** : `/sondage` `/ouinon` `/giveaway` `/tirage` `/say` `/embed` `/compteur` `/avatar` `/userinfo` `/serveur`",
       "**🏅 Profil** : `/niveau` `/rank` `/succes`",
       "**🛡️ Modo** : `/clear` `/kick` `/slowmode` `/lock` `/unlock` `/addrole` `/removerole`",
-      "**🏠 Gestion** : `/membres` `/roles` `/boosts` `/annonce` `/countdown` `/rolereaction` `/reglement` `/ticket`",
+      "**🏠 Gestion** : `/membres` `/roles` `/boosts` `/annonce` `/countdown` `/rolereaction` `/reglement` `/ticket` `/accueil` `/construire`",
       "**🎮 BLOXY** : `/bloxy` `/profil` `/classement`",
       "**🛡️ Modération** : `/warn` `/warns` `/mute` `/unmute` `/ban`"].join("\n"), COL.info, { footer: { text: "Créé avec llmms ia" } });
     case "daily": {
@@ -409,6 +410,26 @@ async function button(i) {
     const emb0 = i.message.embeds[0], vals = Object.values(votes), oui = vals.filter(x => x === 0).length, non = vals.filter(x => x === 1).length, total = oui + non;
     const line = (lbl, n) => { const bar = Math.round((total ? n / total : 0) * 10); return `${lbl}\n\`${"█".repeat(bar)}${"░".repeat(10 - bar)}\` ${n} (${Math.round((total ? n / total : 0) * 100)}%)`; };
     return { type: 7, data: { embeds: [{ ...emb0, description: `${line("👍 **Oui**", oui)}\n\n${line("👎 **Non**", non)}`, footer: { text: `${total} vote${total > 1 ? "s" : ""}` } }] } }; }
+  if (kind === "build") {
+    if (k === "no") return { type: 7, data: { embeds: [{ title: "❌ Annulé", description: "Aucun changement n'a été fait.", color: COL.ko }], components: [] } };
+    let plan; try { const [v] = await kv([["GET", `llmms:dc:plan:${g}:${uid}`]]); plan = JSON.parse(v || "null"); } catch {}
+    if (!plan) return eph("Plan expiré ou ce n'est pas le tien. Relance `/construire`.");
+    if (plan.by && plan.by !== uid) return eph("Seul celui qui a lancé la commande peut confirmer 😉");
+    await kv([["DEL", `llmms:dc:plan:${g}:${uid}`]]);
+    const hex = c => { const n = parseInt(String(c || "").replace("#", ""), 16); return Number.isFinite(n) ? n & 0xffffff : 0; };
+    const clean2 = s => String(s || "salon").toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "").slice(0, 90) || "salon";
+    let roles = 0, chans = 0, errs = 0;
+    const fin = async () => {
+      for (const r of (plan.roles || []).slice(0, 6)) { try { await bot(`/guilds/${g}/roles`, "POST", { name: String(r.name || "role").slice(0, 90), color: hex(r.color), hoist: true }); roles++; } catch { errs++; } }
+      for (const cat of (plan.categories || []).slice(0, 6)) { let parent = null;
+        try { const c = await bot(`/guilds/${g}/channels`, "POST", { name: String(cat.name || "catégorie").slice(0, 90), type: 4 }); parent = c.id; } catch { errs++; }
+        for (const ch of (cat.channels || []).slice(0, 5)) { try { await bot(`/guilds/${g}/channels`, "POST", { name: clean2(ch.name), type: ch.type === "voice" ? 2 : 0, parent_id: parent }); chans++; } catch { errs++; } }
+      }
+      await fetch(`${API}/webhooks/${i.application_id}/${i.token}/messages/@original`, { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ embeds: [{ title: "✅ Serveur construit !", description: `🎭 ${roles} rôle(s) créé(s)\n📁 ${chans} salon(s) créé(s)${errs ? `\n⚠️ ${errs} erreur(s) (permissions ?)` : ""}`, color: COL.ok }], components: [] }) });
+    };
+    const p = fin(); if (bg(p)) return { type: 7, data: { embeds: [{ title: "🏗️ Construction en cours…", description: "Je crée les rôles et les salons, patiente quelques secondes ⏳", color: COL.info }], components: [] } };
+    await p; return { type: 7, data: { embeds: [{ title: "🏗️ Construction en cours…", color: COL.info }], components: [] } };
+  }
   if (kind === "q") { const step = +k, role = j;
     if (step === 0) return { type: 4, data: qStep(0, role) };
     if (step < QUESTIONS.length) return { type: 7, data: qStep(step, role) };
@@ -503,6 +524,23 @@ export default async function handler(req, res) {
         return res.json({ type: 4, data: { embeds: [{ title: "🎉 Gagné !", description: `C'était bien **${st.n}** ! Trouvé en **${st.t}** essai(s).\n+300 ${PIECE} (solde : ${nf(u.c)})`, color: COL.ok }] } }); }
       await kv([["SET", `llmms:dc:dev:${g2}:${uid}`, JSON.stringify(st), "EX", 600]]);
       return res.json({ type: 4, data: { embeds: [{ title: "🔢 Devine le nombre", description: `**${guess}** → c'est ${guess < st.n ? "plus grand ⬆️" : "plus petit ⬇️"}\nEssai n°${st.t}`, color: COL.gold }], components: [{ type: 1, components: [{ type: 2, style: 1, label: "✍️ Réessayer", custom_id: `dev:${uid}` }] }] } }); }
+    if (i.type === 2 && i.data.name === "construire") {
+      const g2 = i.guild_id, uid2 = (i.member?.user || i.user)?.id, desc = String(opt(i, "description") || "").slice(0, 300);
+      if (!g2) return res.json(eph("Cette commande marche seulement dans un serveur."));
+      const build = async () => { let plan;
+        try { const t = await gemini(`Tu conçois la structure d'un serveur Discord. Réponds UNIQUEMENT en JSON, sans texte autour : {"roles":[{"name":"...","color":"#xxxxxx"}],"categories":[{"name":"...","channels":[{"name":"...","type":"text"}]}]}.
+Règles : 3 à 6 rôles (du plus haut au plus bas, ex Admin, Modo, Membre), couleurs en hex. 3 à 6 catégories. Chaque catégorie 2 à 5 salons. type = "text" ou "voice". Noms de salons courts en minuscules avec des tirets (ex: "general", "recherche-coequipiers"). Pas d'emojis dans les noms de salons. Maximum 16 salons au total. En français.`, null, "Tu renvoies uniquement du JSON valide.");
+          const m = t.match(/\{[\s\S]*\}/); plan = JSON.parse(m[0]);
+        } catch (e) { return { embeds: [{ title: "😵 Erreur", description: "L'IA n'a pas réussi à faire le plan : " + e.message, color: COL.ko }] }; }
+        plan.roles = (plan.roles || []).slice(0, 6); plan.categories = (plan.categories || []).slice(0, 6);
+        let nch = 0; plan.categories.forEach(c => { c.channels = (c.channels || []).slice(0, 5).filter(() => nch++ < 16); });
+        plan.by = uid2;
+        await kv([["SET", `llmms:dc:plan:${g2}:${uid2}`, JSON.stringify(plan), "EX", 900]]);
+        const preview = plan.categories.map(c => `**📁 ${c.name}**\n` + (c.channels || []).map(ch => `  ${ch.type === "voice" ? "🔊" : "#"} ${ch.name}`).join("\n")).join("\n\n");
+        return { embeds: [{ title: "🏗️ Aperçu du serveur", description: `🎭 **Rôles :** ${plan.roles.map(r => r.name).join(", ") || "aucun"}\n\n${preview}`.slice(0, 3800), color: COL.info, footer: { text: "Confirme pour tout créer sur le serveur" } }], components: [{ type: 1, components: [{ type: 2, style: 3, label: "✅ Construire", custom_id: "build:go" }, { type: 2, style: 4, label: "❌ Annuler", custom_id: "build:no" }] }] };
+      };
+      return await late(build(), 5);
+    }
     if (i.type === 2 && ["pickup", "verite", "action", "complot", "insulte"].includes(i.data.name)) {
       const n3 = i.data.name;
       const build = async () => { let txt, title;
