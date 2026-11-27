@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>DROPSHIP TYCOON — deviens un empereur du e-commerce (LLMMS)</title>
+<meta name="description" content="DROPSHIP TYCOON : lance ta boutique, trouve des produits gagnants, scale tes pubs et deviens millionnaire. Un jeu de llmms ia.">
+<link rel="icon" href="/favicon.svg">
+<style>
+:root{--bg:#0a0f1c;--bg2:#121a2e;--card:#17213a;--card2:#1f2b49;--line:#2a3a5e;--tx:#eef3ff;--mut:#93a3c4;--a1:#6d5dfc;--a2:#28e0b0;--gold:#ffc53d;--ok:#22c55e;--ko:#ef4444}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent;margin:0}
+html,body{background:var(--bg);color:var(--tx);font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+body{padding-bottom:calc(76px + env(safe-area-inset-bottom))}
+button{font:inherit;color:inherit;border:0;cursor:pointer;background:none}
+input{font:inherit;color:var(--tx);background:var(--bg2);border:1px solid var(--line);border-radius:10px;padding:11px;width:100%}
+.top{position:sticky;top:0;z-index:20;background:rgba(10,15,28,.92);backdrop-filter:blur(10px);border-bottom:1px solid var(--line)}
+.top .in{max-width:720px;margin:0 auto;display:flex;align-items:center;gap:10px;padding:9px 14px}
+.logo{font-weight:900;font-size:18px;letter-spacing:.5px;background:linear-gradient(90deg,var(--a1),var(--a2));-webkit-background-clip:text;background-clip:text;color:transparent}
+.grow{flex:1}
+.pill{display:flex;align-items:center;gap:5px;background:var(--card);border:1px solid var(--line);border-radius:999px;padding:5px 12px;font-weight:800;font-size:14px}
+.ibtn{width:38px;height:38px;border-radius:11px;background:var(--card);border:1px solid var(--line);display:grid;place-items:center;font-size:18px}
+.wrap{max-width:720px;margin:0 auto;padding:14px}
+.nav{position:fixed;bottom:0;left:0;right:0;z-index:20;display:flex;background:rgba(18,26,46,.97);border-top:1px solid var(--line);padding:6px 4px calc(6px + env(safe-area-inset-bottom))}
+.nav button{flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;font-size:11px;color:var(--mut);padding:4px 0}
+.nav button span{font-size:21px}.nav button.on{color:var(--tx)}.nav button.on span{filter:drop-shadow(0 0 6px var(--a2))}
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:14px;margin-bottom:12px}
+.hint{color:var(--mut);font-size:13px}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:7px;padding:12px 16px;border-radius:12px;font-weight:800;background:var(--card2);border:1px solid var(--line)}
+.btn.p{background:linear-gradient(135deg,var(--a1),#8b7dff);border:0}
+.btn.g{background:var(--ok);border:0;color:#04130a}
+.btn.o{background:linear-gradient(135deg,#f59e0b,#f97316);border:0}
+.btn.w{width:100%}.btn:disabled{opacity:.45}
+.kpi{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.kpi>div{background:var(--bg2);border-radius:12px;padding:10px}
+.kpi b{display:block;font-size:17px}.kpi span{font-size:12px;color:var(--mut)}
+.big{font-size:26px;font-weight:900}
+.ad{width:100%;padding:20px;border-radius:20px;font-size:19px;font-weight:900;background:linear-gradient(135deg,var(--a1),var(--a2));border:0;box-shadow:0 10px 30px #6d5dfc44;position:relative}
+.ad:active{transform:scale(.98)}
+.up{display:flex;align-items:center;gap:11px;padding:11px;border-radius:13px;background:var(--bg2);margin-bottom:8px}
+.up .ic{font-size:26px}.up .t{font-weight:700}.up .d{font-size:12px;color:var(--mut)}
+.lv{font-size:11px;color:var(--gold);font-weight:800}
+.tag{display:inline-block;font-size:11px;font-weight:800;padding:2px 8px;border-radius:999px;background:#ffffff14}
+.prod{display:flex;align-items:center;gap:11px;padding:11px;border-radius:13px;background:var(--bg2);margin-bottom:8px}
+.prod .e{font-size:30px}
+.prod.sel{outline:2px solid var(--a2)}
+.feed{max-height:260px;overflow-y:auto}
+.ord{display:flex;gap:9px;align-items:center;padding:7px 0;border-bottom:1px solid var(--line);font-size:13px}
+.toast{position:fixed;left:50%;bottom:92px;transform:translateX(-50%) translateY(20px);background:#fff;color:#111;font-weight:800;padding:10px 16px;border-radius:12px;opacity:0;transition:.25s;z-index:60;pointer-events:none;max-width:92vw;text-align:center}
+.toast.on{opacity:1;transform:translateX(-50%) translateY(0)}
+.modal{position:fixed;inset:0;z-index:80;background:#000b;display:none;align-items:center;justify-content:center;padding:16px}
+.modal.on{display:flex}
+.sheet{width:100%;max-width:440px;background:var(--bg2);border:1px solid var(--line);border-radius:20px;padding:18px;animation:pop .2s}
+@keyframes pop{from{transform:scale(.92);opacity:0}}
+.bar{height:9px;border-radius:9px;background:var(--line);overflow:hidden;margin-top:6px}
+.bar>div{height:100%;background:linear-gradient(90deg,var(--a1),var(--gold))}
+.float{position:absolute;font-weight:900;pointer-events:none;animation:fl 1s ease-out forwards;z-index:30}
+@keyframes fl{to{transform:translateY(-55px);opacity:0}}
+.rank{display:flex;align-items:center;gap:10px;padding:9px;border-radius:12px;background:var(--bg2);margin-bottom:7px}
+</style>
+</head>
+<body>
+<div class="top"><div class="in"><div class="logo">📦 DROPSHIP TYCOON</div><div class="grow"></div><button class="pill" id="tcash"></button><button class="ibtn" id="tadm" title="Panel admin">🛠️</button></div></div>
+<main class="wrap" id="main"></main>
+<nav class="nav" id="nav"></nav>
+<div class="modal" id="modal"><div class="sheet" id="sheet"></div></div>
+<div class="toast" id="toast"></div>
+<script>
+(function(){
+const $=id=>document.getElementById(id), KEY="dropship_llmms1";
+const rnd=(a,b)=>a+Math.random()*(b-a), ri=(a,b)=>Math.floor(rnd(a,b+1)), pick=a=>a[Math.floor(Math.random()*a.length)];
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+function nf(n){ n=Math.floor(n||0); const a=Math.abs(n); if(a>=1e12)return(n/1e12).toFixed(2).replace(/\.?0+$/,"")+" T"; if(a>=1e9)return(n/1e9).toFixed(2).replace(/\.?0+$/,"")+" Md"; if(a>=1e6)return(n/1e6).toFixed(2).replace(/\.?0+$/,"")+" M"; if(a>=1e3)return(n/1e3).toFixed(1).replace(/\.0$/,"")+" k"; return n.toLocaleString("fr-FR"); }
+const eur=n=>nf(n)+" €";
+
+const PRODUCTS=[
+ {id:"led",e:"💡",n:"Lampe LED galaxie",cost:4,price:24,hype:1,unlock:0},
+ {id:"watch",e:"⌚",n:"Montre connectée",cost:8,price:39,hype:1.1,unlock:0},
+ {id:"pop",e:"🧸",n:"Peluche anti-stress",cost:3,price:19,hype:1.2,unlock:500},
+ {id:"led2",e:"🔆",n:"Néon mural perso",cost:12,price:55,hype:1.15,unlock:2000},
+ {id:"mini",e:"🎧",n:"Écouteurs sans fil",cost:9,price:44,hype:1.3,unlock:8000},
+ {id:"proj",e:"📽️",n:"Mini projecteur",cost:22,price:99,hype:1.25,unlock:30000},
+ {id:"drone",e:"🚁",n:"Drone caméra",cost:35,price:149,hype:1.4,unlock:1e5},
+ {id:"mas",e:"💆",n:"Pistolet de massage",cost:18,price:89,hype:1.35,unlock:4e5},
+ {id:"ring",e:"💍",n:"Bague connectée",cost:28,price:159,hype:1.5,unlock:15e5},
+ {id:"vr",e:"🥽",n:"Casque VR",cost:60,price:299,hype:1.6,unlock:6e6}
+];
+const RANKS=[[0,"Débutant","🌱"],[1e3,"Première vente","🥉"],[1e4,"Ça décolle","🥈"],[1e5,"6 chiffres","🥇"],[1e6,"Millionnaire","💎"],[1e7,"Empire e-commerce","🏆"],[1e8,"Mogul mondial","👑"]];
+const rankOf=r=>{ let x=RANKS[0]; for(const k of RANKS) if(r>=k[0]) x=k; return x; };
+const nextRank=r=>RANKS.find(x=>x[0]>r);
+
+const UPG={
+ ad:{ic:"📢",n:"Ciblage pub",d:"+ de visiteurs par pub",base:80,mul:1.55},
+ site:{ic:"🖥️",n:"Design du site",d:"+ de conversion",base:150,mul:1.6},
+ supp:{ic:"🏭",n:"Meilleur fournisseur",d:"Coût produit -",base:300,mul:1.65},
+ sav:{ic:"🎧",n:"Service client",d:"- de remboursements",base:250,mul:1.6},
+ brand:{ic:"✨",n:"Image de marque",d:"+ de ventes & prix",base:600,mul:1.7},
+ auto:{ic:"🤖",n:"Pub automatique",d:"Lance des pubs tout seul",base:1200,mul:1.8},
+ influ:{ic:"🌟",n:"Influenceurs",d:"Gros boost de trafic",base:5000,mul:1.85}
+};
+
+function fresh(){ return {v:1,cash:200,rev:0,orders:0,refunds:0,rep:50,prod:"led",owned:["led","watch"],up:{},feed:[],prestige:0,start:Date.now(),last:Date.now(),ms:{},badges:[]}; }
+let S; try{ S=JSON.parse(localStorage.getItem(KEY)||"null"); }catch(e){ S=null; }
+if(!S||!S.v) S=fresh();
+function save(){ try{ localStorage.setItem(KEY,JSON.stringify(S)); }catch(e){} }
+const prod=id=>PRODUCTS.find(p=>p.id===id);
+function lvl(k){ return S.up[k]||0; }
+function cost(k){ const u=UPG[k]; return Math.floor(u.base*Math.pow(u.mul,lvl(k))); }
+const pm=1+S.prestige*.5;
+function adPower(){ return (1+lvl("ad")*.4)*(1+lvl("influ")*1.2); }
+function conv(){ return Math.min(.4,0.055+lvl("site")*.013+lvl("brand")*.008)*(1+S.rep/200); }
+function supMult(){ return Math.max(.3,1-lvl("supp")*.08); }
+function refundRate(){ return Math.max(.01,0.08-lvl("sav")*.012-S.rep/2000); }
+function priceMult(){ return 1+lvl("brand")*.06; }
+function adCost(){ return Math.max(15,Math.round(25*Math.pow(1.1,S.orders/35))); }
+
+function toast(t){ const e=$("toast"); e.textContent=t; e.classList.add("on"); clearTimeout(toast.t); toast.t=setTimeout(()=>e.classList.remove("on"),2000); }
+
+function runAd(ev,budget){ const pr=prod(S.prod); if(!pr) return; const b=budget||adCost(); if(S.cash<b){ toast("Pas assez de cash pour la pub 💸"); return; }
+ S.cash-=b;
+ const visitors=Math.round(b*rnd(.85,1.25)*adPower()*pm*1.35);
+ let orders=Math.round(visitors*conv()*pr.hype);
+ let viral=1,tag=""; const r=Math.random(); if(r<.05){ viral=rnd(3,8); tag="🔥 VIRAL"; } else if(r>.9){ viral=rnd(.3,.6); tag="📉 flop pub"; }
+ orders=Math.max(0,Math.round(orders*viral));
+ const unit=(pr.price*priceMult())-(pr.cost*supMult())-2; // -2 frais de port
+ let profit=orders*unit; const refs=Math.round(orders*refundRate()); profit-=refs*(pr.price*priceMult());
+ S.cash+=orders*pr.price*priceMult()-refs*pr.price*priceMult(); S.rev+=orders*pr.price*priceMult(); S.cash-=orders*(pr.cost*supMult()+2); S.orders+=orders; S.refunds+=refs;
+ S.rep=Math.min(100,Math.max(0,S.rep+(refs>orders*.1?-1:.3)));
+ S.feed.unshift({e:pr.e,n:pr.n,o:orders,p:Math.round(orders*unit-refs*pr.price*priceMult()),tag,ref:refs}); S.feed=S.feed.slice(0,25);
+ if(ev){ const f=document.createElement("div"); f.className="float"; const rc=ev.target.getBoundingClientRect(); f.style.left=(rc.left+rc.width/2)+"px"; f.style.top=rc.top+"px"; f.style.color=profit>=0?"#28e0b0":"#ef4444"; f.textContent=(profit>=0?"+":"")+eur(profit); document.body.appendChild(f); setTimeout(()=>f.remove(),1000); }
+ checkRank(); maybeEvent(); save(); if(page==="home") renderHome(); else head();
+}
+
+function checkRank(){ const r=rankOf(S.rev); if(S.ms.rank!==r[0]&&S.rev>=r[0]&&r[0]>0){ S.ms.rank=r[0]; const bonus=r[0]*.1; S.cash+=bonus; if(!S.badges.includes(r[1])) S.badges.push(r[1]);
+  pop(`<div style="text-align:center"><div style="font-size:60px">${r[2]}</div><b style="font-size:22px">${r[1]} !</b><p class="hint">Tu as fait <b>${eur(r[0])}</b> de chiffre d'affaires 🎉</p><div class="big" style="color:var(--gold)">+${eur(bonus)}</div><button class="btn p w" id="rok" style="margin-top:14px">Let's go 🔥</button></div>`,()=>{ $("rok").onclick=close; }); } }
+
+const EVENTS=[
+ {t:"🔥 Produit tendance",d:"Ton produit devient à la mode !",opt:["Profiter (pub offerte)","OK"],run:i=>{ if(i===0){ runAd(null,adCost()*2); return "🚀 Grosse vague de commandes !"; } return ""; }},
+ {t:"📦 Fournisseur en rupture",d:"Ton fournisseur est en rupture de stock…",opt:["Payer en express","Attendre"],run:i=>{ if(i===0){ const c=S.cash*.05; S.cash-=c; return `💸 -${eur(c)} mais tu continues à vendre`; } S.rep=Math.max(0,S.rep-3); return "😬 Des clients attendent, ta réputation baisse"; }},
+ {t:"😡 Client mécontent",d:"Un client laisse un avis 1 étoile !",opt:["Rembourser + excuses","Ignorer"],run:i=>{ if(i===0){ const c=S.cash*.02; S.cash-=c; S.rep=Math.min(100,S.rep+4); return "🙏 Client calmé, réputation +"; } S.rep=Math.max(0,S.rep-5); return "⭐ Mauvais avis, réputation -"; }},
+ {t:"🤝 Deal fournisseur",d:"Un fournisseur propose des prix cassés !",opt:["Accepter","Refuser"],run:i=>{ if(i===0){ S.ms.deal=Date.now(); return "📉 Tes coûts baissent un moment !"; } return ""; }}
+];
+function maybeEvent(){ if(S.orders<8) return; if(Math.random()>.08) return; const ev=pick(EVENTS);
+ pop(`<b style="font-size:19px">${ev.t}</b><p>${ev.d}</p><div style="display:grid;gap:8px;margin-top:12px">${ev.opt.map((o,j)=>`<button class="btn ${j===0?"p":""}" data-ev="${j}">${o}</button>`).join("")}</div>`,()=>{ document.querySelectorAll("[data-ev]").forEach(b=>b.onclick=()=>{ const m=ev.run(+b.dataset.ev); save(); close(); if(m)toast(m); if(page==="home")renderHome(); else head(); }); });
+}
+
+let page="home";
+const NAV=[["home","🏪","Boutique"],["prods","📦","Produits"],["shop","⚙️","Améliorer"],["stats","📊","Stats"]];
+function head(){ $("tcash").innerHTML="💰 "+eur(S.cash); }
+function nav(){ $("nav").innerHTML=NAV.map(([k,i,l])=>`<button data-nv="${k}" class="${page===k?"on":""}"><span>${i}</span>${l}</button>`).join(""); document.querySelectorAll("[data-nv]").forEach(b=>b.onclick=()=>{ page=b.dataset.nv; render(); }); }
+function render(){ head(); nav(); if(page==="home")renderHome(); if(page==="prods")renderProds(); if(page==="shop")renderShop(); if(page==="stats")renderStats(); }
+
+function renderHome(){ const pr=prod(S.prod), r=rankOf(S.rev), nx=nextRank(S.rev), ac=adCost();
+ $("main").innerHTML=`<div class="card" style="background:linear-gradient(135deg,#1e2a4d,#0a0f1c)">
+   <div style="display:flex;align-items:center;gap:12px"><div style="font-size:36px">${pr?pr.e:"📦"}</div><div class="grow"><b style="font-size:16px">Produit vedette</b><div class="hint">${pr?esc(pr.n)+" · marge "+eur(pr.price-pr.cost):"Choisis un produit"}</div></div><div style="text-align:right"><div class="hint">${r[2]} ${r[1]}</div>${S.prestige?`<div class="tag">⭐${S.prestige}</div>`:""}</div></div>
+   <div class="kpi" style="margin-top:10px"><div><span>📈 Chiffre d'affaires</span><b>${eur(S.rev)}</b></div><div><span>📦 Commandes</span><b>${nf(S.orders)}</b></div><div><span>⭐ Réputation</span><b>${Math.round(S.rep)}%</b></div><div><span>↩️ Remboursements</span><b>${nf(S.refunds)}</b></div></div>
+   ${nx?`<div class="hint" style="margin-top:8px">Prochain palier : ${nx[2]} ${nx[1]} (${eur(nx[0])})</div><div class="bar"><div style="width:${Math.min(100,S.rev/nx[0]*100)}%"></div></div>`:`<div class="hint" style="margin-top:8px">👑 Palier max !</div>`}</div>
+  <button class="ad" id="runad">📢 Lancer une pub (${eur(ac)})<div class="hint" style="color:#fff;opacity:.85;font-weight:600;margin-top:3px">≈ ${nf(ac*adPower()*pm*1.35*conv()*(pr?pr.hype:1))} commandes</div></button>
+  <div class="hint" style="text-align:center;margin:8px 0">${lvl("auto")?"🤖 Tes pubs automatiques tournent toutes seules":"💡 Clique pour transformer ta pub en commandes"}</div>
+  <div class="card" style="margin-top:4px"><b>🧾 Dernières commandes</b><div class="feed" style="margin-top:6px">${S.feed.length?S.feed.map(f=>`<div class="ord"><span style="font-size:20px">${f.e}</span><div class="grow">${f.o} ventes de ${esc(f.n)} ${f.tag?`<span class="tag">${f.tag}</span>`:""}${f.ref?`<span class="hint"> · ${f.ref}↩️</span>`:""}</div><b style="color:${f.p>=0?"var(--ok)":"var(--ko)"}">${f.p>=0?"+":""}${eur(f.p)}</b></div>`).join(""):`<p class="hint">Lance ta première pub pour avoir des commandes !</p>`}</div></div>`;
+ $("runad").onclick=e=>runAd(e);
+}
+
+function renderProds(){ $("main").innerHTML=`<div class="card"><b>📦 Catalogue de produits</b><p class="hint">Choisis le produit que ta boutique met en avant. Débloque-en des plus chers (plus de marge) en montant ton chiffre d'affaires.</p></div>
+  ${PRODUCTS.map(p=>{ const own=S.owned.includes(p.id), can=S.rev>=p.unlock; return `<div class="prod ${S.prod===p.id?"sel":""}"><div class="e">${p.e}</div><div class="grow"><div style="font-weight:700">${esc(p.n)}</div><div class="hint">Coût ${eur(p.cost)} · Vente ${eur(p.price)} · marge ${eur(p.price-p.cost)} · hype x${p.hype}</div></div>${own?(S.prod===p.id?`<span class="tag" style="background:#28e0b033;color:#28e0b0">✔ En vente</span>`:`<button class="btn g" data-sel="${p.id}" style="padding:8px 12px">Vendre</button>`):can?`<button class="btn" data-buy="${p.id}" style="padding:8px 12px">Importer ${eur(p.cost*20)}</button>`:`<span class="hint">🔒 ${eur(p.unlock)} de CA</span>`}</div>`; }).join("")}`;
+ document.querySelectorAll("[data-sel]").forEach(b=>b.onclick=()=>{ S.prod=b.dataset.sel; save(); toast("Produit mis en avant !"); renderProds(); });
+ document.querySelectorAll("[data-buy]").forEach(b=>b.onclick=()=>{ const p=prod(b.dataset.buy),c=p.cost*20; if(S.cash<c) return toast("Pas assez de cash 💸"); S.cash-=c; S.owned.push(p.id); S.prod=p.id; save(); head(); toast(`${p.e} ${p.n} importé !`); renderProds(); });
+}
+
+function renderShop(){ $("main").innerHTML=`<div class="card"><b>⚙️ Améliore ta boutique</b><div class="kpi" style="margin-top:8px"><div><span>Conversion</span><b>${(conv()*100).toFixed(1)}%</b></div><div><span>Coût fournisseur</span><b>-${Math.round((1-supMult())*100)}%</b></div><div><span>Remboursements</span><b>${(refundRate()*100).toFixed(1)}%</b></div><div><span>Puissance pub</span><b>x${adPower().toFixed(1)}</b></div></div></div>
+  ${Object.keys(UPG).map(k=>{ const u=UPG[k],c=cost(k),can=S.cash>=c; return `<div class="up"><div class="ic">${u.ic}</div><div class="grow"><div class="t">${u.n} <span class="lv">Niv. ${lvl(k)}</span></div><div class="d">${u.d}</div></div><button class="btn ${can?"g":""}" data-up="${k}" ${can?"":"disabled"} style="padding:9px 12px">${eur(c)}</button></div>`; }).join("")}`;
+ document.querySelectorAll("[data-up]").forEach(b=>b.onclick=()=>{ const k=b.dataset.up,c=cost(k); if(S.cash<c) return; S.cash-=c; S.up[k]=lvl(k)+1; save(); toast(`${UPG[k].ic} ${UPG[k].n} niveau ${lvl(k)} !`); renderShop(); head(); });
+}
+
+function renderStats(){ const days=Math.max(1,Math.round((Date.now()-S.start)/864e5));
+ $("main").innerHTML=`<div class="card"><b>📊 Ton business</b><div class="kpi" style="margin-top:8px"><div><span>Chiffre d'affaires</span><b>${eur(S.rev)}</b></div><div><span>Cash actuel</span><b>${eur(S.cash)}</b></div><div><span>Commandes</span><b>${nf(S.orders)}</b></div><div><span>Remboursements</span><b>${nf(S.refunds)}</b></div><div><span>Réputation</span><b>${Math.round(S.rep)}%</b></div><div><span>Produits débloqués</span><b>${S.owned.length}/${PRODUCTS.length}</b></div></div></div>
+  <div class="card"><b>🏆 Paliers</b><div style="margin-top:8px">${RANKS.map(x=>`<div class="rank" style="${S.rev>=x[0]?"":"opacity:.45"}"><div style="font-size:22px">${x[2]}</div><div class="grow"><b>${x[1]}</b><div class="hint">${eur(x[0])} de CA</div></div>${S.rev>=x[0]?'<span class="tag" style="background:#22c55e33;color:#4ade80">✔</span>':"🔒"}</div>`).join("")}</div></div>
+  <div class="card"><b>⭐ Prestige</b><p class="hint">Revends ta boîte et recommence à zéro, mais tu gardes +50% de gains par prestige, pour toujours. Possible dès 1 M€ de CA.</p><div class="hint">Prestige : <b>${S.prestige}</b> (x${(1+S.prestige*.5).toFixed(1)})</div><button class="btn o w" id="pres" style="margin-top:8px" ${S.rev>=1e6?"":"disabled"}>${S.rev>=1e6?"⭐ Prestige (recommencer)":"🔒 Atteins 1 M€ de CA"}</button></div>
+  <div class="card"><b>🏅 Badges</b><div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:6px">${S.badges.length?S.badges.map(b=>`<span class="tag">${esc(b)}</span>`).join(""):'<span class="hint">Aucun</span>'}</div></div>`;
+ if($("pres")) $("pres").onclick=()=>{ if(S.rev<1e6) return; pop(`<div style="text-align:center"><div style="font-size:50px">⭐</div><b style="font-size:20px">Prestige ?</b><p class="hint">Tu repars à 0, mais +50% de gains pour toujours.</p><div style="display:flex;gap:8px;margin-top:12px"><button class="btn o w" id="py">Oui !</button><button class="btn w" id="pn">Non</button></div></div>`,()=>{ $("pn").onclick=close; $("py").onclick=()=>{ const keep={prestige:S.prestige+1,badges:S.badges,start:S.start}; S=Object.assign(fresh(),keep); save(); close(); toast("⭐ Prestige ! Bonus permanent 🔥"); page="home"; render(); }; }); };
+}
+
+function admin(){ pop(`<div class="card" style="background:linear-gradient(135deg,#3b0a0a,#17213a);border-color:#7f1d1d"><b style="font-size:19px">🛠️ Panel admin</b><div class="hint" style="color:#fecaca">Triche à fond 😏</div></div>
+  <div class="hint" style="margin:10px 0 4px">💰 Cash</div><div style="display:flex;flex-wrap:wrap;gap:6px">${[1e3,1e5,1e7,1e9].map(v=>`<button class="btn" data-am="${v}">+${eur(v)}</button>`).join("")}</div>
+  <button class="btn p w" id="aun" style="margin-top:10px">🔓 Débloquer tous les produits</button>
+  <button class="btn p w" id="amax" style="margin-top:8px">🌟 Tout améliorer</button>
+  <button class="btn w" id="arst" style="margin-top:8px;background:#3a1518;border:1px solid #7f1d1d;color:#fecaca">🗑️ Recommencer</button>
+  <button class="btn w" id="acl" style="margin-top:8px">Fermer</button>`,()=>{
+  document.querySelectorAll("[data-am]").forEach(b=>b.onclick=()=>{ S.cash+=+b.dataset.am; S.rev+=+b.dataset.am; checkRank(); save(); head(); toast("💰 +"+eur(+b.dataset.am)); });
+  $("aun").onclick=()=>{ PRODUCTS.forEach(p=>{ if(!S.owned.includes(p.id)) S.owned.push(p.id); }); save(); toast("🔓 Tous les produits débloqués"); if(page==="prods")renderProds(); };
+  $("amax").onclick=()=>{ for(const k in UPG) S.up[k]=(S.up[k]||0)+5; save(); toast("🌟 Boutique boostée"); if(page==="shop")renderShop(); };
+  $("arst").onclick=()=>{ if(!confirm("Tout effacer ?")) return; S=fresh(); save(); close(); render(); };
+  $("acl").onclick=close; });
+}
+$("tadm").onclick=admin;
+$("tcash").onclick=()=>pop(`<div style="text-align:center"><div class="big">${eur(S.cash)}</div><p class="hint">${Math.floor(S.cash).toLocaleString("fr-FR")} € en caisse</p><button class="btn w" id="mc" style="margin-top:12px">Fermer</button></div>`,()=>{ $("mc").onclick=close; });
+function pop(h,a){ $("sheet").innerHTML=h; $("modal").classList.add("on"); a&&a(); }
+function close(){ $("modal").classList.remove("on"); }
+$("modal").onclick=e=>{ if(e.target.id==="modal") close(); };
+
+/* idle : pubs auto + ventes organiques */
+setInterval(()=>{ if(lvl("auto")&&S.cash>adCost()*2&&Math.random()<.4*lvl("auto")){ runAd(null,adCost()); return; }
+  // ventes organiques via réputation
+  const pr=prod(S.prod); if(pr&&S.rep>10){ const o=Math.max(0,Math.round(S.rep/100*Math.log10(S.orders+10)*pm)); if(o>0){ const unit=(pr.price*priceMult())-(pr.cost*supMult()+2); S.cash+=o*unit; S.rev+=o*pr.price*priceMult(); S.orders+=o; } }
+  S.last=Date.now(); save(); if(page==="home")head(); },2000);
+setInterval(()=>{ if(page==="home") renderHome(); else head(); },4000);
+
+render();
+})();
+</script>
+</body>
+</html>
