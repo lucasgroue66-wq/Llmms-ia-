@@ -190,8 +190,7 @@ async function run(i) {
     case "quiz": { const k = ri(0, QUIZ.length - 1), q = QUIZ[k];
       return { type: 4, data: { embeds: [{ title: "🧠 Quiz", description: `**${q[0]}**\nBonne réponse = 200 ${PIECE}`, color: COL.info }], components: [{ type: 1, components: q[1].map((a, j) => ({ type: 2, style: 1, label: a, custom_id: `quiz:${k}:${j}:${uid}` })) }] } }; }
     case "fakenitro": { const d = opt(i, "duree") || "1 mois", troll = String(opt(i, "message") || "non je t'ai troll mdr 😂").slice(0, 150).replace(/:/g, "꞉");
-      return { type: 4, data: { content: "Tiens, cadeau 🎁", embeds: [{ author: { name: "Tu as reçu un cadeau !" }, title: `Nitro · ${d}`, description: `**${name}** t'offre **Nitro** pendant **${d}** ✨
-Clique vite avant que ça expire !`, color: 0xff73fa }],
+      return { type: 4, data: { content: "🎁 **Tu as reçu un cadeau !**", embeds: [{ author: { name: "🎉 Cadeau offert" }, title: `🚀  NITRO  •  ${d}`, description: `✨ **${name}** t'offre **Nitro** pendant **${d}** !\n\n🎁 Un abonnement complet rien que pour toi\n⏳ *Clique vite avant que ça expire…*`, color: 0x5865f2, thumbnail: { url: "https://cdn.jsdelivr.net/gh/twitter/twemoji@14.0.2/assets/72x72/1f381.png" }, footer: { text: "Expire bientôt • récupère maintenant" } }],
         components: [{ type: 1, components: [{ type: 2, style: 3, label: "🎁 Récupérer", custom_id: `nitro:${uid}:${(() => { let t = troll; while (Buffer.byteLength(t) > 54) t = [...t].slice(0, -1).join(""); return Buffer.from(t).toString("base64url"); })()}` }] }] } }; }
     case "faketiktok": { const ty = opt(i, "type") || "cadeau", troll = String(opt(i, "message") || "non je t'ai troll mdr 😂").slice(0, 150);
       const enc = (() => { let t = troll; while (Buffer.byteLength(t) > 50) t = [...t].slice(0, -1).join(""); return Buffer.from(t).toString("base64url"); })();
