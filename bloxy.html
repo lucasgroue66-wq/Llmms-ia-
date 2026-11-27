@@ -285,13 +285,13 @@ function render(){ head(); nav(); const m=$("main");
     document.querySelectorAll("[data-eq]").forEach(b=>b.onclick=()=>{ const it=IT(b.dataset.eq); S.eq[it.t]=S.eq[it.t]===it.id&&it.t!=="face"&&it.t!=="shirt"&&it.t!=="pants"?null:it.id; save(); render(); });
     document.querySelectorAll("[data-sk]").forEach(b=>b.onclick=()=>{ const [k,c]=b.dataset.sk.split(":"); S.body[k]=c; save(); render(); });
     if($("skall")) $("skall").onclick=()=>{ const c=S.body.head; ["torso","arms","legs"].forEach(k=>S.body[k]=c); save(); render(); }; }
-  if(page==="shop"){ const list=ITEMS.filter(i=>i.t===cat&&i.r!=="adm");
+  if(page==="shop"){ const list=ITEMS.filter(i=>i.t===cat&&i.r!=="adm"&&!i.ev);
     m.innerHTML=`<div class="card" style="display:flex;align-items:center;gap:12px;background:linear-gradient(135deg,#2a1a6e,#3b0764)"><span style="font-size:34px">🛍️</span><div class="grow"><b style="font-size:18px">Catalogue</b><div class="hint" style="color:#ddd6fe">Les objets <b style="color:#fca5a5">Limités</b> partent vite !</div></div></div>
       <div class="chips" style="margin-top:12px">${CATS.map(([k,i,l])=>`<button data-ct="${k}" class="${cat===k?"on":""}">${i} ${l}</button>`).join("")}</div>
       <div class="grid" style="margin-top:12px">${list.map(it=>{ const o=S.inv.includes(it.id), R=RAR[it.r], left=it.stock?it.stock-(S.sold[it.id]||0):null; return `<button class="icard" data-it="${it.id}">${o?'<span class="own">✔ À toi</span>':""}<div class="pv">${itemPreview(it)}</div><div class="nm">${esc(it.n)}</div><span class="rar" style="background:${R[1]}22;color:${R[1]}">${R[0]}</span><div class="pr">${it.p?COIN+nf(it.p):"Gratuit"}</div>${left!==null?`<div class="hint" style="font-size:11px;color:#fca5a5">Il en reste ${Math.max(0,left)}</div>`:""}</button>`; }).join("")}</div>`;
     document.querySelectorAll("[data-ct]").forEach(b=>b.onclick=()=>{ cat=b.dataset.ct; render(); });
     document.querySelectorAll("[data-it]").forEach(b=>b.onclick=()=>openItem(b.dataset.it)); }
-  if(page==="prof"){ const inv=S.inv.map(IT).filter(Boolean), val=inv.reduce((t,i)=>t+(i.r==="adm"?250000:i.p),0), show=inv.slice().sort((a,b)=>(b.r==="adm"?1e9:b.p)-(a.r==="adm"?1e9:a.p)).slice(0,8);
+  if(page==="prof"){ const inv=S.inv.map(IT).filter(Boolean), val=inv.reduce((t,i)=>t+itemVal(i),0), show=inv.slice().sort((a,b)=>(b.r==="adm"?1e9:b.p)-(a.r==="adm"?1e9:a.p)).slice(0,8);
     m.innerHTML=`<div class="banner"></div><div style="display:flex;align-items:flex-end;gap:12px"><div class="pav">${avatarSVG(S,"head")}</div><div class="grow" style="padding-bottom:6px"><div class="big" style="font-size:22px">${esc(S.disp)}${cert()}</div><div class="hint">@${esc(S.user)}</div></div></div>
       <div class="stats" style="margin-top:14px"><div><b>${nf(S.fr.length)}</b><span>Amis</span></div><div><b>${nf(S.fol)}</b><span>Abonnés</span></div><div><b>${nf(S.fing)}</b><span>Abonnements</span></div></div>
       <div class="card" style="margin-top:12px"><b>À propos</b><p style="margin:6px 0 0">${esc(S.bio)}</p></div>
@@ -313,7 +313,7 @@ function openGame(id){ const g=G(id); const by=g.mine?`${esc(S.user)}${cert()}`:
     <button class="btn g w" id="gp" style="margin-top:14px;font-size:20px;padding:14px">▶ JOUER</button>
     <div class="stats" style="margin-top:14px"><div><b>${nf(g.pl)}</b><span>En ligne</span></div><div><b>${nf(g.vis)}</b><span>Visites</span></div><div><b>${nf(g.fav)}</b><span>Favoris</span></div><div><b>${g.like} %</b><span>J'aime</span></div></div>
     ${gpHTML(g)}<div class="card" style="margin-top:12px"><b>Description</b><p class="hint" style="margin:6px 0 0">${isSteal(g)?"Achète les unités qui passent sur le tapis rouge, pose-les dans ta base pour qu'elles te rapportent de l'argent… et vole celles des autres joueurs ! Verrouille ta base pour te protéger.":"Saute de plateforme en plateforme, évite le vide et ramasse les pièces. Chaque pièce te rapporte des Bloxbux."}${g.mine?" Un jeu créé par "+esc(S.user)+".":""}</p></div>
-    <button class="btn w" id="gc" style="margin-top:10px">Fermer</button>`,()=>{ $("gc").onclick=close; bindGP(g); $("gp").onclick=()=>{ close(); isSteal(g)?playSteal(g):playGame(g); }; }); }
+    <button class="btn w" id="gc" style="margin-top:10px">Fermer</button>`,()=>{ $("gc").onclick=close; bindGP(g); $("gp").onclick=()=>{ close(); g.lvl?(S.lvls.find(l=>l.id===g.lvl)?playLevel(S.lvls.find(l=>l.id===g.lvl),g):toast("Niveau introuvable")):isSteal(g)?playSteal(g):playGame(g); }; }); }
 
 /* ================= MINI-JEU (obby) ================= */
 function playGame(g){ S.recent=[g.id,...S.recent.filter(x=>x!==g.id)].slice(0,8); g.vis++; save();
@@ -443,7 +443,7 @@ function mkUnit(g,r){ if(r==null){ let w=Math.random()*SR.reduce((t,x)=>t+x[4],0
 function playSteal(g){ S.recent=[g.id,...S.recent.filter(x=>x!==g.id)].slice(0,8); g.vis++;
   const NS=hasGP(g,"vip")?10:8, st=S.steal[g.id]||(S.steal[g.id]={cash:200,slots:[],pend:[],t:Date.now()});
   while(st.slots.length<NS){ st.slots.push(null); st.pend.push(0); }
-  const mult=()=>hasGP(g,"x2")?2:1;
+  const mult=()=>(hasGP(g,"x2")?2:1)*(1+(st.reb||0)*.5);
   { const el=Math.min(7200,(Date.now()-st.t)/1000); st.slots.forEach((u,i)=>{ if(u) st.pend[i]+=u.inc*mult()*el*.5; }); } save();
   const pl=$("play"); pl.classList.add("on");
   pl.innerHTML=`<canvas id="cv" style="touch-action:none"></canvas>
@@ -480,9 +480,10 @@ function playSteal(g){ S.recent=[g.id,...S.recent.filter(x=>x!==g.id)].slice(0,8
   $("sx").onclick=end;
   const sp=$("sp"), panelClose=()=>{ sp.style.display="none"; paused=false; last=performance.now(); };
   $("sshop").onclick=()=>{ if(sp.style.display==="block") return panelClose(); paused=true; sp.style.display="block";
-    const draw=()=>{ sp.innerHTML=`<b>🛒 Boutique</b><div class="hint" style="font-size:12px">Dépense tes Bloxbux (${nf(S.bux)})</div><div style="display:grid;gap:6px;margin-top:8px">${[[50,5000],[200,30000],[1000,250000],[5000,2e6]].map(([b,m])=>`<button class="btn" data-sb="${b}:${m}" style="justify-content:space-between">💵 ${nf(m)}<span style="display:flex;align-items:center;gap:3px">${COIN}${nf(b)}</span></button>`).join("")}<button class="btn" data-su="4:1500" style="justify-content:space-between">🔴 Unité Mythique<span style="display:flex;align-items:center;gap:3px">${COIN}1 500</span></button><button class="btn" data-su="5:6000" style="justify-content:space-between">⚪ Unité Secrète<span style="display:flex;align-items:center;gap:3px">${COIN}6 000</span></button><button class="btn g" id="spc">▶ Reprendre</button></div>`;
+    const draw=()=>{ sp.innerHTML=`<b>🛒 Boutique</b><div class="hint" style="font-size:12px">Dépense tes Bloxbux (${nf(S.bux)})</div><div style="display:grid;gap:6px;margin-top:8px">${[[50,5000],[200,30000],[1000,250000],[5000,2e6]].map(([b,m])=>`<button class="btn" data-sb="${b}:${m}" style="justify-content:space-between">💵 ${nf(m)}<span style="display:flex;align-items:center;gap:3px">${COIN}${nf(b)}</span></button>`).join("")}<button class="btn" data-su="4:1500" style="justify-content:space-between">🔴 Unité Mythique<span style="display:flex;align-items:center;gap:3px">${COIN}1 500</span></button><button class="btn" data-su="5:6000" style="justify-content:space-between">⚪ Unité Secrète<span style="display:flex;align-items:center;gap:3px">${COIN}6 000</span></button><button class="btn p" id="sreb">🔁 Rebirth ${st.reb||0} → ${(st.reb||0)+1}<br><span style="font-size:11.5px;font-weight:600">$${nf(1e6*Math.pow(5,st.reb||0))} · argent x${1+((st.reb||0)+1)*.5} pour toujours</span></button><button class="btn g" id="spc">▶ Reprendre</button></div>`;
       sp.querySelectorAll("[data-sb]").forEach(b=>b.onclick=()=>{ const [bx,m]=b.dataset.sb.split(":").map(Number); if(S.bux<bx) return toast("Pas assez de Bloxbux 💸"); S.bux-=bx; st.cash+=m; log(`🛒 ${g.n} : ${nf(m)} d'argent (-${bx})`); save(); head(); toast(`💵 +${nf(m)}`); draw(); });
       sp.querySelectorAll("[data-su]").forEach(b=>b.onclick=()=>{ const [r,bx]=b.dataset.su.split(":").map(Number); if(S.bux<bx) return toast("Pas assez de Bloxbux 💸"); const u=mkUnit(g,r); if(!placeMine(u)) return toast("Ta base est pleine : vends une unité"); S.bux-=bx; log(`🛒 ${g.n} : ${u.n} (-${bx})`); save(); head(); toast(`${u.e} ${u.n} arrive dans ta base !`); draw(); });
+      $("sreb").onclick=()=>{ const cost=1e6*Math.pow(5,st.reb||0); if(st.cash<cost) return toast(`💸 Il te faut $${nf(cost)} pour le rebirth`); if(!confirm("Rebirth : tu perds ton argent et tes unités, mais tu gagnes plus pour toujours. Go ?")) return; st.reb=(st.reb||0)+1; st.cash=200; st.slots=st.slots.map(()=>null); st.pend=st.pend.map(()=>0); const bd=`🔁 Rebirth ${st.reb}`; if(!S.badges.includes(bd)) S.badges.push(bd); save(); toast(`🔁 REBIRTH ${st.reb} ! Argent x${1+st.reb*.5}`); draw(); };
       $("spc").onclick=panelClose; }; draw(); };
   $("sadm").onclick=()=>{ if(sp.style.display==="block") return panelClose(); paused=true; sp.style.display="block";
     const draw=()=>{ sp.innerHTML=`<b>🛠️ Admin en jeu</b><div style="display:grid;gap:6px;margin-top:8px"><button class="btn" data-ac="1e4">💵 +10 k</button><button class="btn" data-ac="1e6">💵 +1 M</button><button class="btn" data-ac="1e9">💵 +1 Md</button><button class="btn" id="aun">⚪ Give une unité Secrète</button>${[["spd","⚡ Vitesse x2"],["inv","👻 Invisible (personne ne t'attrape)"],["lock","🔒 Base verrouillée à vie"]].map(([k,l])=>`<button class="btn ${A[k]?"p":""}" data-at="${k}" style="justify-content:flex-start">${A[k]?"✅":"⬜"} ${l}</button>`).join("")}<button class="btn g" id="apc">▶ Reprendre</button></div>`;
@@ -504,7 +505,7 @@ function playSteal(g){ S.recent=[g.id,...S.recent.filter(x=>x!==g.id)].slice(0,8
       const spd=230*(hasGP(g,"spd")?1.4:1)*(A.spd?2:1)*(P.carry&&P.carry.from!=="belt"?.72:1);
       P.x=Math.max(15,Math.min(WW-15,P.x+dx*spd*dt)); P.y=Math.max(15,Math.min(WH-15,P.y+dy*spd*dt));
       // tapis
-      spawnT-=dt; if(spawnT<=0){ spawnT=2.3; belt.push({u:mkUnit(g),x:CX,y:-30}); }
+      spawnT-=dt; if(spawnT<=0){ spawnT=2.3; belt.push({u:Math.random()<.07?evUnit():mkUnit(g),x:CX,y:-30}); }
       belt.forEach(b=>b.y+=48*dt); for(let i=belt.length-1;i>=0;i--) if(belt[i].y>WH+40) belt.splice(i,1);
       // revenus
       st.slots.forEach((u,i)=>{ if(u) st.pend[i]+=u.inc*mult()*dt; });
@@ -531,7 +532,7 @@ function playSteal(g){ S.recent=[g.id,...S.recent.filter(x=>x!==g.id)].slice(0,8
         if(!act&&inB(me,P.x,P.y)) for(let i=0;i<NS;i++){ const u=st.slots[i]; if(!u) continue; const s=slotPos(me,i,NS); if(Math.hypot(s.x-P.x,s.y-P.y)<45){ act=[`Vendre ${u.n} · $${nf(u.p*.5)}`,()=>{ st.cash+=Math.round(u.p*.5); st.slots[i]=null; st.pend[i]=0; save(); msg(`💵 Vendu +$${nf(u.p*.5)}`); }]; break; } } }
       setAct(act?act[0]:"",act?act[1]:null);
       if(msgT&&now>msgT){ msgT=0; $("smsg").style.display="none"; }
-      $("hud").innerHTML=`💵 $${nf(st.cash)}<div style="font-size:12px;color:#86efac">+$${nf(incS())}/s</div>`;
+      $("hud").innerHTML=`💵 $${nf(st.cash)}${st.reb?` · 🔁${st.reb}`:""}<div style="font-size:12px;color:#86efac">+$${nf(incS())}/s</div>`;
       const lb=$("slock"); const lt=myLock>now||A.lock?`🔒 ${A.lock?"∞":Math.ceil((myLock-now)/1000)+" s"}`:myLockCD>now?`⏳ ${Math.ceil((myLockCD-now)/1000)}`:"🔒"; if(lb.textContent!==lt) lb.textContent=lt;
     }
     // rendu
@@ -552,6 +553,149 @@ function playSteal(g){ S.recent=[g.id,...S.recent.filter(x=>x!==g.id)].slice(0,8
     if(joy){ c.save(); c.globalAlpha=.35; c.fillStyle="#fff"; c.beginPath(); c.arc(joy.sx,joy.sy,46,0,7); c.fill(); c.globalAlpha=.7; const dx=joy.x-joy.sx, dy=joy.y-joy.sy, l=Math.min(40,Math.hypot(dx,dy))/(Math.hypot(dx,dy)||1); c.beginPath(); c.arc(joy.sx+dx*l,joy.sy+dy*l,20,0,7); c.fill(); c.restore(); }
   })(performance.now());
   if(!S.ms.stealTuto){ S.ms.stealTuto=1; save(); msg("👆 Glisse le doigt pour bouger · achète sur le tapis rouge · vole les autres bases !"); msgT=performance.now()+6000; } }
+
+/* ================= ÉVÉNEMENTS DE LA SEMAINE ================= */
+const EVS=[{k:"hiver",ic:"❄️",n:"Événement Hiver",bg:"linear-gradient(135deg,#0c4a6e,#38bdf8)",u:["☃️","Bonhomme Givré"]},{k:"halloween",ic:"🎃",n:"Événement Halloween",bg:"linear-gradient(135deg,#431407,#f97316)",u:["🎃","Citrouille Maudite"]},{k:"ete",ic:"🌴",n:"Événement Été",bg:"linear-gradient(135deg,#a16207,#facc15)",u:["🍹","Cocktail Turbo"]},{k:"espace",ic:"🚀",n:"Événement Espace",bg:"linear-gradient(135deg,#1e1b4b,#7c3aed)",u:["👽","Alien Doré"]}];
+const WEEK=604800000, curEv=()=>EVS[Math.floor(Date.now()/WEEK)%EVS.length], evEnd=()=>(Math.floor(Date.now()/WEEK)+1)*WEEK;
+RAR.ev=["Événement","#06b6d4"];
+ITEMS.push(
+ {id:"evh1",t:"hat",n:"Bonnet de Noël",p:900,r:"ev",ev:"hiver",d:{k:"beanie",c:"#dc2626"}},{id:"evh2",t:"acc",n:"Écharpe Flocon",p:700,r:"ev",ev:"hiver",d:{k:"scarf",c:"#e0f2fe"}},{id:"evh3",t:"back",n:"Ailes de Glace",p:5000,r:"ev",ev:"hiver",d:{k:"wings",c:"#a5f3fc",glow:1}},
+ {id:"evw1",t:"hat",n:"Cornes Citrouille",p:900,r:"ev",ev:"halloween",d:{k:"horns",c:"#f97316"}},{id:"evw2",t:"back",n:"Cape Vampire",p:1500,r:"ev",ev:"halloween",d:{k:"cape",c:"#111827"}},{id:"evw3",t:"hat",n:"Couronne Maudite",p:5000,r:"ev",ev:"halloween",d:{k:"crown",c:"#22c55e",glow:1}},
+ {id:"eve1",t:"hat",n:"Casquette Plage",p:600,r:"ev",ev:"ete",d:{k:"cap",c:"#facc15"}},{id:"eve2",t:"shirt",n:"Chemise Hawaï",p:1200,r:"ev",ev:"ete",d:{c:"#f97316",pat:"logo",txt:"🌺🌺"}},{id:"eve3",t:"back",n:"Jetpack Soleil",p:5000,r:"ev",ev:"ete",d:{k:"jet",c:"#f59e0b"}},
+ {id:"evs1",t:"hat",n:"Auréole Cosmique",p:1500,r:"ev",ev:"espace",d:{k:"halo",c:"#a855f7"}},{id:"evs2",t:"shirt",n:"Combinaison Astro",p:1800,r:"ev",ev:"espace",d:{c:"#e5e7eb",s:"#64748b",pat:"armor"}},{id:"evs3",t:"back",n:"Ailes Nébuleuse",p:5000,r:"ev",ev:"espace",d:{k:"wings",c:"#6366f1",glow:1}});
+SR.push(["Événement","#06b6d4",20000,800,0]);
+const evUnit=()=>{ const e=curEv(); return {e:e.u[0],n:e.u[1],r:6,inc:Math.round(800*rnd(.9,1.2)),p:Math.round(20000*rnd(.9,1.1))}; };
+const left=ms=>{ const d=Math.floor(ms/864e5), h=Math.floor(ms%864e5/36e5), m=Math.floor(ms%36e5/6e4); return d?`${d} j ${h} h`:h?`${h} h ${m} min`:`${m} min`; };
+
+/* ================= VALEUR DES OBJETS (les Limités bougent) ================= */
+S.lv=S.lv||{}; S.trades=S.trades||[]; S.dm=S.dm||{}; S.lvls=S.lvls||[];
+function itemVal(it){ if(!it) return 0; if(it.r==="adm") return 250000; if(it.r==="lim") return Math.round(it.p*(S.lv[it.id]||1.3)); if(it.r==="ev") return it.ev===curEv().k?it.p:it.p*3; return it.p; }
+
+/* ================= ÉCHANGES + MESSAGES (générés avec la célébrité) ================= */
+const DMT=["Ton jeu est trop bien 🔥","Tu peux me give des Bloxbux stp 🙏","Comment t'as eu le badge certifié ??","On fait une collab ?","Je joue à tes jeux tous les jours","T'es mon créateur préféré 😭","Tu peux m'ajouter en ami ?","C'est quoi ton prochain jeu ?","Ton inventaire est de ouf 😳","J'ai ramené tous mes potes sur ton jeu"];
+const DMR=["Merci frérot 🙏","Trop gentil !","Ça marche 😎","Grave, on fait ça","Tu gères !","Ok je partage ton jeu à tout le monde 🔥"];
+const _ft=fameTick; fameTick=function(k,quiet){ _ft(k,quiet);
+  ITEMS.filter(i=>i.r==="lim").forEach(i=>{ S.lv[i.id]=Math.max(.6,Math.min(25,(S.lv[i.id]||1.3)*Math.pow(rnd(.985,1.03),Math.min(k,200)))); });
+  const pT=Math.min(.35,.05+Math.log10(S.fol+10)*.04);
+  for(let i=0;i<Math.min(k,30)&&S.trades.length<5;i++) if(Math.random()<pT){ const mine=S.inv.map(IT).filter(x=>x&&x.p>0&&x.r!=="adm"); if(!mine.length) break; const want=pick(mine), wv=itemVal(want);
+    const opts=ITEMS.filter(x=>!S.inv.includes(x.id)&&x.r!=="adm"&&x.p>0&&itemVal(x)>=wv*.45&&itemVal(x)<=wv*2.2); if(!opts.length) continue; const give=pick(opts); S.trades.push({id:Date.now().toString(36)+ri(0,999),from:pick(S.fr.length?S.fr:FRIENDS),give:give.id,want:want.id}); if(!quiet) notif("🔁",`${S.trades[S.trades.length-1].from} te propose un échange`); }
+  const pD=Math.min(.5,.08+Math.log10(S.fol+10)*.05);
+  for(let i=0;i<Math.min(k,20);i++) if(Math.random()<pD){ const n=Math.random()<.5&&S.fr.length?pick(S.fr):genName(); (S.dm[n]=S.dm[n]||[]).push({t:pick(DMT),me:0,u:1}); S.dm[n]=S.dm[n].slice(-20); }
+  const ks=Object.keys(S.dm); if(ks.length>30) ks.slice(0,ks.length-30).forEach(x=>delete S.dm[x]);
+  save(); };
+const dmUnread=()=>Object.values(S.dm).reduce((t,a)=>t+a.filter(m=>m.u).length,0);
+bell=function(){ const n=S.req.length+S.trades.length+dmUnread()+S.notifs.filter(x=>x.u).length, b=$("tbell"); if(b) b.innerHTML=`🔔${n?`<span style="position:absolute;top:-4px;right:-4px;background:#ef4444;color:#fff;font-size:10.5px;font-weight:900;border-radius:999px;padding:1px 5px">${n>99?"99+":n}</span>`:""}`; };
+const _ob=openBell; openBell=function(tab,who){ tab=tab||(S.req.length?"req":S.trades.length?"trade":dmUnread()?"msg":"not");
+  if(tab==="req"||tab==="not"){ _ob(tab); const ch=document.querySelector("#sheet .chips"); if(ch){ ch.insertAdjacentHTML("beforeend",`<button data-bt2="trade">🔁 Échanges (${S.trades.length})</button><button data-bt2="msg">💬 Messages${dmUnread()?` (${dmUnread()})`:""}</button>`); ch.querySelectorAll("[data-bt2]").forEach(b=>b.onclick=()=>openBell(b.dataset.bt2)); ch.querySelectorAll("[data-bt]").forEach(b=>b.onclick=()=>openBell(b.dataset.bt)); } return; }
+  const tabs=`<div class="chips"><button data-bt="req">👋 Amis (${S.req.length})</button><button data-bt="trade" class="${tab==="trade"?"on":""}">🔁 Échanges (${S.trades.length})</button><button data-bt="msg" class="${tab==="msg"?"on":""}">💬 Messages${dmUnread()?` (${dmUnread()})`:""}</button><button data-bt="not">🔔 Notifs</button></div>`;
+  let body="";
+  if(tab==="trade") body=S.trades.length?S.trades.map((t,i)=>{ const g=IT(t.give), w=IT(t.want), gv=itemVal(g), wv=itemVal(w), deal=gv>=wv*1.15?["✅ Bon deal","#22c55e"]:gv>=wv*.9?["🟡 Équitable","#eab308"]:["❌ Mauvais deal","#ef4444"]; return `<div class="card" style="margin-bottom:10px"><b>${esc(t.from)}</b> <span class="hint">te propose :</span><div style="display:flex;gap:8px;align-items:center;margin-top:8px"><div class="icard" style="flex:1;padding:5px"><div class="pv">${itemPreview(g)}</div><div class="nm">${esc(g.n)}</div><div class="pr">${COIN}${nf(gv)}</div><div class="hint" style="font-size:11px">Tu reçois</div></div><span style="font-size:22px">⇄</span><div class="icard" style="flex:1;padding:5px"><div class="pv">${itemPreview(w)}</div><div class="nm">${esc(w.n)}</div><div class="pr">${COIN}${nf(wv)}</div><div class="hint" style="font-size:11px">Tu donnes</div></div></div><div style="text-align:center;font-weight:800;color:${deal[1]};margin:8px 0">${deal[0]}</div><div style="display:flex;gap:8px"><button class="btn g w" data-ta="${i}">Accepter</button><button class="btn w" data-tr="${i}">Refuser</button></div></div>`; }).join(""):`<p class="hint">Aucune offre. Plus tu es connu, plus on te propose d'échanges !</p>`;
+  if(tab==="msg"){ if(who&&S.dm[who]){ S.dm[who].forEach(m=>m.u=0); save(); body=`<button class="btn" id="dmb" style="margin-bottom:8px">‹ Messages</button><div style="display:flex;align-items:center;gap:10px;margin-bottom:8px"><div class="fav" style="width:40px;height:40px;margin:0">${avatarSVG(npcAvatar(who),"head")}</div><b>${esc(who)}</b></div><div style="display:flex;flex-direction:column;gap:6px;max-height:45vh;overflow:auto" id="dml">${S.dm[who].map(m=>`<div style="align-self:${m.me?"flex-end":"flex-start"};background:${m.me?"linear-gradient(135deg,#7c5cff,#18c8ff)":"var(--card2)"};padding:8px 12px;border-radius:14px;max-width:80%">${esc(m.t)}</div>`).join("")}</div><div style="display:flex;gap:8px;margin-top:10px"><input id="dmi" placeholder="Écris un message…" maxlength="120"><button class="btn p" id="dms">➤</button></div>`; }
+    else { const ks=Object.keys(S.dm).reverse(); body=ks.length?ks.map(n=>{ const a=S.dm[n], l=a[a.length-1], u=a.filter(m=>m.u).length; return `<button data-dm="${esc(n)}" style="display:flex;width:100%;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--line);text-align:left"><div class="fav" style="width:44px;height:44px;margin:0">${avatarSVG(npcAvatar(n),"head")}</div><div class="grow" style="min-width:0"><b>${esc(n)}</b><div class="hint" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${l.me?"Toi : ":""}${esc(l.t)}</div></div>${u?`<span style="background:#ef4444;color:#fff;border-radius:999px;padding:1px 7px;font-size:12px;font-weight:900">${u}</span>`:""}</button>`; }).join(""):`<p class="hint">Pas encore de messages. Tes fans t'écriront quand tu seras connu !</p>`; } }
+  modal(tabs+`<div style="margin-top:12px">${body}</div><button class="btn w" id="bcl" style="margin-top:12px">Fermer</button>`,()=>{ bell();
+    document.querySelectorAll("[data-bt]").forEach(b=>b.onclick=()=>openBell(b.dataset.bt));
+    document.querySelectorAll("[data-ta]").forEach(b=>b.onclick=()=>{ const t=S.trades.splice(+b.dataset.ta,1)[0]; if(!S.inv.includes(t.want)){ save(); return openBell("trade"); } S.inv=S.inv.filter(x=>x!==t.want); Object.keys(S.eq).forEach(k=>{ if(S.eq[k]===t.want) S.eq[k]=k==="face"?"fsmile":k==="shirt"?"tw":k==="pants"?"pblue":null; }); if(!S.inv.includes(t.give)) S.inv.push(t.give); if(!S.inv.includes("fsmile")) S.inv.push("fsmile"); if(!S.inv.includes("tw")) S.inv.push("tw"); if(!S.inv.includes("pblue")) S.inv.push("pblue"); S.trades=S.trades.filter(x=>x.want!==t.want); log(`🔁 Échange avec ${t.from} : +${IT(t.give).n}`); if(!S.badges.includes("🔁 Trader")) S.badges.push("🔁 Trader"); save(); toast(`🔁 ${IT(t.give).n} est à toi !`); openBell("trade"); });
+    document.querySelectorAll("[data-tr]").forEach(b=>b.onclick=()=>{ S.trades.splice(+b.dataset.tr,1); save(); openBell("trade"); });
+    document.querySelectorAll("[data-dm]").forEach(b=>b.onclick=()=>openBell("msg",b.dataset.dm));
+    if($("dmb")) $("dmb").onclick=()=>openBell("msg");
+    if($("dml")) $("dml").scrollTop=1e6;
+    if($("dms")){ const send=()=>{ const t=$("dmi").value.trim().replace(/[<>]/g,""); if(!t) return; S.dm[who].push({t,me:1}); save(); openBell("msg",who); setTimeout(()=>{ if(!S.dm[who]) return; S.dm[who].push({t:pick(DMR),me:0}); if(Math.random()<.5&&S.games.length){ const g=pick(S.games); g.pl+=ri(20,300); S.fol+=ri(5,60); toast(`🔥 ${who} a partagé « ${g.n} » : des joueurs arrivent !`); } save(); if($("dml")) openBell("msg",who); },1400); }; $("dms").onclick=send; $("dmi").onkeydown=e=>{ if(e.key==="Enter") send(); }; }
+    $("bcl").onclick=()=>{ close(); render(); }; }); };
+
+/* ================= ÉDITEUR DE NIVEAUX (obby) ================= */
+const TL=[[0,"🧽","Gomme","transparent"],[1,"⬛","Bloc","#94a3b8"],[2,"🟧","Lave","#f97316"],[3,"🪙","Pièce","#fbbf24"],[4,"🚩","Checkpoint","#22c55e"],[5,"🏁","Arrivée","#e5e7eb"],[6,"🟩","Trampoline","#4ade80"],[7,"🧊","Glace","#7dd3fc"]];
+let ed=null, tool=1;
+function newLevel(){ const w=60,h=12, t=Array(w*h).fill(0); for(let x=0;x<8;x++) t[(h-1)*w+x]=1; for(let x=10;x<w;x+=5){ const y=h-2-((x/5)%3); t[y*w+x]=1; t[y*w+x+1]=1; if(x%15===0) t[(y-2)*w+x]=3; } for(let x=w-6;x<w;x++) t[(h-1)*w+x]=1; t[(h-2)*w+w-3]=5; return {id:Date.now().toString(36),n:"Mon obby",w,h,t}; }
+function renderCreate(){ const m=$("main");
+  if(!ed){ m.innerHTML=`<div class="card" style="background:linear-gradient(135deg,#065f46,#0e7490);display:flex;gap:12px;align-items:center"><span style="font-size:36px">🏗️</span><div class="grow"><b style="font-size:18px">BLOXY Studio</b><div class="hint" style="color:#ccfbf1">Construis ton obby case par case, teste-le et publie-le.</div></div></div>
+      <button class="btn p w" id="cnew" style="margin-top:12px">➕ Nouveau niveau</button>
+      <h2>📁 Mes niveaux</h2>${S.lvls.length?S.lvls.map((l,i)=>{ const g=S.games.find(x=>x.lvl===l.id); return `<div class="card" style="margin-bottom:8px;display:flex;align-items:center;gap:10px"><span style="font-size:26px">🏗️</span><div class="grow"><b>${esc(l.n)}</b><div class="hint">${g?`🟢 Publié · 👥 ${nf(g.pl)} · ${nf(g.vis)} visites`:"Brouillon"}</div></div><button class="btn" data-ce="${i}">✏️</button><button class="btn g" data-cp="${i}">▶</button></div>`; }).join(""):`<p class="hint">Aucun niveau pour l'instant.</p>`}`;
+    $("cnew").onclick=()=>{ ed=newLevel(); render(); };
+    document.querySelectorAll("[data-ce]").forEach(b=>b.onclick=()=>{ ed=JSON.parse(JSON.stringify(S.lvls[+b.dataset.ce])); render(); });
+    document.querySelectorAll("[data-cp]").forEach(b=>b.onclick=()=>playLevel(S.lvls[+b.dataset.cp],null)); return; }
+  const cs=26;
+  m.innerHTML=`<div style="display:flex;gap:8px;align-items:center"><button class="btn" id="cbk">‹</button><input id="cn" value="${esc(ed.n)}" maxlength="24"></div>
+    <div class="chips" style="margin-top:10px">${TL.map(([k,i,l])=>`<button data-tl="${k}" class="${tool===k?"on":""}">${i} ${l}</button>`).join("")}</div>
+    <div class="hint" style="margin:6px 0">Touche une case pour poser l'outil choisi. Glisse pour te déplacer dans le niveau.</div>
+    <div style="overflow-x:auto;border-radius:12px;border:1px solid var(--line);background:linear-gradient(#38bdf8,#0369a1)"><div id="cg" style="display:grid;grid-template-columns:repeat(${ed.w},${cs}px);width:${ed.w*cs}px">${ed.t.map((v,i)=>`<div data-c="${i}" style="width:${cs}px;height:${cs}px;border:1px solid #ffffff14;display:grid;place-items:center;font-size:15px;background:${v===1?"#94a3b8":v===2?"#f97316":v===6?"#4ade80":v===7?"#7dd3fc":"transparent"}">${v===3?"🪙":v===4?"🚩":v===5?"🏁":""}</div>`).join("")}</div></div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px"><button class="btn" id="cfl">⬛ Remplir le sol</button><button class="btn" id="cclr">🧽 Tout effacer</button><button class="btn" id="cw">↔️ +20 colonnes</button><button class="btn g" id="ct">▶ Tester</button></div>
+    <button class="btn p w" id="cpub" style="margin-top:8px">🚀 ${S.games.some(g=>g.lvl===ed.id)?"Mettre à jour le jeu":"Publier sur BLOXY"}</button>
+    <button class="btn r w" id="cdel" style="margin-top:8px">🗑️ Supprimer ce niveau</button>`;
+  const sv=()=>{ ed.n=($("cn").value.trim()||"Mon obby").replace(/[<>]/g,"").slice(0,24); const i=S.lvls.findIndex(l=>l.id===ed.id); const c=JSON.parse(JSON.stringify(ed)); if(i>=0) S.lvls[i]=c; else S.lvls.push(c); save(); };
+  const paint=el=>{ const i=+el.dataset.c, v=tool; if(v===5||v===4&&false){} if(v===5) ed.t=ed.t.map(x=>x===5?0:x); ed.t[i]=v; if(v===5) return render(); el.style.background=v===1?"#94a3b8":v===2?"#f97316":v===6?"#4ade80":v===7?"#7dd3fc":"transparent"; el.textContent=v===3?"🪙":v===4?"🚩":""; };
+  $("cg").onclick=e=>{ const el=e.target.closest("[data-c]"); if(el) paint(el); };
+  let down=false; $("cg").onmousedown=()=>down=true; addEventListener("mouseup",()=>down=false,{once:true}); $("cg").onmouseover=e=>{ if(down){ const el=e.target.closest("[data-c]"); if(el) paint(el); } };
+  document.querySelectorAll("[data-tl]").forEach(b=>b.onclick=()=>{ tool=+b.dataset.tl; document.querySelectorAll("[data-tl]").forEach(x=>x.classList.toggle("on",x===b)); });
+  $("cbk").onclick=()=>{ sv(); ed=null; render(); };
+  $("cfl").onclick=()=>{ for(let x=0;x<ed.w;x++) ed.t[(ed.h-1)*ed.w+x]=1; render(); };
+  $("cclr").onclick=()=>{ if(!confirm("Tout effacer ?")) return; ed.t=ed.t.map(()=>0); render(); };
+  $("cw").onclick=()=>{ if(ed.w>=200) return toast("Taille max atteinte"); const nw=ed.w+20, nt=[]; for(let y=0;y<ed.h;y++) for(let x=0;x<nw;x++) nt.push(x<ed.w?ed.t[y*ed.w+x]:0); ed.w=nw; ed.t=nt; render(); };
+  $("ct").onclick=()=>{ sv(); playLevel(ed,null); };
+  $("cpub").onclick=()=>{ if(!ed.t.includes(5)) return toast("Ajoute une 🏁 arrivée avant de publier"); sv(); let g=S.games.find(x=>x.lvl===ed.id); if(g){ g.n=ed.n; toast("🚀 Jeu mis à jour !"); } else { g={id:"l"+ed.id,n:ed.n,g:"obby",e:pick(["🏗️","🧗","🌋","🏔️","🌈"]),lvl:ed.id,vis:0,pl:ri(15,120),fav:0,like:ri(82,97),mine:1}; S.games.push(g); notif("🚀",`« ${g.n} » est publié sur BLOXY !`); if(!S.badges.includes("🏗️ Créateur de niveaux")) S.badges.push("🏗️ Créateur de niveaux"); toast("🚀 Publié ! Les joueurs arrivent…"); } save(); render(); };
+  $("cdel").onclick=()=>{ if(!confirm("Supprimer ce niveau (et le jeu publié) ?")) return; S.lvls=S.lvls.filter(l=>l.id!==ed.id); S.games=S.games.filter(g=>g.lvl!==ed.id); ed=null; save(); render(); }; }
+function playLevel(lv,g){ if(g){ S.recent=[g.id,...S.recent.filter(x=>x!==g.id)].slice(0,8); g.vis++; save(); }
+  const pl=$("play"); pl.classList.add("on");
+  pl.innerHTML=`<canvas id="cv" style="touch-action:none"></canvas><div style="position:absolute;top:10px;left:10px;right:10px;display:flex;justify-content:space-between;pointer-events:none"><b id="hud" style="background:#000a;padding:7px 12px;border-radius:12px"></b><button class="btn" id="lx" style="pointer-events:auto">✖ Quitter</button></div>
+   <div style="position:absolute;left:12px;bottom:calc(20px + env(safe-area-inset-bottom));display:flex;gap:10px"><button class="btn" id="bl" style="width:70px;height:70px;font-size:28px;touch-action:none">◀</button><button class="btn" id="br" style="width:70px;height:70px;font-size:28px;touch-action:none">▶</button></div>
+   <button class="btn g" id="bj" style="position:absolute;right:14px;bottom:calc(20px + env(safe-area-inset-bottom));width:84px;height:84px;font-size:30px;border-radius:50%;touch-action:none">⤒</button>`;
+  const cv=$("cv"), c=cv.getContext("2d"), dpr=Math.min(2,devicePixelRatio||1), VW=innerWidth, VH=innerHeight; cv.width=VW*dpr; cv.height=VH*dpr; cv.style.width=VW+"px"; cv.style.height=VH+"px"; c.scale(dpr,dpr);
+  const W=lv.w, H=lv.h, ts=Math.max(26,Math.min(56,Math.floor((VH-140)/H))), T=lv.t.slice(), tile=(x,y)=>x<0||x>=W?1:y<0?0:y>=H?0:T[y*W+x], solid=v=>v===1||v===6||v===7;
+  let sx=1, sy=H-3; for(let y=0;y<H-1;y++) if(!solid(tile(1,y))&&solid(tile(1,y+1))){ sx=1; sy=y; break; }
+  const P={x:sx*ts+ts/2,y:(sy+1)*ts,vx:0,vy:0,on:false}, cp={x:P.x,y:P.y}; const pw=ts*.6, ph=ts*.9;
+  const img=new Image(); img.src="data:image/svg+xml;utf8,"+encodeURIComponent(avatarSVG(S));
+  let L=0,R=0,J=0, got=0, deaths=0, t0=performance.now(), last=t0, raf, over=false, won=false;
+  const hold=(id,f)=>{ const b=$(id); b.onpointerdown=e=>{ e.preventDefault(); f(1); }; b.onpointerup=b.onpointerleave=b.onpointercancel=()=>f(0); };
+  hold("bl",v=>L=v); hold("br",v=>R=v); hold("bj",v=>{ if(v) J=1; });
+  const kd=e=>{ const k=e.key.toLowerCase(); if(k==="arrowleft"||k==="q"||k==="a") L=1; if(k==="arrowright"||k==="d") R=1; if(k===" "||k==="arrowup"||k==="z"||k==="w"){ e.preventDefault(); J=1; } }, ku=e=>{ const k=e.key.toLowerCase(); if(k==="arrowleft"||k==="q"||k==="a") L=0; if(k==="arrowright"||k==="d") R=0; };
+  addEventListener("keydown",kd); addEventListener("keyup",ku);
+  const end=()=>{ if(over) return; over=true; cancelAnimationFrame(raf); removeEventListener("keydown",kd); removeEventListener("keyup",ku); const secs=Math.round((performance.now()-t0)/1000); let gain=0; if(g&&won){ gain=100+got*10; S.bux+=gain; log(`🏁 ${g.n} terminé : +${gain} Bloxbux`); save(); head(); }
+    modal(`<div style="text-align:center"><div style="font-size:46px">${won?"🏆":"👋"}</div><b style="font-size:21px">${won?"Niveau terminé !":"Partie quittée"}</b><p class="hint">⏱️ ${secs} s · 🪙 ${got} pièces · 💀 ${deaths} mort(s)</p>${g?(gain?`<div class="big" style="display:flex;justify-content:center;align-items:center;gap:6px">+${COIN}${nf(gain)}</div>`:""):`<p class="hint">Mode test : pas de récompense.</p>`}<button class="btn p w" id="ok" style="margin-top:16px">Continuer</button></div>`,()=>{ $("ok").onclick=()=>{ close(); pl.classList.remove("on"); pl.innerHTML=""; render(); }; }); };
+  $("lx").onclick=end;
+  const hit=(x,y)=>{ const x0=Math.floor((x-pw/2)/ts), x1=Math.floor((x+pw/2-1)/ts), y0=Math.floor((y-ph)/ts), y1=Math.floor((y-1)/ts); for(let ty=y0;ty<=y1;ty++) for(let tx=x0;tx<=x1;tx++) if(solid(tile(tx,ty))) return true; return false; };
+  (function loop(now){ raf=requestAnimationFrame(loop); const dt=Math.min(.033,(now-last)/1000); last=now;
+    const under=tile(Math.floor(P.x/ts),Math.floor((P.y+1)/ts)), ice=P.on&&under===7, acc=ts*(ice?9:30), max=ts*5.2;
+    const dir=R-L; if(dir) P.vx+=dir*acc*dt; else P.vx*=ice?.985:.75; P.vx=Math.max(-max,Math.min(max,P.vx));
+    if(J){ J=0; if(P.on){ P.vy=-ts*11.5; P.on=false; } }
+    P.vy=Math.min(ts*22,P.vy+ts*32*dt);
+    const nx=P.x+P.vx*dt; if(!hit(nx,P.y)) P.x=nx; else P.vx=0;
+    const ny=P.y+P.vy*dt; if(!hit(P.x,ny)){ P.y=ny; P.on=false; } else { if(P.vy>0){ P.y=Math.floor(ny/ts)*ts; P.on=true; if(tile(Math.floor(P.x/ts),Math.floor((P.y+1)/ts))===6){ P.vy=-ts*17; P.on=false; } else P.vy=0; } else { P.vy=0; } }
+    const cx0=Math.floor((P.x-pw/2)/ts), cx1=Math.floor((P.x+pw/2-1)/ts), cy0=Math.floor((P.y-ph)/ts), cy1=Math.floor((P.y-1)/ts);
+    for(let ty=cy0;ty<=cy1;ty++) for(let tx=cx0;tx<=cx1;tx++){ const v=tile(tx,ty);
+      if(v===2){ deaths++; P.x=cp.x; P.y=cp.y; P.vx=P.vy=0; }
+      if(v===3){ T[ty*W+tx]=0; got++; }
+      if(v===4&&(cp.x!==tx*ts+ts/2)){ cp.x=tx*ts+ts/2; cp.y=(ty+1)*ts; toast("🚩 Checkpoint !"); }
+      if(v===5&&!won){ won=true; setTimeout(end,300); } }
+    if(P.y>(H+3)*ts){ deaths++; P.x=cp.x; P.y=cp.y; P.vx=P.vy=0; }
+    const camX=Math.max(0,Math.min(W*ts-VW,P.x-VW*.4)), oy=Math.max(60,(VH-H*ts)/2);
+    const sky=c.createLinearGradient(0,0,0,VH); sky.addColorStop(0,"#38bdf8"); sky.addColorStop(1,"#0369a1"); c.fillStyle=sky; c.fillRect(0,0,VW,VH);
+    c.save(); c.translate(-camX*.3,0); c.fillStyle="#ffffff30"; for(let i=0;i<40;i++){ c.beginPath(); c.arc(i*190+50,oy+40+(i%3)*30,30+(i%4)*8,0,7); c.fill(); } c.restore();
+    c.save(); c.translate(-camX,oy);
+    const xs=Math.max(0,Math.floor(camX/ts)), xe=Math.min(W,Math.ceil((camX+VW)/ts)+1);
+    for(let y=0;y<H;y++) for(let x=xs;x<xe;x++){ const v=T[y*W+x], px=x*ts, py=y*ts; if(!v) continue;
+      if(v===1||v===6||v===7){ c.fillStyle=v===1?"#94a3b8":v===6?"#22c55e":"#7dd3fc"; c.fillRect(px,py,ts,ts); c.fillStyle="#ffffff40"; c.fillRect(px,py,ts,ts*.18); c.fillStyle="#0002"; c.fillRect(px,py+ts*.82,ts,ts*.18); if(v===6){ c.fillStyle="#fff"; c.font=`${ts*.5}px system-ui`; c.textAlign="center"; c.textBaseline="middle"; c.fillText("⇧",px+ts/2,py+ts/2); } }
+      else if(v===2){ c.fillStyle=`hsl(${20+Math.sin(now/200+x)*8},95%,52%)`; c.fillRect(px,py+ts*.15,ts,ts*.85); }
+      else { c.font=`${ts*.7}px system-ui`; c.textAlign="center"; c.textBaseline="middle"; c.fillStyle="#000"; c.fillText(v===3?"🪙":v===4?"🚩":"🏁",px+ts/2,py+ts/2+(v===3?Math.sin(now/250+x)*3:0)); } }
+    if(img.complete) c.drawImage(img,P.x-ts*.45,P.y-ts*1.15,ts*.9,ts*1.15);
+    c.restore();
+    $("hud").textContent=`🪙 ${got} · 💀 ${deaths} · ⏱️ ${Math.floor((now-t0)/1000)} s`; })(performance.now()); }
+
+/* ================= CLASSEMENTS ================= */
+function lbHTML(){ const t=lbHTML.t||"cre"; const seedF=n=>{ let h=[...n].reduce((x,c)=>x*31+c.charCodeAt(0)>>>0,5); return 5e3+(h%9973)/9973*4e7; };
+  let rows=[];
+  if(t==="cre") rows=[...new Set(OTHER.map(o=>o[3]))].map(n=>({n,v:Math.round(seedF(n)),ic:"👤"})).concat([{n:S.disp,v:S.fol,me:1,ic:"⭐"}]);
+  if(t==="jeu") rows=allGames().map(g=>({n:g.n,v:g.pl,me:g.mine,ic:g.e}));
+  if(t==="inv") rows=FRIENDS.concat(OTHER.map(o=>o[3])).map(n=>({n,v:Math.round(seedF(n+"inv")/40),ic:"🎒"})).concat([{n:S.disp,v:S.inv.map(IT).reduce((a,i)=>a+itemVal(i),0),me:1,ic:"⭐"}]);
+  rows.sort((a,b)=>b.v-a.v); const myR=rows.findIndex(r=>r.me);
+  const line=(r,i)=>`<div style="display:flex;align-items:center;gap:10px;padding:7px 8px;border-radius:10px;${r.me?"background:#7c5cff33;border:1px solid #7c5cff":""}"><b style="width:30px;color:${i<3?["#fbbf24","#cbd5e1","#d97706"][i]:"var(--mut)"}">${i<3?["🥇","🥈","🥉"][i]:"#"+(i+1)}</b><span>${r.ic}</span><span class="grow" style="font-weight:${r.me?900:600}">${esc(r.n)}${r.me&&S.cert&&t!=="jeu"?` <span class="cert">✔</span>`:""}</span><b>${nf(r.v)}</b></div>`;
+  return `<h2>🏆 Classements</h2><div class="chips">${[["cre","👤 Créateurs (abonnés)"],["jeu","🎮 Jeux (joueurs)"],["inv","🎒 Inventaires"]].map(([k,l])=>`<button data-lb="${k}" class="${t===k?"on":""}">${l}</button>`).join("")}</div><div class="card" style="margin-top:10px;padding:8px">${rows.slice(0,10).map(line).join("")}${myR>=10?`<div class="hint" style="text-align:center">…</div>`+line(rows[myR],myR):""}</div>`; }
+
+/* ================= BRANCHEMENTS ================= */
+NAV.splice(3,0,["create","🏗️","Créer"]);
+const _rd=render; render=function(){ if(page==="create"){ head(); nav(); renderCreate(); return; } _rd();
+  const m=$("main");
+  if(page==="home"){ const e=curEv(), h=m.querySelector(".hero"); if(h) h.insertAdjacentHTML("afterend",`<button class="card" id="evb" style="width:100%;margin-top:12px;display:flex;align-items:center;gap:12px;text-align:left;background:${e.bg};border:0"><span style="font-size:34px">${e.ic}</span><div class="grow"><b style="font-size:17px">${e.n}</b><div style="font-size:12.5px;opacity:.9">Skins exclusifs + ${e.u[0]} ${e.u[1]} dans les jeux Steal · fin dans ${left(evEnd()-Date.now())}</div></div><span style="font-size:20px">›</span></button>`); if($("evb")) $("evb").onclick=()=>{ cat="hat"; go("shop"); }; }
+  if(page==="disc"){ m.insertAdjacentHTML("beforeend",lbHTML()); const bind=()=>m.querySelectorAll("[data-lb]").forEach(b=>b.onclick=()=>{ lbHTML.t=b.dataset.lb; const y=scrollY; render(); scrollTo(0,y); }); bind(); }
+  if(page==="shop"){ const e=curEv(), evs=ITEMS.filter(i=>i.ev===e.k); m.querySelector(".card").insertAdjacentHTML("afterend",`<div class="card" style="margin-top:12px;background:${e.bg};border:0"><b>${e.ic} ${e.n}</b> <span style="font-size:12px;opacity:.9">· fin dans ${left(evEnd()-Date.now())}</span><div class="grid" style="margin-top:10px;grid-template-columns:repeat(3,1fr);gap:8px">${evs.map(it=>`<button class="icard" data-it="${it.id}" style="padding:5px">${S.inv.includes(it.id)?'<span class="own">✔</span>':""}<div class="pv">${itemPreview(it)}</div><div class="nm" style="font-size:11.5px">${esc(it.n)}</div><div class="pr">${COIN}${nf(it.p)}</div></button>`).join("")}</div></div>`); m.querySelectorAll(".card [data-it]").forEach(b=>b.onclick=()=>openItem(b.dataset.it)); } };
 
 $("tbell").onclick=()=>openBell();
 save(); render(); bell();
