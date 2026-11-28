@@ -115,19 +115,33 @@ function adCost(){ return Math.max(12,Math.round(18*Math.pow(1.07,S.orders/60)))
 
 function toast(t){ const e=$("toast"); e.textContent=t; e.classList.add("on"); clearTimeout(toast.t); toast.t=setTimeout(()=>e.classList.remove("on"),2000); }
 
-function runAd(ev,budget){ const pr=prod(S.prod); if(!pr) return; const b=budget||adCost(); if(S.cash<b){ toast("Pas assez de cash pour la pub 💸"); return; }
- S.cash-=b;
- const visitors=Math.round(b*rnd(.85,1.25)*adPower()*pm*1.5);
- let orders=Math.round(visitors*conv()*pr.hype);
- let viral=1,tag=""; const r=Math.random(); if(r<.05){ viral=rnd(3,8); tag="🔥 VIRAL"; } else if(r>.9){ viral=rnd(.3,.6); tag="📉 flop pub"; }
- orders=Math.max(0,Math.round(orders*viral));
- const unit=(pr.price*priceMult())-(pr.cost*supMult())-2; // -2 frais de port
- let profit=orders*unit; const refs=Math.round(orders*refundRate()); profit-=refs*(pr.price*priceMult());
- S.cash+=orders*pr.price*priceMult()-refs*pr.price*priceMult(); S.rev+=orders*pr.price*priceMult(); S.cash-=orders*(pr.cost*supMult()+2); S.orders+=orders; S.refunds+=refs;
- S.rep=Math.min(100,Math.max(0,S.rep+(refs>orders*.1?-1:.3)));
- S.feed.unshift({e:pr.e,n:pr.n,o:orders,p:Math.round(orders*unit-refs*pr.price*priceMult()),tag,ref:refs}); S.feed=S.feed.slice(0,25);
- if(ev){ const f=document.createElement("div"); f.className="float"; const rc=ev.target.getBoundingClientRect(); f.style.left=(rc.left+rc.width/2)+"px"; f.style.top=rc.top+"px"; f.style.color=profit>=0?"#28e0b0":"#ef4444"; f.textContent=(profit>=0?"+":"")+eur(profit); document.body.appendChild(f); setTimeout(()=>f.remove(),1000); }
- checkRank(); maybeEvent(); save(); if(page==="home") renderHome(); else head();
+function yieldPerEuro(){ const pr=prod(S.prod); return 0.085*(0.6+conv()*3)*Math.sqrt(adPower())*(pr?pr.hype:1)*pm; }
+const CAMP_DUR=120000; // 12h de jeu ≈ 2 min réelles
+function launchCampaign(budget){ const pr=prod(S.prod); if(!pr){ toast("Choisis un produit d'abord"); return; }
+ budget=Math.max(10,Math.min(Math.floor(S.cash),Math.floor(budget))); if(S.cash<budget){ toast("Pas assez de cash 💸"); return; }
+ if(S.camp){ toast("Une campagne tourne déjà, attends la fin ⏳"); return; }
+ let viral=1,tag=""; const r=Math.random(); if(r<.05){ viral=rnd(2,4); tag="🔥 VIRALE"; } else if(r>.93){ viral=rnd(.4,.7); tag="📉 flop"; }
+ const total=Math.max(1,Math.round(budget*yieldPerEuro()*viral));
+ S.cash-=budget;
+ S.camp={budget,total,done:0,prod:S.prod,e:pr.e,pn:pr.n,unit:(pr.price*priceMult())-(pr.cost*supMult()+2),price:pr.price*priceMult(),ref:refundRate(),start:Date.now(),dur:CAMP_DUR,tag};
+ save(); head(); toast(`📢 Campagne lancée : ${eur(budget)} → ~${nf(total)} ventes sur 12h`); if(page==="home") renderHome();
+}
+function tickCampaign(){ const c=S.camp; if(!c) return; const frac=Math.min(1,(Date.now()-c.start)/c.dur), target=Math.round(c.total*frac), add=target-c.done;
+ if(add>0){ const refs=Math.round(add*c.ref); S.cash+=add*c.unit-refs*c.price; S.rev+=add*c.price; S.orders+=add; S.refunds+=refs; c.done=target; S.rep=Math.min(100,Math.max(0,S.rep+(refs>add*.12?-.3:.1))); checkRank(); }
+ if(frac>=1){ const refs=Math.round(c.total*c.ref); S.feed.unshift({e:c.e,n:c.pn,o:c.total,p:Math.round(c.total*c.unit-refs*c.price),tag:c.tag,ref:refs}); S.feed=S.feed.slice(0,25); S.camp=null; maybeEvent(); }
+ save();
+}
+function openCampaign(){ const pr=prod(S.prod); const presets=[100,1000,10000,100000].filter(v=>v<=S.cash);
+ const line=b=>`<button class="btn ${S.cash>=b?"p":""}" data-cb="${b}" ${S.cash>=b?"":"disabled"} style="justify-content:space-between">${eur(b)}<span class="hint" style="color:#fff">≈ ${nf(b*yieldPerEuro())} ventes</span></button>`;
+ pop(`<b style="font-size:19px">📢 Lancer une campagne de pub</b><p class="hint">Choisis ton budget. Plus tu mets, plus tu as de ventes. La campagne dure 12h de jeu (~2 min).</p>
+   <div class="hint" style="margin-top:8px">Produit : ${pr?pr.e+" "+esc(pr.n):"aucun"} · rendement ${yieldPerEuro().toFixed(3)} ventes/€</div>
+   <div style="display:grid;gap:7px;margin-top:10px">${presets.map(line).join("")||'<p class="hint">Pas assez de cash, commence petit 👇</p>'}
+   <button class="btn g" data-cb="${Math.floor(S.cash)}" ${S.cash>=10?"":"disabled"} style="justify-content:space-between">🔥 Max (${eur(S.cash)})<span class="hint" style="color:#04130a">≈ ${nf(S.cash*yieldPerEuro())} ventes</span></button></div>
+   <div style="margin-top:10px"><div class="hint">Budget perso :</div><div style="display:flex;gap:8px;margin-top:4px"><input id="cbx" inputmode="numeric" placeholder="ex: 500"><button class="btn p" id="cbg">Lancer</button></div></div>
+   <button class="btn w" id="ccl" style="margin-top:10px">Annuler</button>`,()=>{
+   document.querySelectorAll("[data-cb]").forEach(b=>b.onclick=()=>{ launchCampaign(+b.dataset.cb); close(); });
+   $("cbg").onclick=()=>{ const v=Math.floor(+String($("cbx").value).replace(/\s/g,"")||0); if(v<10) return toast("Minimum 10 €"); launchCampaign(v); close(); };
+   $("ccl").onclick=close; });
 }
 
 function checkRank(){ const r=rankOf(S.rev); if(S.ms.rank!==r[0]&&S.rev>=r[0]&&r[0]>0){ S.ms.rank=r[0]; const bonus=r[0]*.1; S.cash+=bonus; if(!S.badges.includes(r[1])) S.badges.push(r[1]);
@@ -154,10 +168,10 @@ function renderHome(){ const pr=prod(S.prod), r=rankOf(S.rev), nx=nextRank(S.rev
    <div style="display:flex;align-items:center;gap:12px"><div style="font-size:36px">${pr?pr.e:"📦"}</div><div class="grow"><b style="font-size:16px">Produit vedette</b><div class="hint">${pr?esc(pr.n)+" · marge "+eur(pr.price-pr.cost):"Choisis un produit"}</div></div><div style="text-align:right"><div class="hint">${r[2]} ${r[1]}</div>${S.prestige?`<div class="tag">⭐${S.prestige}</div>`:""}</div></div>
    <div class="kpi" style="margin-top:10px"><div><span>📈 Chiffre d'affaires</span><b>${eur(S.rev)}</b></div><div><span>📦 Commandes</span><b>${nf(S.orders)}</b></div><div><span>⭐ Réputation</span><b>${Math.round(S.rep)}%</b></div><div><span>↩️ Remboursements</span><b>${nf(S.refunds)}</b></div></div>
    ${nx?`<div class="hint" style="margin-top:8px">Prochain palier : ${nx[2]} ${nx[1]} (${eur(nx[0])})</div><div class="bar"><div style="width:${Math.min(100,S.rev/nx[0]*100)}%"></div></div>`:`<div class="hint" style="margin-top:8px">👑 Palier max !</div>`}</div>
-  <button class="ad" id="runad">📢 Lancer une pub (${eur(ac)})<div class="hint" style="color:#fff;opacity:.85;font-weight:600;margin-top:3px">≈ ${nf(ac*adPower()*pm*1.5*conv()*(pr?pr.hype:1))} commandes</div></button>
-  <div class="hint" style="text-align:center;margin:8px 0">${lvl("auto")?"🤖 Tes pubs automatiques tournent toutes seules":"💡 Clique pour transformer ta pub en commandes"}</div>
+  ${S.camp?(()=>{ const c=S.camp, frac=Math.min(1,(Date.now()-c.start)/c.dur), left=Math.max(0,Math.ceil((c.dur-(Date.now()-c.start))/1000)); return `<div class="ad" style="cursor:default"><div style="font-size:16px">📢 Campagne en cours ${c.tag?`<span class="tag">${c.tag}</span>`:""}</div><div style="font-size:13px;opacity:.9;margin:4px 0">${nf(c.done)} / ${nf(c.total)} ventes · ⏳ ${left}s</div><div class="bar" style="background:#ffffff33"><div style="width:${frac*100}%"></div></div></div><button class="btn w" id="skipc" style="margin-top:8px">⏭️ Terminer la campagne maintenant</button>`; })():`<button class="ad" id="runad">📢 Lancer une campagne de pub<div class="hint" style="color:#fff;opacity:.85;font-weight:600;margin-top:3px">Choisis ton budget · 12h de jeu</div></button>`}
+  <div class="hint" style="text-align:center;margin:8px 0">${lvl("auto")?"🤖 Tes campagnes auto se relancent toutes seules":"💡 Mets le budget que tu veux, les ventes tombent sur 12h"}</div>
   <div class="card" style="margin-top:4px"><b>🧾 Dernières commandes</b><div class="feed" style="margin-top:6px">${S.feed.length?S.feed.map(f=>`<div class="ord"><span style="font-size:20px">${f.e}</span><div class="grow">${f.o} ventes de ${esc(f.n)} ${f.tag?`<span class="tag">${f.tag}</span>`:""}${f.ref?`<span class="hint"> · ${f.ref}↩️</span>`:""}</div><b style="color:${f.p>=0?"var(--ok)":"var(--ko)"}">${f.p>=0?"+":""}${eur(f.p)}</b></div>`).join(""):`<p class="hint">Lance ta première pub pour avoir des commandes !</p>`}</div></div>`;
- $("runad").onclick=e=>runAd(e);
+ if($("runad")) $("runad").onclick=openCampaign; if($("skipc")) $("skipc").onclick=()=>{ if(S.camp){ S.camp.start=Date.now()-S.camp.dur-1; tickCampaign(); save(); head(); renderHome(); } };
 }
 
 function renderProds(){ $("main").innerHTML=`<div class="card"><b>📦 Catalogue de produits</b><p class="hint">Choisis le produit que ta boutique met en avant. Débloque-en des plus chers (plus de marge) en montant ton chiffre d'affaires.</p></div>
@@ -198,12 +212,13 @@ function close(){ $("modal").classList.remove("on"); }
 $("modal").onclick=e=>{ if(e.target.id==="modal") close(); };
 
 /* idle : pubs auto + ventes organiques */
-setInterval(()=>{ if(lvl("auto")&&S.cash>adCost()*2&&Math.random()<.4*lvl("auto")){ runAd(null,adCost()); return; }
-  // ventes organiques via réputation
+setInterval(()=>{ tickCampaign();
+  if(!S.camp&&lvl("auto")&&S.cash>50&&Math.random()<.5*lvl("auto")){ launchCampaign(Math.min(S.cash*.3, 2000*lvl("auto"))); }
   const pr=prod(S.prod); if(pr&&S.rep>10){ const o=Math.max(0,Math.round(S.rep/100*Math.log10(S.orders+10)*pm)); if(o>0){ const unit=(pr.price*priceMult())-(pr.cost*supMult()+2); S.cash+=o*unit; S.rev+=o*pr.price*priceMult(); S.orders+=o; } }
-  S.last=Date.now(); save(); if(page==="home")head(); },2000);
+  S.last=Date.now(); save(); if(page==="home"){ if(S.camp) renderHome(); else head(); } },2000);
 setInterval(()=>{ if(page==="home") renderHome(); else head(); },4000);
 
+save();
 render();
 })();
 </script>
