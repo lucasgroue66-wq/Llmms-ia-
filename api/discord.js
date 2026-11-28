@@ -604,7 +604,7 @@ export default async function handler(req, res) {
       await kv([["SET", `llmms:dc:dev:${g2}:${uid}`, JSON.stringify(st), "EX", 600]]);
       return res.json({ type: 4, data: { embeds: [{ title: "🔢 Devine le nombre", description: `**${guess}** → c'est ${guess < st.n ? "plus grand ⬆️" : "plus petit ⬇️"}\nEssai n°${st.t}`, color: COL.gold }], components: [{ type: 1, components: [{ type: 2, style: 1, label: "✍️ Réessayer", custom_id: `dev:${uid}` }] }] } }); }
     if (i.type === 2 && i.data.name === "construire") {
-      const g2 = i.guild_id, uid2 = (i.member?.user || i.user)?.id, desc = String(opt(i, "description") || "").slice(0, 300);
+      const g2 = i.guild_id, uid2 = (i.member?.user || i.user)?.id, desc = String(opt(i, "description") || "").slice(0, 1500);
       if (!g2) return res.json(eph("Cette commande marche seulement dans un serveur."));
       const build = async () => { let plan;
         try { const t = await gemini(`Construis la structure d'un serveur Discord à partir de cette demande de l'utilisateur :
