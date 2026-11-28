@@ -574,8 +574,11 @@ export default async function handler(req, res) {
     const app = (process.env.DISCORD_APP_ID || "").trim(), q = new URL(req.url, "http://x").searchParams;
     if (q.get("register")) {
       if (!app || q.get("register") !== app) return res.status(403).send("Mets ?register=TON_APPLICATION_ID (et vérifie DISCORD_APP_ID sur Vercel).");
-      try { const r = await bot(`/applications/${app}/commands`, "PUT", CMDS); return res.status(200).send(`✅ ${r.length} commandes installées ! Elles apparaissent sur ton serveur en tapant /`); }
-      catch (e) { return res.status(500).send("❌ " + e.message); }
+      const guild = (q.get("guild") || "").trim();
+      try {
+        if (/^\d{17,20}$/.test(guild)) { const r = await bot(`/applications/${app}/guilds/${guild}/commands`, "PUT", CMDS); return res.status(200).send(`✅ ${r.length} commandes installées sur ton serveur ${guild} — elles apparaissent TOUT DE SUITE en tapant /`); }
+        const r = await bot(`/applications/${app}/commands`, "PUT", CMDS); return res.status(200).send(`✅ ${r.length} commandes installées (en global — ça peut prendre jusqu'à 1 h à apparaître).\n\n💡 Pour les voir TOUT DE SUITE, ajoute ton serveur : ?register=${app}&guild=ID_DE_TON_SERVEUR`);
+      } catch (e) { return res.status(500).send("❌ " + e.message); }
     }
     const pk = (process.env.DISCORD_PUBLIC_KEY || "").trim(), tk = (process.env.DISCORD_BOT_TOKEN || "").trim();
     const lines = [
