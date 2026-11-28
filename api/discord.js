@@ -158,6 +158,7 @@ const CMDS = [
   { name: "ticket", description: "🎫 Bouton pour ouvrir un ticket d'aide (admins)", default_member_permissions: "16" },
   { name: "accueil", description: "👋 Message d'accueil avec questions (admins)", default_member_permissions: "32", options: [{ type: 8, name: "role", description: "Rôle donné à la fin (accès au serveur)", required: false }] },
   { name: "construire", description: "🏗️ L'IA construit ton serveur (salons, rôles) — admins", default_member_permissions: "32", options: [{ type: 3, name: "description", description: "Décris le serveur que tu veux", required: true }] },
+  { name: "modifier", description: "🔧 L'IA modifie ton serveur existant (décris le changement) — admins", default_member_permissions: "32", options: [{ type: 3, name: "changement", description: "Ex: ajoute 2 vocaux gaming, renomme général en chat, supprime le rôle X", required: true }] },
   { name: "nettoyer", description: "🗑️ Supprimer tous les salons ou rôles (admins) — irréversible", default_member_permissions: "8", options: [{ type: 3, name: "quoi", description: "Ce qu'il faut supprimer", required: true, choices: [{ name: "Tous les salons", value: "salons" }, { name: "Tous les rôles", value: "roles" }, { name: "TOUT (salons + rôles)", value: "tout" }] }] },
   { name: "creerroles", description: "🎭 Créer des rôles (noms séparés par des ;) — admins", default_member_permissions: "268435456", options: [{ type: 3, name: "noms", description: "Ex: Admin;Modo;VIP;Membre", required: true }] },
   { name: "creersalons", description: "📁 Créer des salons (noms séparés par des ;) — admins", default_member_permissions: "16", options: [{ type: 3, name: "noms", description: "Ex: général;média;annonces", required: true }, { type: 3, name: "type", description: "Texte ou vocal", required: false, choices: [{ name: "Texte", value: "text" }, { name: "Vocal", value: "voice" }] }] }
@@ -186,7 +187,7 @@ async function run(i) {
       "**🎉 Serveur** : `/sondage` `/ouinon` `/giveaway` `/tirage` `/say` `/embed` `/compteur` `/avatar` `/userinfo` `/serveur`",
       "**🏅 Profil** : `/niveau` `/rank` `/succes`",
       "**🛡️ Modo** : `/clear` `/kick` `/slowmode` `/lock` `/unlock` `/addrole` `/removerole`",
-      "**🏠 Gestion** : `/membres` `/roles` `/boosts` `/annonce` `/countdown` `/rolereaction` `/reglement` `/ticket` `/accueil` `/construire`",
+      "**🏠 Gestion** : `/membres` `/roles` `/boosts` `/annonce` `/countdown` `/rolereaction` `/reglement` `/ticket` `/accueil` `/construire` `/modifier`",
       "**🎮 BLOXY** : `/bloxy` `/profil` `/classement`",
       "**🛡️ Modération** : `/warn` `/warns` `/mute` `/unmute` `/ban`"].join("\n"), COL.info, { footer: { text: "Créé avec llmms ia" } });
     case "daily": {
@@ -445,6 +446,38 @@ async function button(i) {
     const p = fin(); if (bg(p)) return { type: 7, data: { embeds: [{ title: "🗑️ Suppression en cours…", color: COL.ko }], components: [], flags: 64 } };
     await p; return { type: 7, data: { embeds: [{ title: "🗑️ Suppression en cours…", color: COL.ko }], components: [], flags: 64 } };
   }
+  if (kind === "mod") {
+    if (k === "no") return { type: 7, data: { embeds: [{ title: "❌ Annulé", description: "Aucun changement n'a été fait.", color: COL.ko }], components: [] } };
+    let plan; try { const [v] = await kv([["GET", `llmms:dc:modplan:${g}:${uid}`]]); plan = JSON.parse(v || "null"); } catch {}
+    if (!plan) return eph("Plan expiré ou ce n'est pas le tien. Relance `/modifier`.");
+    if (plan.by && plan.by !== uid) return eph("Seul celui qui a lancé la commande peut confirmer 😉");
+    await kv([["DEL", `llmms:dc:modplan:${g}:${uid}`]]);
+    const hex = c => { const n = parseInt(String(c || "").replace("#", ""), 16); return Number.isFinite(n) ? n & 0xffffff : 0; };
+    const norm = s => String(s || "").toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/[^a-z0-9]+/g, "").trim();
+    const clean2 = s => String(s || "salon").toLowerCase().normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "").slice(0, 90) || "salon";
+    const fin = async () => {
+      let done = 0, errs = 0, chs = [], rls = [];
+      try { chs = await bot(`/guilds/${g}/channels`) || []; rls = await bot(`/guilds/${g}/roles`) || []; } catch {}
+      const catId = {}; chs.filter(c => c.type === 4).forEach(c => catId[norm(c.name)] = c.id);
+      const findCh = n => chs.find(c => (c.type === 0 || c.type === 2) && norm(c.name) === norm(n)) || chs.find(c => (c.type === 0 || c.type === 2) && norm(c.name).includes(norm(n)));
+      const findCat = n => chs.find(c => c.type === 4 && norm(c.name) === norm(n));
+      const findRole = n => rls.find(r => r.name !== "@everyone" && !r.managed && norm(r.name) === norm(n)) || rls.find(r => r.name !== "@everyone" && !r.managed && norm(r.name).includes(norm(n)));
+      for (const o of plan.ops) { try {
+        if (o.do === "create_category") { const c = await bot(`/guilds/${g}/channels`, "POST", { name: String(o.name || "catégorie").slice(0, 90), type: 4 }); if (c) catId[norm(o.name)] = c.id; done++; }
+        else if (o.do === "create_channel") { const parent = o.category ? (catId[norm(o.category)] || null) : null; await bot(`/guilds/${g}/channels`, "POST", { name: o.type === "voice" ? String(o.name || "salon").slice(0, 90) : clean2(o.name), type: o.type === "voice" ? 2 : 0, parent_id: parent }); done++; }
+        else if (o.do === "create_role") { await bot(`/guilds/${g}/roles`, "POST", { name: String(o.name || "rôle").slice(0, 90), color: hex(o.color), hoist: true }); done++; }
+        else if (o.do === "rename_channel") { const c = findCh(o.from); if (c) { await bot(`/channels/${c.id}`, "PATCH", { name: c.type === 2 ? String(o.to).slice(0, 90) : clean2(o.to) }); done++; } else errs++; }
+        else if (o.do === "rename_category") { const c = findCat(o.from); if (c) { await bot(`/channels/${c.id}`, "PATCH", { name: String(o.to).slice(0, 90) }); done++; } else errs++; }
+        else if (o.do === "rename_role") { const r = findRole(o.from); if (r) { await bot(`/guilds/${g}/roles/${r.id}`, "PATCH", { name: String(o.to).slice(0, 90) }); done++; } else errs++; }
+        else if (o.do === "delete_channel") { const c = findCh(o.name); if (c) { await bot(`/channels/${c.id}`, "DELETE"); done++; } else errs++; }
+        else if (o.do === "delete_role") { const r = findRole(o.name); if (r) { await bot(`/guilds/${g}/roles/${r.id}`, "DELETE"); done++; } else errs++; }
+        else errs++;
+      } catch { errs++; } }
+      await fetch(`${API}/webhooks/${i.application_id}/${i.token}/messages/@original`, { method: "PATCH", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ embeds: [{ title: "✅ Serveur modifié", description: `${done} modification(s) appliquée(s)${errs ? `\n⚠️ ${errs} non faite(s) (introuvable, permission manquante, ou rôle au-dessus du bot)` : ""}`, color: COL.ok }], components: [] }) }).catch(() => {});
+    };
+    const p = fin(); if (bg(p)) return { type: 7, data: { embeds: [{ title: "🔧 Modifications en cours…", description: "Je touche à ton serveur, patiente quelques secondes ⏳", color: COL.info }], components: [] } };
+    await p; return { type: 7, data: { embeds: [{ title: "🔧 Modifications en cours…", color: COL.info }], components: [] } };
+  }
   if (kind === "build") {
     if (k === "no") return { type: 7, data: { embeds: [{ title: "❌ Annulé", description: "Aucun changement n'a été fait.", color: COL.ko }], components: [] } };
     let plan; try { const [v] = await kv([["GET", `llmms:dc:plan:${g}:${uid}`]]); plan = JSON.parse(v || "null"); } catch {}
@@ -582,6 +615,44 @@ RÈGLE N°1 — OBÉIS À LA LETTRE : si l'utilisateur donne une liste de catég
         await kv([["SET", `llmms:dc:plan:${g2}:${uid2}`, JSON.stringify(plan), "EX", 900]]);
         const preview = plan.categories.map(c => `**📁 ${c.name}**\n` + (c.channels || []).map(ch => `  ${ch.type === "voice" ? "🔊" : "#"} ${ch.name}`).join("\n")).join("\n\n");
         return { embeds: [{ title: "🏗️ Aperçu du serveur", description: `🎭 **Rôles :** ${plan.roles.map(r => r.name).join(", ") || "aucun"}\n\n${preview}`.slice(0, 3800), color: COL.info, footer: { text: "Confirme pour tout créer sur le serveur" } }], components: [{ type: 1, components: [{ type: 2, style: 3, label: "✅ Construire", custom_id: "build:go" }, { type: 2, style: 4, label: "❌ Annuler", custom_id: "build:no" }] }] };
+      };
+      return await late(build(), 5);
+    }
+    if (i.type === 2 && i.data.name === "modifier") {
+      const g2 = i.guild_id, uid2 = (i.member?.user || i.user)?.id, desc = String(opt(i, "changement") || "").slice(0, 300);
+      if (!g2) return res.json(eph("Cette commande marche seulement dans un serveur."));
+      const build = async () => {
+        let chs = [], rls = [];
+        try { chs = await bot(`/guilds/${g2}/channels`) || []; rls = await bot(`/guilds/${g2}/roles`) || []; } catch (e) { return { embeds: [{ title: "😵 Erreur", description: "Je n'arrive pas à lire le serveur : " + e.message, color: COL.ko }] }; }
+        const cats = chs.filter(c => c.type === 4).map(c => c.name), txt = chs.filter(c => c.type === 0).map(c => c.name), voc = chs.filter(c => c.type === 2).map(c => c.name), rns = rls.filter(r => r.name !== "@everyone" && !r.managed).map(r => r.name);
+        let plan;
+        try { const t = await gemini(`Voici l'état ACTUEL d'un serveur Discord :
+Catégories : ${cats.join(", ") || "(aucune)"}
+Salons texte : ${txt.join(", ") || "(aucun)"}
+Salons vocaux : ${voc.join(", ") || "(aucun)"}
+Rôles : ${rns.join(", ") || "(aucun)"}
+
+L'utilisateur veut ce changement : «${desc}»
+
+Réponds UNIQUEMENT en JSON, sans texte autour : {"ops":[ ... ]}. Chaque op a un champ "do" :
+- {"do":"create_category","name":"NOM"}
+- {"do":"create_channel","name":"nom","type":"text|voice","category":"catégorie existante ou créée (optionnel)"}
+- {"do":"create_role","name":"Nom","color":"#xxxxxx"}
+- {"do":"rename_channel","from":"nom actuel exact","to":"nouveau nom"}
+- {"do":"rename_category","from":"nom actuel","to":"nouveau nom"}
+- {"do":"rename_role","from":"nom actuel","to":"nouveau nom"}
+- {"do":"delete_channel","name":"nom actuel exact"}
+- {"do":"delete_role","name":"nom actuel exact"}
+
+RÈGLES : fais SEULEMENT ce que l'utilisateur demande, rien d'autre. Pour renommer/supprimer, utilise EXACTEMENT un nom présent dans les listes ci-dessus. Salons texte en minuscules avec des tirets, sans emoji. Maximum 20 opérations. JSON complet et bien fermé.`, null, "Tu renvoies uniquement du JSON valide, complet et bien fermé. Tu ne fais que ce qui est demandé.", 2000, "gemini-2.0-flash,gemini-flash-latest,gemini-flash-lite-latest", 0.15);
+          let raw = (t.match(/\{[\s\S]*\}/) || [t])[0].replace(/,(\s*[}\]])/g, "$1");
+          try { plan = JSON.parse(raw); } catch { plan = JSON.parse(repairJSON(raw)); }
+        } catch (e) { return { embeds: [{ title: "😵 Erreur", description: "L'IA n'a pas réussi : " + e.message, color: COL.ko }] }; }
+        plan.ops = (plan.ops || []).slice(0, 20); plan.by = uid2;
+        if (!plan.ops.length) return { embeds: [{ title: "🤔 Rien à faire", description: "Je n'ai pas compris le changement. Réessaie plus précisément (ex: « ajoute un vocal musique », « renomme général en discussion », « supprime le salon spam »).", color: COL.gold }] };
+        const label = o => o.do === "create_category" ? `📁 Créer la catégorie « ${o.name} »` : o.do === "create_channel" ? `${o.type === "voice" ? "🔊" : "#"} Créer le salon « ${o.name} »${o.category ? " dans " + o.category : ""}` : o.do === "create_role" ? `🎭 Créer le rôle « ${o.name} »` : o.do === "rename_channel" ? `✏️ Salon « ${o.from} » → « ${o.to} »` : o.do === "rename_category" ? `✏️ Catégorie « ${o.from} » → « ${o.to} »` : o.do === "rename_role" ? `✏️ Rôle « ${o.from} » → « ${o.to} »` : o.do === "delete_channel" ? `🗑️ Supprimer le salon « ${o.name} »` : o.do === "delete_role" ? `🗑️ Supprimer le rôle « ${o.name} »` : `• ${o.do}`;
+        await kv([["SET", `llmms:dc:modplan:${g2}:${uid2}`, JSON.stringify(plan), "EX", 900]]);
+        return { embeds: [{ title: "🔧 Aperçu des modifications", description: plan.ops.map(label).join("\n").slice(0, 3800), color: COL.info, footer: { text: "Confirme pour appliquer sur ton serveur" } }], components: [{ type: 1, components: [{ type: 2, style: 3, label: "✅ Appliquer", custom_id: "mod:go" }, { type: 2, style: 4, label: "❌ Annuler", custom_id: "mod:no" }] }] };
       };
       return await late(build(), 5);
     }
