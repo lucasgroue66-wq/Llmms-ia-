@@ -137,13 +137,13 @@ const rankOf=r=>{ let x=RANKS[0]; for(const k of RANKS) if(r>=k[0]) x=k; return 
 const nextRank=r=>RANKS.find(x=>x[0]>r);
 
 const UPG={
- ad:{ic:"📢",n:"Ciblage pub",d:"+ de visiteurs par pub",base:80,mul:1.55},
- site:{ic:"🖥️",n:"Design du site",d:"+ de conversion",base:150,mul:1.6},
- supp:{ic:"🏭",n:"Meilleur fournisseur",d:"Coût produit -",base:300,mul:1.65},
- sav:{ic:"🎧",n:"Service client",d:"- de remboursements",base:250,mul:1.6},
- brand:{ic:"✨",n:"Image de marque",d:"+ de ventes & prix",base:600,mul:1.7},
- auto:{ic:"🤖",n:"Pub automatique",d:"Lance des pubs tout seul",base:1200,mul:1.8},
- influ:{ic:"🌟",n:"Influenceurs",d:"Gros boost de trafic",base:5000,mul:1.85}
+ ad:{ic:"📢",n:"Ciblage pub",d:"+ de visiteurs par pub",base:120,mul:1.58},
+ site:{ic:"🖥️",n:"Design du site",d:"+ de conversion",base:230,mul:1.62},
+ supp:{ic:"🏭",n:"Meilleur fournisseur",d:"Coût produit -",base:450,mul:1.66},
+ sav:{ic:"🎧",n:"Service client",d:"- de remboursements",base:380,mul:1.62},
+ brand:{ic:"✨",n:"Image de marque",d:"+ de ventes & prix",base:950,mul:1.72},
+ auto:{ic:"🤖",n:"Pub automatique",d:"Lance des pubs tout seul",base:2000,mul:1.82},
+ influ:{ic:"🌟",n:"Influenceurs",d:"Gros boost de trafic",base:8000,mul:1.86}
 };
 
 function fresh(){ return {v:1,cash:200,rev:0,orders:0,refunds:0,rep:50,prod:"led",owned:["led","watch"],up:{},feed:[],prestige:0,start:Date.now(),last:Date.now(),ms:{},badges:[]}; }
@@ -154,17 +154,17 @@ const prod=id=>PRODUCTS.find(p=>p.id===id);
 function lvl(k){ return S.up[k]||0; }
 function cost(k){ const u=UPG[k]; return Math.floor(u.base*Math.pow(u.mul,lvl(k))); }
 const pm=1+S.prestige*.5;
-function adPower(){ return (1+lvl("ad")*.4)*(1+lvl("influ")*1.2); }
-function conv(){ return Math.min(.4,0.055+lvl("site")*.013+lvl("brand")*.008)*(1+S.rep/200); }
+function adPower(){ return (1+lvl("ad")*.35)*(1+lvl("influ")*.7); }
+function conv(){ return Math.min(.33,0.05+lvl("site")*.012+lvl("brand")*.007)*(1+S.rep/200); }
 function supMult(){ return Math.max(.3,1-lvl("supp")*.08); }
-function refundRate(){ return Math.max(.01,0.08-lvl("sav")*.012-S.rep/2000); }
+function refundRate(){ return Math.max(.015,0.1-lvl("sav")*.011-S.rep/2200); }
 function priceMult(){ return 1+lvl("brand")*.06; }
 function adCost(){ return Math.max(12,Math.round(18*Math.pow(1.07,S.orders/60))); }
 
 function toast(t){ const e=$("toast"); e.textContent=t; e.classList.add("on"); clearTimeout(toast.t); toast.t=setTimeout(()=>e.classList.remove("on"),2000); }
 
-function yieldPerEuro(){ const pr=prod(S.prod); return 0.085*(0.6+conv()*3)*Math.sqrt(adPower())*(pr?pr.hype:1)*pm; }
-const CAMP_DUR=120000; // 12h de jeu ≈ 2 min réelles
+function yieldPerEuro(){ const pr=prod(S.prod); return 0.082*(0.6+conv()*3)*Math.sqrt(adPower())*(pr?pr.hype:1)*pm; }
+const CAMP_DUR=45000; // 12h de jeu ≈ 45 s réelles
 function launchCampaign(budget){ const pr=prod(S.prod); if(!pr){ toast("Choisis un produit d'abord"); return; }
  budget=Math.max(10,Math.min(Math.floor(S.cash),Math.floor(budget))); if(S.cash<budget){ toast("Pas assez de cash 💸"); return; }
  if(S.camp){ toast("Une campagne tourne déjà, attends la fin ⏳"); return; }
@@ -221,7 +221,7 @@ function renderHome(){ const pr=prod(S.prod), r=rankOf(S.rev), nx=nextRank(S.rev
    <div style="display:flex;align-items:center;gap:12px"><div class="thumb sm">${pr?pr.e:"📦"}</div><div class="grow"><b style="font-size:16px">Produit vedette</b><div class="hint">${pr?"marge "+eur(pr.price-pr.cost)+" · hype x"+pr.hype:"Choisis un produit"}</div></div><div style="text-align:right"><div class="hint">${r[2]} ${r[1]}</div>${S.prestige?`<div class="tag">⭐${S.prestige}</div>`:""}</div></div>
    <div class="kpi" style="margin-top:10px"><div><span>📈 Chiffre d'affaires</span><b>${eur(S.rev)}</b></div><div><span>📦 Commandes</span><b>${nf(S.orders)}</b></div><div><span>⭐ Réputation</span><b>${Math.round(S.rep)}%</b></div><div><span>↩️ Remboursements</span><b>${nf(S.refunds)}</b></div></div>
    ${nx?`<div class="hint" style="margin-top:8px">Prochain palier : ${nx[2]} ${nx[1]} (${eur(nx[0])})</div><div class="bar"><div style="width:${Math.min(100,S.rev/nx[0]*100)}%"></div></div>`:`<div class="hint" style="margin-top:8px">👑 Palier max !</div>`}</div>
-  ${S.camp?(()=>{ const c=S.camp, frac=Math.min(1,(Date.now()-c.start)/c.dur), left=Math.max(0,Math.ceil((c.dur-(Date.now()-c.start))/1000)); return `<div class="ad" style="cursor:default"><div style="font-size:16px">📢 Campagne en cours ${c.tag?`<span class="tag">${c.tag}</span>`:""}</div><div style="font-size:13px;opacity:.9;margin:4px 0">${nf(c.done)} / ${nf(c.total)} ventes · ⏳ ${left}s</div><div class="bar" style="background:#ffffff33"><div style="width:${frac*100}%"></div></div></div><button class="btn w" id="skipc" style="margin-top:8px">⏭️ Terminer la campagne maintenant</button>`; })():`<button class="ad" id="runad">📢 Lancer une campagne de pub<div class="hint" style="color:#fff;opacity:.85;font-weight:600;margin-top:3px">Choisis ton budget · 12h de jeu</div></button>`}
+  ${S.camp?(()=>{ const c=S.camp, frac=Math.min(1,(Date.now()-c.start)/c.dur), left=Math.max(0,Math.ceil((c.dur-(Date.now()-c.start))/1000)); return `<div class="ad" style="cursor:default"><div style="font-size:16px">📢 Campagne en cours ${c.tag?`<span class="tag">${c.tag}</span>`:""}</div><div style="font-size:13px;opacity:.9;margin:4px 0">${nf(c.done)} / ${nf(c.total)} ventes · ⏳ ${left}s</div><div class="bar" style="background:#ffffff33"><div style="width:${frac*100}%"></div></div></div><button class="btn w" id="skipc" style="margin-top:8px">⏭️ Terminer la campagne maintenant</button>`; })():`<button class="ad" id="runad">📢 Lancer une campagne de pub<div class="hint" style="color:#fff;opacity:.85;font-weight:600;margin-top:3px">Choisis ton budget · 12h de jeu (45s)</div></button>`}
   <div class="hint" style="text-align:center;margin:8px 0">${lvl("auto")?"🤖 Tes campagnes auto se relancent toutes seules":"💡 Mets le budget que tu veux, les ventes tombent sur 12h"}</div>
   <div class="card" style="margin-top:4px"><b>🧾 Dernières commandes</b><div class="feed" style="margin-top:6px">${S.feed.length?S.feed.map(f=>`<div class="ord"><span style="font-size:20px">${f.e}</span><div class="grow">${f.o} ventes de ${esc(f.n)} ${f.tag?`<span class="tag">${f.tag}</span>`:""}${f.ref?`<span class="hint"> · ${f.ref}↩️</span>`:""}</div><b style="color:${f.p>=0?"var(--ok)":"var(--ko)"}">${f.p>=0?"+":""}${eur(f.p)}</b></div>`).join(""):`<p class="hint">Lance ta première pub pour avoir des commandes !</p>`}</div></div>`;
  if($("runad")) $("runad").onclick=openCampaign; if($("skipc")) $("skipc").onclick=()=>{ if(S.camp){ S.camp.start=Date.now()-S.camp.dur-1; tickCampaign(); save(); head(); renderHome(); } };
@@ -267,9 +267,10 @@ $("modal").onclick=e=>{ if(e.target.id==="modal") close(); };
 /* idle : pubs auto + ventes organiques */
 setInterval(()=>{ tickCampaign();
   if(!S.camp&&lvl("auto")&&S.cash>50&&Math.random()<.5*lvl("auto")){ launchCampaign(Math.min(S.cash*.3, 2000*lvl("auto"))); }
-  const pr=prod(S.prod); if(pr&&S.rep>10){ const o=Math.max(0,Math.round(S.rep/100*Math.log10(S.orders+10)*pm)); if(o>0){ const unit=(pr.price*priceMult())-(pr.cost*supMult()+2); S.cash+=o*unit; S.rev+=o*pr.price*priceMult(); S.orders+=o; } }
+  const pr=prod(S.prod); if(pr&&S.rep>15){ const o=Math.max(0,Math.round(S.rep/175*Math.log10(S.orders+10)*pm)); if(o>0){ const unit=(pr.price*priceMult())-(pr.cost*supMult()+2); S.cash+=o*unit; S.rev+=o*pr.price*priceMult(); S.orders+=o; } }
   S.last=Date.now(); save(); if(page==="home"){ if(S.camp) renderHome(); else head(); } },2000);
 setInterval(()=>{ if(page==="home") renderHome(); else head(); },4000);
+setInterval(()=>{ if(!S.camp) return; tickCampaign(); head(); if(page==="home") renderHome(); },500);
 
 save();
 render();
