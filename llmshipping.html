@@ -6,6 +6,8 @@
 <title>LLM Shipping — tes Kinder livrés chez toi</title>
 <meta name="description" content="LLM Shipping : commande tes Kinder préférés (Bueno, Country, Maxi, Schoko-Bons…) et fais-toi livrer rapidement. La boutique gourmande de LLMMS.">
 <link rel="icon" href="/favicon.svg">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
 <style>
 :root{
  --bg:#140d06;--bg2:#1d1309;--panel:#241708;--cream:#f6ecd8;--milk:#f3d9a8;
@@ -13,8 +15,12 @@
  --red:#d0392b;--ok:#2fbf6b;--tx:#2a1c0d;--mut:#9c8464;--line:#e7d4b4;
 }
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;margin:0}
-html,body{background:var(--cream);color:var(--tx);font-family:"Segoe UI",system-ui,Roboto,sans-serif;-webkit-font-smoothing:antialiased}
+html,body{background:var(--cream);color:var(--tx);font-family:"Nunito","Segoe UI",system-ui,Roboto,sans-serif;-webkit-font-smoothing:antialiased}
 body{padding-bottom:60px}
+h1,.brand,.h2,.price,.foot .tot,.sheet h3,.cb .n{font-family:"Baloo 2","Nunito",system-ui,sans-serif}
+/* bandeau promo */
+.promo{background:linear-gradient(90deg,var(--red),#e8603a);color:#fff;text-align:center;font-weight:800;font-size:13px;padding:8px 12px;letter-spacing:.2px}
+.promo span{opacity:.92}
 button{font:inherit;cursor:pointer;border:0;background:none;color:inherit}
 a{color:inherit;text-decoration:none}
 /* ---------- HEADER ---------- */
@@ -92,6 +98,11 @@ a{color:inherit;text-decoration:none}
 .field input:focus,.field textarea:focus{border-color:var(--caramel);box-shadow:0 0 0 3px #e9b24a44}
 .ok{text-align:center;padding:14px 6px}
 .ok .big{font-size:52px}
+.trust{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:14px;margin-top:6px}
+.tc{background:#fff;border:1px solid var(--line);border-radius:18px;padding:18px 14px;text-align:center;box-shadow:0 12px 26px -20px #3a23108c}
+.tc .ic{font-size:30px}
+.tc b{display:block;margin-top:6px;color:var(--choco);font-size:16px;font-family:"Baloo 2",sans-serif}
+.tc span{display:block;margin-top:3px;font-size:12.5px;color:#8a6a3a}
 .footer{max-width:1080px;margin:30px auto 0;padding:24px 16px;color:#8a6a3a;font-size:13px;text-align:center;border-top:1px solid var(--line)}
 .toast{position:fixed;left:50%;bottom:26px;transform:translateX(-50%) translateY(20px);background:var(--choco);color:var(--cream);font-weight:800;padding:12px 18px;border-radius:14px;opacity:0;transition:.25s;z-index:90;box-shadow:0 14px 30px -10px #000a}
 .toast.on{opacity:1;transform:translateX(-50%) translateY(0)}
@@ -100,6 +111,7 @@ a{color:inherit;text-decoration:none}
 </head>
 <body>
 
+<div class="promo">🚚 <span>Livraison OFFERTE dès 15 € d'achat</span> · 🍫 Nouveaux arrivages chaque semaine</div>
 <header class="hd"><div class="hin">
   <div class="brand"><div class="logo">🍫</div><div>LLM Shipping<small>LIVRAISON GOURMANDE</small></div></div>
   <span class="grow"></span>
@@ -125,6 +137,15 @@ a{color:inherit;text-decoration:none}
   <div class="h2">🍫 Notre sélection <span class="line"></span></div>
   <div class="grid" id="grid"></div>
 </main>
+
+<section class="wrap" style="padding-top:8px">
+  <div class="trust">
+    <div class="tc"><div class="ic">🚚</div><b>Livraison rapide</b><span>Expédié en 24-72h partout en France</span></div>
+    <div class="tc"><div class="ic">🔒</div><b>Paiement sécurisé</b><span>Tes données sont protégées</span></div>
+    <div class="tc"><div class="ic">🍫</div><b>Produits frais</b><span>Stock renouvelé chaque semaine</span></div>
+    <div class="tc"><div class="ic">⭐</div><b>4,9/5</b><span>Plus de 2 300 clients satisfaits</span></div>
+  </div>
+</section>
 
 <div class="footer">
   <b>LLM Shipping</b> — la boutique gourmande de LLMMS 🍫<br>
