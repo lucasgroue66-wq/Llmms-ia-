@@ -155,6 +155,7 @@ const CMDS = [
   { name: "countdown", description: "⏳ Compte à rebours pour un event", options: [{ type: 3, name: "event", description: "Le nom de l'event", required: true }, { type: 4, name: "jours", description: "Dans combien de jours", required: false, min_value: 0 }, { type: 4, name: "heures", description: "+ heures", required: false, min_value: 0 }, { type: 4, name: "minutes", description: "+ minutes", required: false, min_value: 0 }] },
   { name: "rolereaction", description: "🎭 Message pour choisir un rôle (admins)", default_member_permissions: "268435456", options: [{ type: 8, name: "role", description: "Le rôle à distribuer", required: true }, { type: 3, name: "nom", description: "Texte du bouton", required: false }, { type: 3, name: "message", description: "Texte au-dessus", required: false }] },
   { name: "reglement", description: "📜 Règlement avec bouton J'accepte (admins)", default_member_permissions: "8192", options: [{ type: 3, name: "texte", description: "Le règlement", required: true }, { type: 8, name: "role", description: "Rôle donné à l'acceptation", required: false }] },
+  { name: "roleauto", description: "✅ Bouton d'accès : les nouveaux cliquent pour recevoir un rôle (admins)", default_member_permissions: "268435456", options: [{ type: 8, name: "role", description: "Le rôle à donner", required: true }, { type: 3, name: "message", description: "Texte affiché au-dessus", required: false }, { type: 3, name: "bouton", description: "Texte du bouton", required: false }] },
   { name: "ticket", description: "🎫 Bouton pour ouvrir un ticket d'aide (admins)", default_member_permissions: "16" },
   { name: "accueil", description: "👋 Message d'accueil avec questions (admins)", default_member_permissions: "32", options: [{ type: 8, name: "role", description: "Rôle donné à la fin (accès au serveur)", required: false }] },
   { name: "construire", description: "🏗️ L'IA construit ton serveur (salons, rôles) — admins", default_member_permissions: "32", options: [{ type: 3, name: "description", description: "Décris le serveur que tu veux", required: true }] },
@@ -198,7 +199,7 @@ async function run(i) {
       "**🎉 Serveur** : `/sondage` `/ouinon` `/giveaway` `/tirage` `/say` `/embed` `/compteur` `/avatar` `/userinfo` `/serveur`",
       "**🏅 Profil** : `/niveau` `/rank` `/succes`",
       "**🛡️ Modo** : `/clear` `/kick` `/slowmode` `/lock` `/unlock` `/addrole` `/removerole`",
-      "**🏠 Gestion** : `/membres` `/roles` `/boosts` `/annonce` `/countdown` `/rolereaction` `/reglement` `/ticket` `/accueil` `/construire` `/modifier` `/setup` `/evenement`",
+      "**🏠 Gestion** : `/membres` `/roles` `/boosts` `/annonce` `/countdown` `/rolereaction` `/reglement` `/roleauto` `/ticket` `/accueil` `/construire` `/modifier` `/setup` `/evenement`",
       "**🎮 BLOXY** : `/bloxy` `/profil` `/classement`",
       "**🛡️ Modération** : `/warn` `/warns` `/mute` `/unmute` `/ban`"].join("\n"), COL.info, { footer: { text: "Créé avec llmms ia" } });
     case "daily": {
@@ -380,6 +381,8 @@ async function run(i) {
       return { type: 4, data: { embeds: [{ title: "🎭 Rôle", description: txt, color: COL.info }], components: [{ type: 1, components: [{ type: 2, style: 1, label, custom_id: `role:${r}` }] }], allowed_mentions: { parse: [] } } }; }
     case "reglement": { const txt = String(opt(i, "texte")).slice(0, 3500), r = opt(i, "role");
       return { type: 4, data: { embeds: [{ title: "📜 Règlement", description: txt, color: COL.gold, footer: { text: "Clique sur J'accepte pour valider" } }], components: [{ type: 1, components: [{ type: 2, style: 3, label: "✅ J'accepte", custom_id: `accept:${r || "0"}` }] }] } }; }
+    case "roleauto": { const r = opt(i, "role"), txt = String(opt(i, "message") || "Clique sur le bouton pour accéder au serveur et recevoir ton rôle 👇").slice(0, 500), lb = String(opt(i, "bouton") || "✅ Récupérer mon rôle").slice(0, 40);
+      return { type: 4, data: { embeds: [{ title: "👋 Accès au serveur", description: txt, color: COL.ok }], components: [{ type: 1, components: [{ type: 2, style: 3, label: lb, custom_id: `rget:${r}` }] }], allowed_mentions: { parse: [] } } }; }
     case "ticket": return { type: 4, data: { embeds: [{ title: "🎫 Support", description: "Besoin d'aide ? Clique sur le bouton pour ouvrir un salon privé avec le staff.", color: COL.info }], components: [{ type: 1, components: [{ type: 2, style: 3, label: "🎫 Ouvrir un ticket", custom_id: "ticket:open" }] }] } };
     case "creerroles": { if (g === "dm") return eph("Seulement sur un serveur."); const noms = String(opt(i, "noms")).split(/[;,]/).map(s => s.trim()).filter(Boolean).slice(0, 10);
       if (!noms.length) return eph("Donne au moins un nom (ex: Admin;Modo;Membre)."); let ok2 = 0, errs = 0;
@@ -514,6 +517,8 @@ async function button(i) {
     if (step < QUESTIONS.length) return { type: 7, data: qStep(step, role) };
     let note = ""; if (role && role !== "0") { try { await bot(`/guilds/${g}/members/${uid}/roles/${role}`, "PUT"); note = `\n\n🎟️ Tu as reçu le rôle <@&${role}>, tu as accès au serveur !`; } catch (e) { note = "\n\n⚠️ (le bot n'a pas pu te donner le rôle : " + e.message + ")"; } }
     return { type: 7, data: { embeds: [{ title: "🎉 Merci et bienvenue !", description: `Tu as répondu à toutes les questions 👏${note}\nAmuse-toi bien sur le serveur 💜`, color: COL.ok }], flags: 64, components: [] } }; }
+  if (kind === "rget") { const rid = k; if ((i.member?.roles || []).includes(rid)) return eph("Tu as déjà ce rôle ✅");
+    try { await bot(`/guilds/${g}/members/${uid}/roles/${rid}`, "PUT"); return eph(`✅ Tu as reçu le rôle <@&${rid}> ! Bienvenue 🎉`); } catch (e) { return eph("❌ " + e.message + "\n(le bot peut-il gérer ce rôle ? son rôle doit être au-dessus dans la liste.)"); } }
   if (kind === "role") { const rid = k, has = (i.member?.roles || []).includes(rid);
     try { await bot(`/guilds/${g}/members/${uid}/roles/${rid}`, has ? "DELETE" : "PUT"); return eph(has ? `➖ Rôle <@&${rid}> retiré.` : `✅ Rôle <@&${rid}> ajouté !`); } catch (e) { return eph("❌ " + e.message + "\n(le bot peut-il gérer ce rôle ?)"); } }
   if (kind === "accept") { if (k && k !== "0") { try { await bot(`/guilds/${g}/members/${uid}/roles/${k}`, "PUT"); } catch (e) { return eph("❌ " + e.message); } } return eph("✅ Merci d'avoir accepté le règlement ! Bienvenue 🎉"); }
