@@ -179,7 +179,11 @@ const RCOL = [0xe74c3c, 0xe67e22, 0xf1c40f, 0x2ecc71, 0x1abc9c, 0x3498db, 0x9b59
 const QUESTIONS = [
   { q: "Tu connais LLMMS ? 👑", opts: ["Oui évidemment 🔥", "Un peu 👀", "Non c'est qui ?"] },
   { q: "Tu savais que LLMMS a quitté Discord pendant 1 an ? 😱", opts: ["Ouais le traître 😭", "Non sérieux ?! 😳"] },
-  { q: "Tu connais Storm ? ⚡", opts: ["Ouais carrément", "Non jamais entendu"] }
+  { q: "Tu connais Storm ? ⚡", opts: ["Ouais carrément", "Un peu", "Non jamais entendu"] },
+  { q: "Tu sais qui va quitter Roblox ? 👀", opts: ["Ouais je sais 🤫", "Non raconte !", "Quoi ?! 😱"] },
+  { q: "T'as des brainrots sur Steal a Noflex ? 🧱", opts: ["Full brainrots 🔥", "Quelques-uns", "Zéro 😅"] },
+  { q: "T'as des brainrots sur Steal a Snow ? ❄️", opts: ["Ouais j'en ai 😎", "Un peu", "Non pas encore"] },
+  { q: "Tu viens pour quoi sur le serveur ? 🎮", opts: ["Jouer à Roblox", "Parler avec la commu", "Voir LLMMS 👑"] }
 ];
 
 const ANY = ["aide", "ia", "discute", "idee", "pfc", "de", "8ball", "quiz", "fakenitro", "faketiktok", "fakeboost", "bloxy", "profil", "classement", "roast", "histoire", "traduire", "resume", "avatar", "userinfo", "roulette", "devine", "duel", "fakeban", "fakehack", "fakeleave", "fakeannonce", "pickup", "verite", "action", "complot", "insulte", "say", "embed", "tirage", "ouinon", "rank", "succes"];
