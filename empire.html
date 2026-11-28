@@ -757,7 +757,7 @@ function commHTML(A){ const tp=bloxPlayers(A), c=A.comm;
   </div>`;
 }
 const PROMOS=[["🎵","TikTok (TokTik)",120,2500,7000,.35],["▶️","YouTube (VidTube)",160,1800,5000,.55],["📸","Insta (Pixgram)",90,1200,3500,.3],["🟥","Pub Bloxy",220,6000,14000,0]];
-function promoGame(id){ const A=P(), g=A.blox.find(x=>x.id==id); if(!g||g.dev>0) return; const aud=Math.round(Object.values(S0()).reduce((s,x)=>s+(x.f||0),0));
+function promoGame(id){ const A=P(), g=A.blox.find(x=>x.id==id); if(!g||g.dev>0) return; const aud=Math.round(Object.values(S0()).reduce((s,x)=>s+(x.f||0),0)+(A.vid&&A.vid.subs||0));
   popup(`<h3>📣 Faire de la pub pour ${esc(g.n)}</h3><p class="hint">Choisis une plateforme. <b>1 personne sur 10</b> qui voit ta pub rejoint ton jeu. Plus tu as d'abonnés (${aud.toLocaleString("fr-FR")}), plus ta pub touche de monde.</p>
    ${PROMOS.map((pr,i)=>{ const cost=Math.round(g.q*pr[2]), reachEst=Math.round((pr[3]+pr[4])/2+aud*pr[5]); return `<div class="item"><div class="ic">${pr[0]}</div><div class="grow"><div class="t">${pr[1]}</div><div class="d">~${reachEst.toLocaleString("fr-FR")} vues · ≈ ${Math.round(reachEst/10).toLocaleString("fr-FR")} joueurs</div></div><button class="btn p" data-pr="${i}" ${E.cash<cost?"disabled":""}>${fmt(cost)}</button></div>`; }).join("")}
    <button class="btn gh" id="prx" style="width:100%;margin-top:8px">Fermer</button>`,()=>{
