@@ -253,7 +253,8 @@ function randomEvent(){ pick([
   ()=>{ const t=Math.max(0,E.cash)*.03; if(t<50) return; E.cash-=t; logEv(`🧾 Contrôle fiscal : -${fmt(t)}`); },
   ()=>{ const g=Math.max(200,netWorth()*.0022); E.cash+=g; logEv(`🎁 Héritage d'un oncle éloigné : +${fmt(g)}`); }])(); }
 let timer=null;
-function startClock(){ clearInterval(timer); timer=setInterval(()=>{ for(let i=0;i<E.spd;i++) tick(); save(); head(); if(page==="inv"&&!$("pop").classList.contains("on")) draw(); if(curAsset&&$("pop").classList.contains("on")) assetPop(curAsset[0],curAsset[1]); if(curBiz!=null&&$("pop").classList.contains("on")) bizPop(curBiz,true); },4000);
+function startClock(){ clearInterval(timer); timer=setInterval(()=>{ for(let i=0;i<E.spd;i++) tick(); save(); head(); const po=$("pop").classList.contains("on"); if(page==="inv"&&!po) draw(); if(curAsset&&po) assetPop(curAsset[0],curAsset[1]); if(curBiz!=null&&po) bizPop(curBiz,true);
+  if(page==="apps"&&app&&!po){ const ae=document.activeElement, tg=ae&&ae.tagName; if(!(tg==="INPUT"||tg==="TEXTAREA"||tg==="SELECT"||(ae&&ae.isContentEditable))){ const y=scrollY; try{ apps(); }catch(e){} scrollTo(0,y); } } },4000);
   setInterval(()=>{ if(E.boost>0){ E.boost--; if(page==="home") homeTap(); } if(E.bcd>0) E.bcd--; let g=0; if(E.ac) g+=clickVal()*E.ac; if(E.rain>0) g+=E.rain; if(g){ E.cash+=g; E.tapE+=E.ac?clickVal()*E.ac:0; head(); } },1000); }
 
 /* ================= UI ================= */
