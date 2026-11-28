@@ -159,6 +159,17 @@ const CMDS = [
   { name: "accueil", description: "👋 Message d'accueil avec questions (admins)", default_member_permissions: "32", options: [{ type: 8, name: "role", description: "Rôle donné à la fin (accès au serveur)", required: false }] },
   { name: "construire", description: "🏗️ L'IA construit ton serveur (salons, rôles) — admins", default_member_permissions: "32", options: [{ type: 3, name: "description", description: "Décris le serveur que tu veux", required: true }] },
   { name: "modifier", description: "🔧 L'IA modifie ton serveur existant (décris le changement) — admins", default_member_permissions: "32", options: [{ type: 3, name: "changement", description: "Ex: ajoute 2 vocaux gaming, renomme général en chat, supprime le rôle X", required: true }] },
+  { name: "setup", description: "⚙️ Installe des systèmes sur ton serveur (coche ce que tu veux) — admins", default_member_permissions: "32", options: [
+    { type: 5, name: "bienvenue", description: "Messages d'arrivée automatiques dans un salon #bienvenue" },
+    { type: 5, name: "roles", description: "Salon où les membres choisissent leurs rôles en cliquant" },
+    { type: 5, name: "tickets", description: "Système de tickets d'aide (bouton)" },
+    { type: 5, name: "moderation", description: "Rôle Modérateur + salons de logs" } ] },
+  { name: "evenement", description: "📅 Crée un événement programmé sur le serveur — admins", default_member_permissions: "32", options: [
+    { type: 3, name: "nom", description: "Nom de l'événement", required: true },
+    { type: 3, name: "date", description: "Date AAAA-MM-JJ (ex: 2026-12-25)", required: true },
+    { type: 3, name: "heure", description: "Heure HH:MM (ex: 20:00)", required: false },
+    { type: 3, name: "lieu", description: "Où ça se passe (ex: Vocal, en ligne…)", required: false },
+    { type: 3, name: "details", description: "Description de l'événement", required: false } ] },
   { name: "nettoyer", description: "🗑️ Supprimer tous les salons ou rôles (admins) — irréversible", default_member_permissions: "8", options: [{ type: 3, name: "quoi", description: "Ce qu'il faut supprimer", required: true, choices: [{ name: "Tous les salons", value: "salons" }, { name: "Tous les rôles", value: "roles" }, { name: "TOUT (salons + rôles)", value: "tout" }] }] },
   { name: "creerroles", description: "🎭 Créer des rôles (noms séparés par des ;) — admins", default_member_permissions: "268435456", options: [{ type: 3, name: "noms", description: "Ex: Admin;Modo;VIP;Membre", required: true }] },
   { name: "creersalons", description: "📁 Créer des salons (noms séparés par des ;) — admins", default_member_permissions: "16", options: [{ type: 3, name: "noms", description: "Ex: général;média;annonces", required: true }, { type: 3, name: "type", description: "Texte ou vocal", required: false, choices: [{ name: "Texte", value: "text" }, { name: "Vocal", value: "voice" }] }] }
@@ -187,7 +198,7 @@ async function run(i) {
       "**🎉 Serveur** : `/sondage` `/ouinon` `/giveaway` `/tirage` `/say` `/embed` `/compteur` `/avatar` `/userinfo` `/serveur`",
       "**🏅 Profil** : `/niveau` `/rank` `/succes`",
       "**🛡️ Modo** : `/clear` `/kick` `/slowmode` `/lock` `/unlock` `/addrole` `/removerole`",
-      "**🏠 Gestion** : `/membres` `/roles` `/boosts` `/annonce` `/countdown` `/rolereaction` `/reglement` `/ticket` `/accueil` `/construire` `/modifier`",
+      "**🏠 Gestion** : `/membres` `/roles` `/boosts` `/annonce` `/countdown` `/rolereaction` `/reglement` `/ticket` `/accueil` `/construire` `/modifier` `/setup` `/evenement`",
       "**🎮 BLOXY** : `/bloxy` `/profil` `/classement`",
       "**🛡️ Modération** : `/warn` `/warns` `/mute` `/unmute` `/ban`"].join("\n"), COL.info, { footer: { text: "Créé avec llmms ia" } });
     case "daily": {
@@ -653,6 +664,48 @@ RÈGLES : fais SEULEMENT ce que l'utilisateur demande, rien d'autre. Pour renomm
         const label = o => o.do === "create_category" ? `📁 Créer la catégorie « ${o.name} »` : o.do === "create_channel" ? `${o.type === "voice" ? "🔊" : "#"} Créer le salon « ${o.name} »${o.category ? " dans " + o.category : ""}` : o.do === "create_role" ? `🎭 Créer le rôle « ${o.name} »` : o.do === "rename_channel" ? `✏️ Salon « ${o.from} » → « ${o.to} »` : o.do === "rename_category" ? `✏️ Catégorie « ${o.from} » → « ${o.to} »` : o.do === "rename_role" ? `✏️ Rôle « ${o.from} » → « ${o.to} »` : o.do === "delete_channel" ? `🗑️ Supprimer le salon « ${o.name} »` : o.do === "delete_role" ? `🗑️ Supprimer le rôle « ${o.name} »` : `• ${o.do}`;
         await kv([["SET", `llmms:dc:modplan:${g2}:${uid2}`, JSON.stringify(plan), "EX", 900]]);
         return { embeds: [{ title: "🔧 Aperçu des modifications", description: plan.ops.map(label).join("\n").slice(0, 3800), color: COL.info, footer: { text: "Confirme pour appliquer sur ton serveur" } }], components: [{ type: 1, components: [{ type: 2, style: 3, label: "✅ Appliquer", custom_id: "mod:go" }, { type: 2, style: 4, label: "❌ Annuler", custom_id: "mod:no" }] }] };
+      };
+      return await late(build(), 5);
+    }
+    if (i.type === 2 && i.data.name === "setup") {
+      const g2 = i.guild_id, uid2 = (i.member?.user || i.user)?.id;
+      if (!g2) return res.json(eph("Cette commande marche seulement dans un serveur."));
+      const wB = !!opt(i, "bienvenue"), wR = !!opt(i, "roles"), wT = !!opt(i, "tickets"), wM = !!opt(i, "moderation");
+      if (!wB && !wR && !wT && !wM) return res.json(eph("Coche au moins un module : bienvenue, roles, tickets ou moderation 😉"));
+      const build = async () => {
+        const res2 = []; const errs = [];
+        const mkChan = (name, type, parent) => bot(`/guilds/${g2}/channels`, "POST", { name, type, parent_id: parent || undefined });
+        try {
+          if (wB) { try { const ch = await mkChan("👋-bienvenue", 0); await bot(`/guilds/${g2}`, "PATCH", { system_channel_id: ch.id, system_channel_flags: 0 }); res2.push("👋 Salon <#" + ch.id + "> créé + messages d'arrivée Discord activés (le pseudo s'affiche quand quelqu'un rejoint)"); } catch (e) { errs.push("bienvenue : " + e.message); } }
+          if (wM) { try { let rid = null; try { const r = await bot(`/guilds/${g2}/roles`, "POST", { name: "Modérateur", color: 0x5865f2, hoist: true, permissions: "0" }); rid = r.id; } catch {}
+            const cat = await mkChan("🛡️ MODÉRATION", 4); await mkChan("logs", 0, cat.id).catch(() => {}); await mkChan("sanctions", 0, cat.id).catch(() => {}); await mkChan("staff", 0, cat.id).catch(() => {});
+            res2.push("🛡️ Rôle Modérateur" + (rid ? " créé" : "") + " + catégorie Modération (logs, sanctions, staff)"); } catch (e) { errs.push("moderation : " + e.message); } }
+          if (wT) { try { const cat = await mkChan("🎫 SUPPORT", 4); const ch = await mkChan("ouvrir-un-ticket", 0, cat.id);
+            await bot(`/channels/${ch.id}/messages`, "POST", { embeds: [{ title: "🎫 Besoin d'aide ?", description: "Clique sur le bouton pour ouvrir un salon privé avec le staff.", color: COL.info }], components: [{ type: 1, components: [{ type: 2, style: 3, label: "🎫 Ouvrir un ticket", custom_id: "ticket:open" }] }] });
+            res2.push("🎫 Système de tickets installé dans <#" + ch.id + ">"); } catch (e) { errs.push("tickets : " + e.message); } }
+          if (wR) { try { const defs = [["🎮 Gaming", 0x22c55e], ["🎨 Créatif", 0xec4899], ["🎵 Musique", 0xf59e0b], ["📢 Annonces", 0x3b82f6]]; const made = [];
+            for (const [n, c] of defs) { try { const r = await bot(`/guilds/${g2}/roles`, "POST", { name: n, color: c, hoist: false }); made.push([n, r.id]); } catch {} }
+            const ch = await mkChan("🎭-choisis-tes-roles", 0);
+            await bot(`/channels/${ch.id}/messages`, "POST", { embeds: [{ title: "🎭 Choisis tes rôles", description: "Clique sur un bouton pour prendre ou retirer un rôle.", color: COL.gold }], components: [{ type: 1, components: made.map(([n, id]) => ({ type: 2, style: 2, label: n, custom_id: "role:" + id })) }] });
+            res2.push("🎭 Salon de rôles créé dans <#" + ch.id + "> (" + made.length + " rôles)"); } catch (e) { errs.push("roles : " + e.message); } }
+        } catch (e) { errs.push(e.message); }
+        return { embeds: [{ title: "⚙️ Setup terminé", description: (res2.join("\n") || "Rien n'a pu être créé.") + (errs.length ? "\n\n⚠️ Soucis :\n" + errs.join("\n") + "\n\n(le bot a-t-il les permissions Gérer le serveur / salons / rôles, et son rôle est-il assez haut ?)" : ""), color: errs.length ? COL.gold : COL.ok }] };
+      };
+      return await late(build(), 5);
+    }
+    if (i.type === 2 && i.data.name === "evenement") {
+      const g2 = i.guild_id, nom = String(opt(i, "nom") || "Événement").slice(0, 100), date = String(opt(i, "date") || "").trim(), heure = String(opt(i, "heure") || "20:00").trim(), lieu = String(opt(i, "lieu") || "Sur le serveur").slice(0, 100), det = String(opt(i, "details") || "").slice(0, 900);
+      if (!g2) return res.json(eph("Cette commande marche seulement dans un serveur."));
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(date)) return res.json(eph("La date doit être au format AAAA-MM-JJ (ex: 2026-12-25)."));
+      const hm = /^\d{1,2}:\d{2}$/.test(heure) ? heure.padStart(5, "0") : "20:00";
+      const start = new Date(`${date}T${hm}:00+01:00`);
+      if (isNaN(start.getTime())) return res.json(eph("Date ou heure invalide."));
+      if (start.getTime() < Date.now() + 60000) return res.json(eph("L'événement doit être dans le futur ⏳"));
+      const end = new Date(start.getTime() + 2 * 3600 * 1000);
+      const build = async () => {
+        try { const ev = await bot(`/guilds/${g2}/scheduled-events`, "POST", { name: nom, privacy_level: 2, scheduled_start_time: start.toISOString(), scheduled_end_time: end.toISOString(), entity_type: 3, entity_metadata: { location: lieu }, description: det || undefined });
+          return { embeds: [{ title: "📅 Événement créé !", description: `**${nom}**\n🕒 ${date} à ${hm}\n📍 ${lieu}${det ? "\n\n" + det : ""}`, color: COL.ok, footer: { text: "Les membres peuvent cliquer sur « Intéressé » dans l'onglet Événements" } }] };
+        } catch (e) { return { embeds: [{ title: "😵 Erreur", description: "Impossible de créer l'événement : " + e.message + "\n(le bot a-t-il la permission « Gérer les événements » ?)", color: COL.ko }] }; }
       };
       return await late(build(), 5);
     }
